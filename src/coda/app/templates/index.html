@@ -641,6 +641,15 @@
         overflow-y: auto;
         padding-right: 8px;
       }
+      .note-marker {
+        color: var(--ink-muted);
+        font-style: italic;
+      }
+      .transcript-body.drag-over {
+        outline: 2px dashed var(--accent-sage);
+        outline-offset: 4px;
+        background: var(--accent-sage-soft);
+      }
       .transcript-body::-webkit-scrollbar {
         width: 8px;
       }
@@ -2564,6 +2573,15 @@
             <i class="bi bi-clock-history"></i>
             <span data-i18n="common.history">History</span>
           </button>
+          <button
+            id="noteBtn"
+            class="btn btn-ghost"
+            title="Upload a .txt clinical note, or drop it on the transcript"
+          >
+            <i class="bi bi-file-earmark-text"></i>
+            <span data-i18n="common.note">Clinical note</span>
+          </button>
+          <input type="file" id="noteInput" accept=".txt" hidden />
           <button id="resetBtn" class="btn btn-ghost" title="New session">
             <i class="bi bi-arrow-counterclockwise"></i>
             <span data-i18n="common.new">New</span>
@@ -3124,6 +3142,7 @@
           "common.checkSettings": "Check settings",
           "common.seeAll": "See all",
           "common.history": "History",
+          "common.note": "Clinical note",
           "tagline.line1": "Cause of Death",
           "tagline.line2": "Determination Assistant",
           "onboard.eyebrow": "BEFORE YOU BEGIN",
@@ -3200,6 +3219,7 @@
           "common.checkSettings": "Angalia mipangilio",
           "common.seeAll": "Ona zote",
           "common.history": "Historia",
+          "common.note": "Maelezo ya kliniki",
           "tagline.line1": "Sababu ya Kifo",
           "tagline.line2": "Msaidizi wa Uamuzi",
           "onboard.eyebrow": "KABLA HUJAANZA",
@@ -3275,6 +3295,7 @@
           "common.checkSettings": "Vérifier les paramètres",
           "common.seeAll": "Tout voir",
           "common.history": "Historique",
+          "common.note": "Note clinique",
           "tagline.line1": "Cause du décès",
           "tagline.line2": "Assistant de détermination",
           "onboard.eyebrow": "AVANT DE COMMENCER",
@@ -3353,6 +3374,7 @@
           "common.checkSettings": "مراجعة الإعدادات",
           "common.seeAll": "عرض الكل",
           "common.history": "السجل",
+          "common.note": "ملاحظة سريرية",
           "tagline.line1": "سبب الوفاة",
           "tagline.line2": "مساعد التحديد",
           "onboard.eyebrow": "قبل البدء",
@@ -3427,6 +3449,7 @@
           "common.checkSettings": "সেটিংস দেখুন",
           "common.seeAll": "সব দেখুন",
           "common.history": "ইতিহাস",
+          "common.note": "ক্লিনিক্যাল নোট",
           "tagline.line1": "মৃত্যুর কারণ",
           "tagline.line2": "নির্ধারণ সহকারী",
           "onboard.eyebrow": "শুরু করার আগে",
@@ -3503,6 +3526,7 @@
           "common.checkSettings": "Revisar ajustes",
           "common.seeAll": "Ver todas",
           "common.history": "Historial",
+          "common.note": "Nota clínica",
           "tagline.line1": "Causa de muerte",
           "tagline.line2": "Asistente de determinación",
           "onboard.eyebrow": "ANTES DE EMPEZAR",
@@ -3580,6 +3604,7 @@
           "common.checkSettings": "Kambela swiyimiso",
           "common.seeAll": "Vona hinkwaswo",
           "common.history": "Matimu",
+          "common.note": "Tsalwa ra kliniki",
           "tagline.line1": "Mupfuni wo kumisisa",
           "tagline.line2": "xivangelo xa rifu",
           "onboard.eyebrow": "U NGA SI SUNGULA",
@@ -5466,6 +5491,69 @@
           showStatus("No text to copy", "warning");
         }
       });
+
+      // Clinical note upload
+      const noteBtn = document.getElementById("noteBtn");
+      const noteInput = document.getElementById("noteInput");
+
+      noteBtn.addEventListener("click", () => noteInput.click());
+      noteInput.addEventListener("change", () => {
+        if (noteInput.files.length > 0) {
+          uploadClinicalNote(noteInput.files[0]);
+          noteInput.value = "";
+        }
+      });
+      transcript.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        transcript.classList.add("drag-over");
+      });
+      transcript.addEventListener("dragleave", () =>
+        transcript.classList.remove("drag-over"),
+      );
+      transcript.addEventListener("drop", (e) => {
+        e.preventDefault();
+        transcript.classList.remove("drag-over");
+        if (e.dataTransfer.files.length > 0) {
+          uploadClinicalNote(e.dataTransfer.files[0]);
+        }
+      });
+
+      async function uploadClinicalNote(file) {
+        if (!file.name.endsWith(".txt")) {
+          showStatus("Please upload a .txt file", "warning");
+          return;
+        }
+        if (!currentInferenceSessionId) {
+          showStatus("Start a session before uploading a note", "warning");
+          return;
+        }
+        showStatus(`Processing "${file.name}"…`, "info");
+        try {
+          const resp = await fetch("/upload-note", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: await file.text(),
+              filename: file.name,
+              session_id: currentInferenceSessionId,
+            }),
+          });
+          if (!resp.ok) {
+            const err = await resp.json();
+            showStatus(err.detail || "Upload failed", "danger");
+            return;
+          }
+          transcript.insertAdjacentHTML(
+            "beforeend",
+            `<span class="note-marker">[Clinical note: ${escapeHtml(file.name)}]</span> `,
+          );
+          transcript.scrollTop = transcript.scrollHeight;
+          showStatus(`Clinical note "${file.name}" processed`, "success");
+        } catch (e) {
+          console.error("Upload failed:", e);
+          showStatus("Failed to upload clinical note", "danger");
+        }
+      }
 
       loadSettings();
       renderIdleRecent();

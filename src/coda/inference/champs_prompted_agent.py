@@ -55,6 +55,7 @@ CHAMPS_GROUP_TO_ICD10 = load_group_to_icd10()
 SYSTEM_PROMPT = read_champs_resource("system_prompt.txt")
 SCHEMA_GUIDANCE = read_champs_resource("schema_guidance.txt")
 DIAGNOSIS_STANDARD = read_champs_resource("diagnosis_standard.txt")
+CLINICAL_NOTE_GUIDANCE = read_champs_resource("clinical_note_guidance.txt")
 
 DEFAULT_NUM_QUESTIONS = 3
 DEFAULT_QUESTION_STYLE = "default"
@@ -168,7 +169,8 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             SYSTEM_PROMPT.replace("{question_guidance}", question_guidance) \
                          .format(allowed_causes=allowed_str,
                                  num_questions=num_questions) + "\n\n" \
-            + self.schema_guidance
+            + self.schema_guidance + "\n\n" \
+            + CLINICAL_NOTE_GUIDANCE
 
     async def infer(self, chunk_id: str, text: str,
                     annotations: List[Annotation]):
@@ -182,6 +184,9 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             f"- narrative:\n"
             f"  {self.all_text.strip()}"
         )
+        if self.clinical_note:
+            user_prompt += (f"\n\n<clinical_note>\n{self.clinical_note.strip()}"
+                            f"\n</clinical_note>")
 
         try:
             logger.info(f'Inferring causes up to chunk {chunk_id}...')
