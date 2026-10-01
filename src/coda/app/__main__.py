@@ -1,7 +1,9 @@
 import uvicorn
 
-from .server import app
-from coda.config import settings
+from coda.config import configure_logging, settings
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=settings.app.host, port=settings.app.port)
+    configure_logging()
+    from .server import app
+    uvicorn.run(app, host=settings.app.host, port=settings.app.port,
+                log_config=None)

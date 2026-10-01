@@ -218,8 +218,10 @@ class InferenceServer:
             agent: InferenceAgent,
             host: Optional[str] = None,
             port: Optional[int] = None,
+            info: Optional[dict] = None,
     ):
         self.agent = agent
+        self.info = info or {}
         self.host = host or settings.inference.host
         self.port = port if port is not None else settings.inference.port
         self.app = FastAPI(title="CODA Inference Agent")
@@ -284,6 +286,11 @@ class InferenceServer:
             """Health check endpoint."""
             return {"status": "healthy"}
 
+        @self.app.get("/info")
+        async def info():
+            """Report the agent implementation and model this server runs."""
+            return self.info
+
         @self.app.post("/reset")
         async def reset(request: Optional[ResetRequest] = None):
             """Reset agent state for one session or all sessions."""
@@ -317,7 +324,7 @@ class InferenceServer:
         """Start the inference server."""
         import uvicorn
         logger.info(f"Starting inference server on {self.host}:{self.port}")
-        uvicorn.run(self.app, host=self.host, port=self.port)
+        uvicorn.run(self.app, host=self.host, port=self.port, log_config=None)
 
 
 if __name__ == "__main__":
@@ -341,18 +348,21 @@ if __name__ == "__main__":
                         help="Server port")
     args = parser.parse_args()
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    from coda.config import configure_logging
+    configure_logging()
 
+    info = {"agent": args.agent}
     if args.agent == "champs_finetuned":
         from coda.inference.champs_finetuned import create_champs_finetuned_agent
         agent = create_champs_finetuned_agent()
         agent.ensure_model()
+        info.update(adapter_path=agent.adapter_path, top_k=agent.top_k)
     else:
         from coda.inference.champs_prompted_agent import create_champs_prompted_agent
         agent = create_champs_prompted_agent(provider=args.provider, model=args.model)
+        info.update(provider=args.provider, model=agent.llm_client.model,
+                    num_questions=agent.num_questions,
+                    question_style=agent.question_style)
 
-    server = InferenceServer(agent, host=args.host, port=args.port)
+    server = InferenceServer(agent, host=args.host, port=args.port, info=info)
     server.run()

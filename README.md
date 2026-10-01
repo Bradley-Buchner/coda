@@ -180,6 +180,18 @@ The Compose path is env-driven. The main runtime variables are:
   fragment shown on the onboarding page before the consent checkbox (unset
   means no notice); `CODA_APP__ONBOARDING_NOTICE__VERSION` is the consent
   version, bumped to make browsers that already consented see it again
+- `CODA_STORAGE__ENABLED` turns on per-case storage (off by default; nothing
+  is written to disk while it is off). Each case, a session up to the next
+  Reset, gets its own folder under `CODA_STORAGE__OUTPUT_DIR` (default
+  `~/.data/coda/cases`) with a `manifest.json` (settings and model versions),
+  transcripts in the spoken language and English, per-chunk grounding
+  annotations (`chunks.jsonl`), every inference result with the follow-up
+  questions shown and when (`inference.jsonl`), and timings (`timing.jsonl`).
+  `CODA_STORAGE__STORE__AUDIO=true` also keeps the raw audio as `audio.wav`.
+  Each item can be switched off under `storage.store` in `settings.yaml`.
+  Retention defaults are still to be agreed with the sites.
+- `CODA_LOGGING__LEVEL` and `CODA_LOGGING__FILE` set the application log level
+  and an optional log file (logs always go to stderr as well)
 - `NEO4J_HTTP_PORT`, `NEO4J_BOLT_PORT`
 
 `CODA_INFERENCE__URL` is wired automatically for Compose and normally does not

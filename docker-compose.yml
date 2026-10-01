@@ -69,6 +69,10 @@ services:
       CODA_GROUNDER__RAG__RERANKER__ENABLED: ${CODA_GROUNDER__RAG__RERANKER__ENABLED:-true}
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # To keep stored cases (storage.enabled) outside the container, mount a
+    # host directory and point CODA_STORAGE__OUTPUT_DIR at it:
+    # volumes:
+    #   - ./cases:/cases
     depends_on:
       inference:
         condition: service_healthy

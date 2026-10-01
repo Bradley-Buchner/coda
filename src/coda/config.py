@@ -15,6 +15,7 @@ Override any value at runtime with a ``CODA_``-prefixed environment variable,
 using ``__`` to descend into nested keys (``CODA_APP__PORT=9000``).
 """
 
+import logging
 import os
 from pathlib import Path
 
@@ -60,12 +61,24 @@ settings = Dynaconf(
         Validator("grounder.rag.retriever.top_k", cast=int),
         Validator("grounder.rag.retriever.min_similarity", cast=float),
         Validator("grounder.rag.reranker.enabled", cast=bool),
+        Validator(
+            "storage.enabled",
+            "storage.store.audio",
+            "storage.store.transcripts",
+            "storage.store.annotations",
+            "storage.store.inference",
+            "storage.store.metadata",
+            "storage.store.timing",
+            cast=bool,
+        ),
         # And the other direction: keep these text. Dynaconf infers types, so a
         # date-shaped consent version (`2026-08-06`) would otherwise arrive as a
         # `datetime.date` and break the JSON-encoded version the page embeds.
         Validator(
             "app.onboarding_notice.file",
             "app.onboarding_notice.version",
+            "storage.output_dir",
+            "logging.file",
             cast=str,
         ),
     ],
@@ -110,3 +123,28 @@ def inference_url() -> str:
     if url:
         return url
     return f"http://127.0.0.1:{settings.inference.port}"
+
+
+LOG_FORMAT = '%(levelname)s: [%(asctime)s] %(name)s - %(message)s'
+LOG_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+
+
+def configure_logging() -> None:
+    """Configure the root logger from the ``logging`` settings section.
+
+    Logs always go to stderr, and additionally to ``logging.file`` when set.
+    Replaces any handlers installed earlier (e.g. the import-time default).
+    """
+    handlers: list[logging.Handler] = [logging.StreamHandler()]
+    log_file = settings.logging.get("file", "")
+    if log_file:
+        log_path = Path(log_file).expanduser()
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        handlers.append(logging.FileHandler(log_path, encoding="utf-8"))
+    logging.basicConfig(
+        format=LOG_FORMAT,
+        datefmt=LOG_DATE_FORMAT,
+        level=str(settings.logging.get("level", "INFO")).upper(),
+        handlers=handlers,
+        force=True,
+    )

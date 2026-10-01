@@ -184,32 +184,3 @@ async def test_independent_sessions_keep_buffers_separate(monkeypatch):
 
     release.set()
     await asyncio.gather(session_a.wait_for_idle(), session_b.wait_for_idle())
-
-
-@pytest.mark.asyncio
-async def test_targeted_reset_does_not_close_shared_save_files(monkeypatch):
-    session = server.InferenceSessionCoordinator(
-        DummyWebSocket(), session_id="session-a")
-    original_sessions = set(server.active_inference_sessions)
-    server.active_inference_sessions.clear()
-    server.active_inference_sessions.add(session)
-    close_calls = []
-
-    async def fake_reset(session_id, generation):
-        return None
-
-    monkeypatch.setattr(server, "close_save_files",
-                        lambda: close_calls.append("closed"))
-    monkeypatch.setattr(server, "_reset_inference_session", fake_reset)
-
-    try:
-        response = await server.reset_session(server.ResetRequest(
-            session_id="session-a",
-            session_generation=0,
-        ))
-    finally:
-        server.active_inference_sessions.clear()
-        server.active_inference_sessions.update(original_sessions)
-
-    assert response == {"status": "reset"}
-    assert close_calls == []

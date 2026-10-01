@@ -2,7 +2,7 @@
 #
 # This is the single source of truth for all runtime configuration, loaded by
 # `coda.config` via Dynaconf. It is organized into one namespace per module
-# (app, inference, llm, kg, grounder, dialogue).
+# (app, inference, llm, kg, grounder, dialogue, storage, logging).
 #
 # Overriding values:
 #   - Edit a value here to change the default.
@@ -129,3 +129,23 @@ dialogue:
   speechmatics:
     url: wss://us.rt.speechmatics.com/v2/
     model: enhanced         # operating point. alternatives: enhanced | standard
+
+storage:
+  # Per-case storage of interview data. When false, the app writes no case data
+  # to disk. Each case (one session, restarted by Reset) gets its own folder.
+  enabled: false
+  # Root directory for case folders. Empty -> ~/.data/coda/cases (pystow).
+  output_dir: ""
+  # What each case folder keeps.
+  store:
+    audio: false            # raw microphone audio as 16 kHz mono WAV
+    transcripts: true       # transcript text, original language and English
+    annotations: true       # per-chunk text with grounding annotations
+    inference: true         # every inference result, incl. questions shown
+    metadata: true          # case profile / demographics
+    timing: true            # per-chunk and per-inference timings
+
+logging:
+  level: INFO               # alternatives: DEBUG | INFO | WARNING | ERROR
+  # Log file path. Empty -> log to stderr only.
+  file: ""
