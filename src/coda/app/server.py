@@ -14,15 +14,14 @@ import os
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
-from typing import Dict, Optional
+from typing import Optional
 
 import httpx
 from fastapi import Body, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from coda import CODA_BASE
+from coda.app.storage import CaseRecorder, storage_enabled
 from coda.app.onboarding_notice import (
     load_onboarding_notice_html,
     render_onboarding_notice,
@@ -59,9 +58,6 @@ templates_dir = os.path.join(here, "templates")
 
 # Server-level settings
 current_language = settings.dialogue.language
-save_enabled = False
-save_files: Dict[str, object] = {}  # open file handles keyed by language code
-transcripts_dir = CODA_BASE.join(name="transcripts")
 current_transcriber_backend = settings.dialogue.transcriber_backend
 
 
@@ -99,7 +95,6 @@ active_inference_sessions: set["InferenceSessionCoordinator"] = set()
 
 class SettingsRequest(BaseModel):
     language: Optional[str] = None
-    save_enabled: Optional[bool] = None
     transcriber_backend: Optional[str] = None
     transcriber_model: Optional[str] = None
     grounder: Optional[str] = None
@@ -141,6 +136,24 @@ class InferenceSessionCoordinator:
         self._lock = asyncio.Lock()
         self._pending: list[PendingInferenceChunk] = []
         self._drain_task: asyncio.Task | None = None
+        self.recorder: CaseRecorder | None = None
+
+    async def start_case(self):
+        """Begin recording a new case for the current generation, if enabled."""
+        if not storage_enabled():
+            return
+        recorder = CaseRecorder(self.session_id, self.generation,
+                                await _run_info())
+        self.end_case()
+        self.recorder = recorder
+        logger.info("Recording case %s to %s", recorder.case_id,
+                    recorder.case_dir)
+
+    def end_case(self):
+        if self.recorder is not None:
+            self.recorder.close(current_metadata.to_dict())
+            logger.info("Closed case %s", self.recorder.case_id)
+            self.recorder = None
 
     async def enqueue(self, chunk_id: str, timestamp: float, text: str,
                       annotations: list):
@@ -167,6 +180,10 @@ class InferenceSessionCoordinator:
             self.session_id, old_generation, reason, dropped
         )
         await _reset_inference_session(self.session_id, old_generation)
+        if reason == "disconnect":
+            self.end_case()
+        else:
+            await self.start_case()
 
     async def wait_for_idle(self):
         task = None
@@ -252,80 +269,6 @@ if transcriber.normalize_language(current_language) is None:
     )
 
 
-def open_save_files(language: str):
-    """Open transcript and annotation files for saving. Returns dict of file paths."""
-    global save_files
-    close_save_files()
-
-    os.makedirs(transcripts_dir, exist_ok=True)
-    ts = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-    paths = {}
-
-    if language != "en":
-        # Original language file
-        orig_path = os.path.join(transcripts_dir,
-                                 f"transcript_{ts}_{language}.txt")
-        save_files[language] = open(orig_path, "a", encoding="utf-8")
-        paths[language] = orig_path
-
-        # English translation file
-        en_path = os.path.join(transcripts_dir, f"transcript_{ts}_en.txt")
-        save_files["en"] = open(en_path, "a", encoding="utf-8")
-        paths["en"] = en_path
-    else:
-        en_path = os.path.join(transcripts_dir, f"transcript_{ts}_en.txt")
-        save_files["en"] = open(en_path, "a", encoding="utf-8")
-        paths["en"] = en_path
-
-    # Annotated dialogue file (JSON Lines - one JSON object per chunk)
-    annotations_path = os.path.join(transcripts_dir,
-                                    f"annotations_{ts}.jsonl")
-    save_files["annotations"] = open(annotations_path, "a", encoding="utf-8")
-    paths["annotations"] = annotations_path
-
-    return paths
-
-
-def close_save_files():
-    """Close any open save files."""
-    global save_files
-    for f in save_files.values():
-        try:
-            f.close()
-        except Exception:
-            pass
-    save_files.clear()
-
-
-def save_transcript(text: str, lang_code: str):
-    """Append a transcript line to the appropriate file."""
-    f = save_files.get(lang_code)
-    if f:
-        f.write(text + "\n")
-        f.flush()
-
-
-def save_annotated_chunk(chunk_id: str, timestamp: float,
-                         english_text: str, annotations,
-                         original_text: str = None,
-                         original_language: str = None):
-    """Save a chunk with its annotations as a JSON Lines record."""
-    f = save_files.get("annotations")
-    if not f:
-        return
-    record = {
-        "chunk_id": chunk_id,
-        "timestamp": timestamp,
-        "text": english_text,
-        "annotations": [a.to_json() for a in annotations] if annotations else [],
-    }
-    if original_text:
-        record["original_text"] = original_text
-        record["original_language"] = original_language
-    f.write(json.dumps(record) + "\n")
-    f.flush()
-
-
 async def translate_text(text: str, source_language: str) -> str:
     """Translate text to English using the LLM API."""
     lang_name = get_language_name(source_language)
@@ -382,6 +325,28 @@ async def _reset_inference_session(session_id: str, generation: int):
         )
 
 
+async def _run_info() -> dict:
+    """Settings and model versions in effect, recorded with each case."""
+    try:
+        resp = await inference_client.get("/info", timeout=5.0)
+        resp.raise_for_status()
+        inference_info = resp.json()
+    except Exception as e:
+        logger.warning("Could not fetch inference service info: %s", e)
+        inference_info = None
+    return {
+        "language": current_language,
+        "translation_mode": translation_mode,
+        "transcriber_backend": current_transcriber_backend,
+        "transcriber_model": current_transcriber_model,
+        "grounder": current_grounder,
+        "rag": rag_config if current_grounder == "rag" else None,
+        "translation_llm": {"provider": current_llm_provider,
+                            "model": current_llm_model},
+        "inference": inference_info,
+    }
+
+
 async def process_inference(session: InferenceSessionCoordinator,
                             request_generation: int,
                             batch: CoalescedInferenceBatch,
@@ -390,7 +355,7 @@ async def process_inference(session: InferenceSessionCoordinator,
     started = time.perf_counter()
     try:
         # Send request to inference agent
-        response = await inference_client.post("/infer", json={
+        request = {
             "chunk_id": batch.chunk_id,
             "timestamp": batch.timestamp,
             "text": batch.text,
@@ -398,7 +363,8 @@ async def process_inference(session: InferenceSessionCoordinator,
             "metadata": current_metadata.to_dict(),
             "session_id": session.session_id,
             "session_generation": request_generation,
-        })
+        }
+        response = await inference_client.post("/infer", json=request)
         response.raise_for_status()
         result = response.json()
         infer_s = time.perf_counter() - started
@@ -415,6 +381,9 @@ async def process_inference(session: InferenceSessionCoordinator,
             )
             return
 
+        if session.recorder is not None:
+            session.recorder.write_inference(request, result,
+                                             shown_at=time.time())
         # Send inference result to client
         await _ws_send_safe(session.websocket, {"type": "inference", **result})
         # Log top cause
@@ -477,11 +446,9 @@ async def get_languages():
 @app.get("/settings")
 async def get_settings():
     """Get current server settings."""
-    file_paths = {k: f.name for k, f in save_files.items()} if save_files else {}
     return {
         "language": current_language,
-        "save_enabled": save_enabled,
-        "file_paths": file_paths,
+        "storage_enabled": storage_enabled(),
         "transcriber_backend": current_transcriber_backend,
         "transcriber_model": current_transcriber_model,
         "grounder": current_grounder,
@@ -534,7 +501,7 @@ async def update_settings(req: SettingsRequest):
     """Update server settings."""
     if settings.app.get("lock_server_settings", False):
         raise HTTPException(status_code=403, detail="Server settings are locked")
-    global current_language, save_enabled, transcriber, grounder
+    global current_language, transcriber, grounder
     global current_transcriber_model, current_llm_provider, current_llm_model
     global translation_mode
     global current_grounder, current_transcriber_backend
@@ -545,14 +512,6 @@ async def update_settings(req: SettingsRequest):
     if req.language is not None:
         current_language = req.language
         logger.info(f"Language set to: {current_language}")
-    if req.save_enabled is not None:
-        save_enabled = req.save_enabled
-        if save_enabled:
-            paths = open_save_files(current_language)
-            logger.info(f"Transcript saving enabled: {paths}")
-        else:
-            close_save_files()
-            logger.info("Transcript saving disabled")
     if req.grounder is not None:
         grounder_name = req.grounder.strip().lower()
         if grounder_name not in {"gilda", "rag"}:
@@ -624,11 +583,9 @@ async def update_settings(req: SettingsRequest):
     if req.translation_mode is not None:
         translation_mode = req.translation_mode
         logger.info(f"Translation mode set to: {translation_mode}")
-    file_paths = {k: f.name for k, f in save_files.items()} if save_files else {}
     return {
         "language": current_language,
-        "save_enabled": save_enabled,
-        "file_paths": file_paths,
+        "storage_enabled": storage_enabled(),
         "transcriber_backend": current_transcriber_backend,
         "transcriber_model": current_transcriber_model,
         "grounder": current_grounder,
@@ -651,11 +608,10 @@ async def websocket_endpoint(websocket: WebSocket):
     """
     await websocket.accept()
     logger.info("WebSocket connection established")
-    if save_enabled and not save_files:
-        open_save_files(current_language)
 
     inference_session = InferenceSessionCoordinator(websocket)
     active_inference_sessions.add(inference_session)
+    await inference_session.start_case()
     await _ws_send_safe(websocket, {
         "type": "session",
         "session_id": inference_session.session_id,
@@ -706,6 +662,8 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
             data = await queue.get()
             if data is None:
                 return
+            if inference_session.recorder is not None:
+                inference_session.recorder.write_audio(data)
             yield data
 
     # Direct speech-to-English translation is a Whisper capability; for other
@@ -752,8 +710,8 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
                 continue
             # One bad event shouldn't kill the session.
             try:
-                committed = await _handle_committed(websocket, event,
-                                                    direct_translate)
+                committed = await _handle_committed(
+                    inference_session, event, direct_translate)
             except Exception as e:
                 logger.error(f"Error on event {event.id}: {e}", exc_info=True)
                 continue
@@ -768,7 +726,8 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
         timer.cancel()
 
 
-async def _handle_committed(websocket: WebSocket, event, direct_translate: bool):
+async def _handle_committed(inference_session: InferenceSessionCoordinator,
+                            event, direct_translate: bool):
     """Translate, ground, save, and display one committed transcript event.
 
     Returns (chunk_id, timestamp, english_text, annotations) for the caller to
@@ -803,17 +762,16 @@ async def _handle_committed(websocket: WebSocket, event, direct_translate: bool)
     if not english_text:
         return None
 
-    # Save transcripts and annotations if enabled
-    if save_enabled:
+    recorder = inference_session.recorder
+    if recorder is not None:
         save_start = time.perf_counter()
-        save_transcript(english_text, "en")
-        if original_transcript and current_language != "en":
-            save_transcript(original_transcript, current_language)
-        save_annotated_chunk(
+        recorder.write_chunk(
             chunk_id, timestamp, english_text, annotations,
+            timings={"translate_s": round(translation_s, 3),
+                     "ground_s": round(grounding_s, 3)},
             original_text=original_transcript,
             original_language=(current_language
-                               if current_language != "en" else None),
+                               if original_transcript else None),
         )
         save_s = time.perf_counter() - save_start
 
@@ -841,7 +799,7 @@ async def _handle_committed(websocket: WebSocket, event, direct_translate: bool)
         msg["original_transcript"] = original_transcript
         msg["original_language"] = current_language
     emit_start = time.perf_counter()
-    await _ws_send_safe(websocket, msg)
+    await _ws_send_safe(inference_session.websocket, msg)
     emit_s = time.perf_counter() - emit_start
     total_s = time.perf_counter() - total_start
     logger.info(
@@ -863,12 +821,11 @@ async def _start_inference(inference_session: InferenceSessionCoordinator,
 
 @app.post("/reset")
 async def reset_session(req: Optional[ResetRequest] = None):
-    """Reset session state: close save files and reset the inference agent."""
+    """Reset session state: start a new case and reset the inference agent."""
     global current_metadata
     targeted_reset = req is not None and req.session_id is not None
     if not targeted_reset:
         current_metadata = Metadata()
-        close_save_files()
     target_sessions = list(active_inference_sessions)
     if targeted_reset:
         target_sessions = [

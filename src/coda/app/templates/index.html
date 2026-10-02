@@ -2056,17 +2056,6 @@
         color: var(--ink-muted);
       }
 
-      .file-path {
-        font-family: "SF Mono", ui-monospace, Menlo, monospace;
-        font-size: 11px;
-        color: var(--ink-muted);
-        padding: 10px 12px;
-        background: var(--paper-elevated);
-        border-radius: var(--radius-sm);
-        word-break: break-all;
-        margin-top: 8px;
-        border: 1px solid var(--border-warm);
-      }
 
       .whisper-warning {
         font-size: 11px;
@@ -2994,26 +2983,27 @@
           class="kicker"
           style="display: block; margin-bottom: 10px"
           data-i18n="settings.localStorage"
-          >Local storage</label
+          >Storage</label
         >
         <div class="switch-row">
-          <div class="switch-body">
-            <strong data-i18n="settings.saveTitle"
-              >Save transcripts on this device</strong
+          <div class="switch-body" id="storageOn" hidden>
+            <strong data-i18n="settings.storageOnTitle"
+              >Case data is saved</strong
             >
-            <small data-i18n="settings.saveBody"
-              >Keep past sessions for reference. Otherwise they're discarded
-              when you stop recording.</small
+            <small data-i18n="settings.storageOnBody"
+              >This server keeps a record of each session as configured by its
+              administrator. Past sessions are also kept on this device.</small
             >
           </div>
-          <label class="switch">
-            <input type="checkbox" id="saveToggle" />
-            <span class="switch-track"></span>
-            <span class="switch-thumb"></span>
-          </label>
-        </div>
-        <div id="filePathDisplay" style="display: none">
-          <div class="file-path" id="filePathText"></div>
+          <div class="switch-body" id="storageOff">
+            <strong data-i18n="settings.storageOffTitle"
+              >Case data is not saved</strong
+            >
+            <small data-i18n="settings.storageOffBody"
+              >Nothing from your sessions is stored on the server or on this
+              device.</small
+            >
+          </div>
         </div>
       </div>
     </aside>
@@ -3091,13 +3081,16 @@
           "settings.transcriptionBackend": "Transcription backend",
           "settings.grounder": "Grounder",
           "settings.appearance": "Appearance",
-          "settings.localStorage": "Local storage",
+          "settings.localStorage": "Storage",
           "settings.themeLight": "Light",
           "settings.themeDark": "Dark",
           "settings.themeSystem": "System",
-          "settings.saveTitle": "Save transcripts on this device",
-          "settings.saveBody":
-            "Keep past sessions for reference. Otherwise they're discarded when you stop recording.",
+          "settings.storageOnTitle": "Case data is saved",
+          "settings.storageOnBody":
+            "This server keeps a record of each session as configured by its administrator. Past sessions are also kept on this device.",
+          "settings.storageOffTitle": "Case data is not saved",
+          "settings.storageOffBody":
+            "Nothing from your sessions is stored on the server or on this device.",
           "history.title": "Past sessions",
           "history.subtitle":
             "Everything is stored locally on this device. Nothing is synced or uploaded.",
@@ -3162,13 +3155,16 @@
           "settings.transcriptionBackend": "Injini ya unakili",
           "settings.grounder": "Injini ya ufungamanishaji",
           "settings.appearance": "Mwonekano",
-          "settings.localStorage": "Uhifadhi wa ndani",
+          "settings.localStorage": "Uhifadhi",
           "settings.themeLight": "Mwangaza",
           "settings.themeDark": "Giza",
           "settings.themeSystem": "Mfumo",
-          "settings.saveTitle": "Hifadhi maandishi kwenye kifaa hiki",
-          "settings.saveBody":
-            "Weka vikao vilivyopita kwa rejeleo. Vinginevyo vinatupwa unapomaliza kurekodi.",
+          "settings.storageOnTitle": "Data ya kesi inahifadhiwa",
+          "settings.storageOnBody":
+            "Seva hii inaweka kumbukumbu ya kila kikao kama ilivyowekwa na msimamizi wake. Vikao vilivyopita pia vinahifadhiwa kwenye kifaa hiki.",
+          "settings.storageOffTitle": "Data ya kesi haihifadhiwi",
+          "settings.storageOffBody":
+            "Hakuna chochote kutoka kwa vikao vyako kinachohifadhiwa kwenye seva au kwenye kifaa hiki.",
           "history.title": "Vikao vilivyopita",
           "history.subtitle":
             "Kila kitu kinahifadhiwa ndani ya kifaa hiki. Hakuna kinachosawazishwa au kupakiwa.",
@@ -3236,14 +3232,16 @@
           "settings.transcriptionBackend": "Moteur de transcription",
           "settings.grounder": "Moteur d'ancrage",
           "settings.appearance": "Apparence",
-          "settings.localStorage": "Stockage local",
+          "settings.localStorage": "Stockage",
           "settings.themeLight": "Clair",
           "settings.themeDark": "Sombre",
           "settings.themeSystem": "Système",
-          "settings.saveTitle":
-            "Enregistrer les transcriptions sur cet appareil",
-          "settings.saveBody":
-            "Conservez les sessions passées pour référence. Sinon, elles sont supprimées à l'arrêt de l'enregistrement.",
+          "settings.storageOnTitle": "Les données des cas sont enregistrées",
+          "settings.storageOnBody":
+            "Ce serveur conserve un enregistrement de chaque session selon la configuration de son administrateur. Les sessions passées sont aussi conservées sur cet appareil.",
+          "settings.storageOffTitle": "Les données des cas ne sont pas enregistrées",
+          "settings.storageOffBody":
+            "Rien de vos sessions n'est conservé sur le serveur ni sur cet appareil.",
           "history.title": "Sessions précédentes",
           "history.subtitle":
             "Tout est stocké localement sur cet appareil. Rien n'est synchronisé ni téléchargé.",
@@ -3307,13 +3305,16 @@
           "settings.transcriptionBackend": "محرك النسخ",
           "settings.grounder": "محرك الربط",
           "settings.appearance": "المظهر",
-          "settings.localStorage": "التخزين المحلي",
+          "settings.localStorage": "التخزين",
           "settings.themeLight": "فاتح",
           "settings.themeDark": "داكن",
           "settings.themeSystem": "النظام",
-          "settings.saveTitle": "حفظ النصوص على هذا الجهاز",
-          "settings.saveBody":
-            "احتفظ بالجلسات السابقة للرجوع إليها. وإلا يتم حذفها عند إيقاف التسجيل.",
+          "settings.storageOnTitle": "يتم حفظ بيانات الحالة",
+          "settings.storageOnBody":
+            "يحتفظ هذا الخادم بسجل لكل جلسة وفقًا لإعدادات المسؤول. كما يتم الاحتفاظ بالجلسات السابقة على هذا الجهاز.",
+          "settings.storageOffTitle": "لا يتم حفظ بيانات الحالة",
+          "settings.storageOffBody":
+            "لا يتم تخزين أي شيء من جلساتك على الخادم أو على هذا الجهاز.",
           "history.title": "الجلسات السابقة",
           "history.subtitle":
             "يتم تخزين كل شيء محلياً على هذا الجهاز. لا شيء متزامن أو مرفوع.",
@@ -3379,13 +3380,16 @@
           "settings.transcriptionBackend": "প্রতিলিপি ইঞ্জিন",
           "settings.grounder": "গ্রাউন্ডিং ইঞ্জিন",
           "settings.appearance": "চেহারা",
-          "settings.localStorage": "স্থানীয় সংরক্ষণ",
+          "settings.localStorage": "সংরক্ষণ",
           "settings.themeLight": "আলো",
           "settings.themeDark": "অন্ধকার",
           "settings.themeSystem": "সিস্টেম",
-          "settings.saveTitle": "এই ডিভাইসে প্রতিলিপি সংরক্ষণ করুন",
-          "settings.saveBody":
-            "রেফারেন্সের জন্য অতীত সেশন রাখুন। অন্যথায় রেকর্ডিং বন্ধ করলে মুছে যায়।",
+          "settings.storageOnTitle": "কেসের তথ্য সংরক্ষিত হয়",
+          "settings.storageOnBody":
+            "প্রশাসকের কনফিগারেশন অনুযায়ী এই সার্ভার প্রতিটি সেশনের রেকর্ড রাখে। অতীত সেশনগুলোও এই ডিভাইসে রাখা হয়।",
+          "settings.storageOffTitle": "কেসের তথ্য সংরক্ষিত হয় না",
+          "settings.storageOffBody":
+            "আপনার সেশনের কিছুই সার্ভারে বা এই ডিভাইসে সংরক্ষিত হয় না।",
           "history.title": "পূর্ববর্তী সেশন",
           "history.subtitle":
             "সবকিছু স্থানীয়ভাবে এই ডিভাইসে সংরক্ষিত। কিছুই সিঙ্ক বা আপলোড করা হয় না।",
@@ -3452,13 +3456,16 @@
           "settings.transcriptionBackend": "Motor de transcripción",
           "settings.grounder": "Motor de anclaje",
           "settings.appearance": "Apariencia",
-          "settings.localStorage": "Almacenamiento local",
+          "settings.localStorage": "Almacenamiento",
           "settings.themeLight": "Claro",
           "settings.themeDark": "Oscuro",
           "settings.themeSystem": "Sistema",
-          "settings.saveTitle": "Guardar transcripciones en este dispositivo",
-          "settings.saveBody":
-            "Conserva sesiones pasadas para referencia. Si no, se descartan al detener la grabación.",
+          "settings.storageOnTitle": "Los datos del caso se guardan",
+          "settings.storageOnBody":
+            "Este servidor guarda un registro de cada sesión según la configuración de su administrador. Las sesiones anteriores también se guardan en este dispositivo.",
+          "settings.storageOffTitle": "Los datos del caso no se guardan",
+          "settings.storageOffBody":
+            "Nada de sus sesiones se guarda en el servidor ni en este dispositivo.",
           "history.title": "Sesiones anteriores",
           "history.subtitle":
             "Todo se almacena localmente en este dispositivo. Nada se sincroniza ni sube.",
@@ -3670,7 +3677,7 @@
       }
 
       function finalizeSessionIfSaving() {
-        if (!saveToggle.checked) return;
+        if (!storageEnabled) return;
         if (!latestCauses || !Object.keys(latestCauses).length) return;
         const sorted = Object.entries(latestCauses).sort(
           (a, b) => b[1].score - a[1].score,
@@ -4193,9 +4200,9 @@
       const statusMessage = document.getElementById("statusMessage");
       const micSelect = document.getElementById("micSelect");
       const languageSelect = document.getElementById("languageSelect");
-      const saveToggle = document.getElementById("saveToggle");
-      const filePathDisplay = document.getElementById("filePathDisplay");
-      const filePathText = document.getElementById("filePathText");
+      const storageOn = document.getElementById("storageOn");
+      const storageOff = document.getElementById("storageOff");
+      let storageEnabled = false;
       const transcriberBackendSelect = document.getElementById(
         "transcriberBackendSelect",
       );
@@ -4423,7 +4430,9 @@
           if (language !== data.language) {
             await updateSettings({ language });
           }
-          saveToggle.checked = data.save_enabled;
+          storageEnabled = data.storage_enabled === true;
+          storageOn.hidden = !storageEnabled;
+          storageOff.hidden = storageEnabled;
           transcriberBackendSelect.value = data.transcriber_backend;
           await loadBackendModels(
             data.transcriber_backend,
@@ -4438,7 +4447,6 @@
           ragOntologySelect.value = data.rag_ontology || "icd10";
           ragRerankerToggle.checked = data.rag_use_reranker !== false;
           updateRagVisibility();
-          updateFilePathDisplay(data.file_paths);
           updateTranslationVisibility();
           updateLangChip();
           applyServerSettingsLock(data.server_settings_locked === true);
@@ -4452,7 +4460,7 @@
       function applyServerSettingsLock(locked) {
         serverSettingsLocked = locked;
         const controls = [
-          languageSelect, saveToggle, transcriberBackendSelect,
+          languageSelect, transcriberBackendSelect,
           transcriberModelSelect, modelApplyBtn, grounderSelect,
           translationModeSelect, llmProviderSelect, llmModelInput,
           ragProviderSelect, ragModelSelect, ragOntologySelect,
@@ -4475,7 +4483,6 @@
             showStatus(data.detail || "Failed to update settings", "danger");
             return false;
           }
-          updateFilePathDisplay(data.file_paths);
           if (changes.transcriber_model) {
             showStatus(
               `Loading model "${changes.transcriber_model}"…`,
@@ -4491,16 +4498,6 @@
         }
       }
 
-      function updateFilePathDisplay(filePaths) {
-        if (filePaths && Object.keys(filePaths).length > 0) {
-          filePathText.textContent =
-            "Saving to: " + Object.values(filePaths).join(", ");
-          filePathDisplay.style.display = "block";
-        } else {
-          filePathDisplay.style.display = "none";
-        }
-      }
-
       languageSelect.addEventListener("change", () => {
         updateSettings({ language: languageSelect.value });
         updateTranslationVisibility();
@@ -4509,10 +4506,6 @@
       translationModeSelect.addEventListener("change", () => {
         updateSettings({ translation_mode: translationModeSelect.value });
         updateTranslationVisibility();
-      });
-
-      saveToggle.addEventListener("change", () => {
-        updateSettings({ save_enabled: saveToggle.checked });
       });
 
       let loadedModel = null;

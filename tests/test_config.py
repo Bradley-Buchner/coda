@@ -32,6 +32,11 @@ CODA_ENV_VARS = (
     "CODA_DIALOGUE__TRANSLATION_MODE",
     "CODA_DIALOGUE__SPEECHMATICS__URL",
     "CODA_DIALOGUE__SPEECHMATICS__MODEL",
+    "CODA_STORAGE__ENABLED",
+    "CODA_STORAGE__OUTPUT_DIR",
+    "CODA_STORAGE__STORE__AUDIO",
+    "CODA_LOGGING__LEVEL",
+    "CODA_LOGGING__FILE",
 )
 
 
@@ -79,6 +84,12 @@ def test_defaults():
     assert settings.dialogue.translation_mode == "llm"
     assert settings.dialogue.speechmatics.url == "wss://us.rt.speechmatics.com/v2/"
     assert settings.dialogue.speechmatics.model == "enhanced"
+    assert settings.storage.enabled is False
+    assert settings.storage.output_dir == ""
+    assert settings.storage.store.audio is False
+    assert settings.storage.store.transcripts is True
+    assert settings.logging.level == "INFO"
+    assert settings.logging.file == ""
 
 
 def test_types_are_coerced():
@@ -160,3 +171,16 @@ def test_prompts_loaded():
     # Regression: the medcoder prompt must use `supporting_evidence_key`.
     assert "supporting_evidence_key" in PROMPTS["extractor_medcoder"]
     assert "supporting_evidence_field" not in PROMPTS["extractor_medcoder"]
+
+
+def test_storage_env_var_overrides(monkeypatch, tmp_path):
+    monkeypatch.setenv("CODA_STORAGE__ENABLED", "true")
+    monkeypatch.setenv("CODA_STORAGE__OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setenv("CODA_STORAGE__STORE__AUDIO", "true")
+    monkeypatch.setenv("CODA_LOGGING__LEVEL", "DEBUG")
+    reload_settings()
+    assert settings.storage.enabled is True
+    assert settings.storage.output_dir == str(tmp_path)
+    assert settings.storage.store.audio is True
+    assert settings.storage.store.transcripts is True
+    assert settings.logging.level == "DEBUG"
