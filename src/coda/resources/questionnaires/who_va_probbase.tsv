@@ -1,0 +1,342 @@
+id	question	responses	category
+who.va.q:W610004-a	Did he or she die during the wet season?		background
+who.va.q:W610004-b	Did he or she die during the dry season?		background
+who.va.q:W610022-h	Was he or she a live baby who died within 24 hours of birth?		background
+who.va.q:W610022-i	Was he or she a baby who died between 24 and 48 hours of birth?		background
+who.va.q:W610022-j	Was he or she a baby who died more than 48 hours from birth, but within the first week?		background
+who.va.q:W610022-k	Was he or she a baby who died after the first week, but within the first month?		background
+who.va.q:W610059-o	Was she married at the time of death?		background
+who.va.q:W610077-o	Did he or she suffer from any injury or accident that led to his or her death?		symptom
+who.va.q:W610079-o	Was he or she injured in a road traffic accident?		symptom
+who.va.q:W610082-o	Was he or she injured in a non-road transport accident?		symptom
+who.va.q:W610083-o	Was he or she injured in a fall?		symptom
+who.va.q:W610084-o	Was he or she poisoned in any way?		symptom
+who.va.q:W610085-o	Did he or she die of drowning?		symptom
+who.va.q:W610086-o	Was he or she injured by the bite or sting of a venomous animal?		symptom
+who.va.q:W610087-o	Was he or she injured by an animal or insect (non-venomous)		symptom
+who.va.q:W610089-o	Was he or she injured by burns or fire?		symptom
+who.va.q:W610090-o	Was he or she subject to violence (suicide, homicide, abuse)?		symptom
+who.va.q:W610091-o	Was he or she injured by a fire arm?		symptom
+who.va.q:W610092-o	Was he or she stabbed, cut or pierced?		symptom
+who.va.q:W610093-o	Was he or she strangled?		symptom
+who.va.q:W610094-o	Was he or she injured by a blunt force?		symptom
+who.va.q:W610095-o	Was he or she injured by a force of nature?		symptom
+who.va.q:W610096-o	Was he or she electrocuted?		symptom
+who.va.q:W610098-o	Was the injury accidental?		symptom
+who.va.q:W610099-o	Was the injury or accident self-inflicted?		symptom
+who.va.q:W610100-o	Was the injury or accident intentionally inflicted by someone else?		symptom
+who.va.q:W610104-o	Did the baby ever cry?		symptom
+who.va.q:W610105-o	Did the baby cry immediately after birth, even if only a little bit?		symptom
+who.va.q:W610106-a	Was it more than 5 minutes after birth before the baby first cried?		symptom
+who.va.q:W610107-o	Did the baby stop being able to cry?		symptom
+who.va.q:W610108-a	Did the baby stop crying more than a day before he or she died?		symptom
+who.va.q:W610109-o	Did the baby ever move?		symptom
+who.va.q:W610110-o	Did the baby ever breathe?		symptom
+who.va.q:W610111-o	Did the baby breathe immediately after birth, even a little?		symptom
+who.va.q:W610112-o	Did the baby have a breathing problem?		symptom
+who.va.q:W610113-o	Was the baby given assistance to breathe at birth?		symptom
+who.va.q:W610114-o	If the baby didn't show any sign of life, was it born dead?		symptom
+who.va.q:W610115-o	Were there any bruises or signs of injury on child's body after the birth?		symptom
+who.va.q:W610116-o	Was the baby's body soft, pulpy and discoloured with the skin peeling away?		symptom
+who.va.q:W610120-a	Did the final illness last less than 3 weeks?		symptom
+who.va.q:W610120-b	Did the final illness last at least 3 weeks?		symptom
+who.va.q:W610123-o	Did he or she die suddenly?		symptom
+who.va.q:W610125-o	Was there any diagnosis by a health professional of tuberculosis?		symptom
+who.va.q:W610127-o	Was there any diagnosis by a health professional of HIV/AIDS?		symptom
+who.va.q:W610128-o	Did he or she have a recent positive test by a health professional for malaria?		symptom
+who.va.q:W610129-o	Did he or she have a recent negative test by a health professional for malaria?		symptom
+who.va.q:W610130-o	Was there any diagnosis by a health professional of dengue fever?		symptom
+who.va.q:W610131-o	Was there any diagnosis by a health professional of measles?		symptom
+who.va.q:W610132-o	Was there any diagnosis by a health professional of high blood pressure?		symptom
+who.va.q:W610133-o	Was there any diagnosis by a health professional of heart disease?		symptom
+who.va.q:W610134-o	Was there any diagnosis by a health professional of diabetes?		symptom
+who.va.q:W610135-o	Was there any diagnosis by a health professional of asthma?		symptom
+who.va.q:W610136-o	Was there any diagnosis by a health professional of epilepsy?		symptom
+who.va.q:W610137-o	Was there any diagnosis by a health professional of cancer?		symptom
+who.va.q:W610138-o	Was there any diagnosis by a health professional of Chronic Obstructive Pulmonary Disease (COPD)?		symptom
+who.va.q:W610139-o	Was there any diagnosis by a physician or health worker of dementia?		symptom
+who.va.q:W610140-o	Was there any diagnosis by a health professional of depression?		symptom
+who.va.q:W610141-o	Was there any diagnosis by a health professional of stroke?		symptom
+who.va.q:W610142-o	Was there any diagnosis by a health professional of sickle cell disease?		symptom
+who.va.q:W610143-o	Was there any diagnosis by a health professional of kidney disease?		symptom
+who.va.q:W610144-o	Was there any diagnosis by a health professional of liver disease?		symptom
+who.va.q:W610147-o	During the illness that led to death, did he or she have a fever?		symptom
+who.va.q:W610148-a	Did the fever last less than a week before death?		symptom
+who.va.q:W610148-b	Did the fever last at least one week, but less than 2 weeks before death?		symptom
+who.va.q:W610148-c	Did the fever last at least 2 weeks before death?		symptom
+who.va.q:W610149-o	Did the fever continue until death?		symptom
+who.va.q:W610150-a	Was the fever severe?		symptom
+who.va.q:W610151-a	Was the fever continuous?		symptom
+who.va.q:W610152-o	Did he or she have night sweats?		symptom
+who.va.q:W610153-o	During the illness that led to death, did he or she have a cough?		symptom
+who.va.q:W610154-a	Did the cough last less than 3 weeks before death?		symptom
+who.va.q:W610154-b	Did the cough last at least 3 weeks before death?		symptom
+who.va.q:W610155-o	Was the cough productive, with sputum?		symptom
+who.va.q:W610156-o	Was the cough very severe?		symptom
+who.va.q:W610157-o	Did he or she cough up blood?		symptom
+who.va.q:W610158-o	Did he or she make a whooping sound when coughing?		symptom
+who.va.q:W610159-o	During the illness that led to death, did he or she have any difficulty breathing?		symptom
+who.va.q:W610161-a	Did the difficult breathing last for at least 3 days before death?		symptom
+who.va.q:W610165-a	Was the difficult breathing continuous during this period?		symptom
+who.va.q:W610166-o	Did he or she have fast breathing?		symptom
+who.va.q:W610167-a	Did the fast breathing last for less than two weeks before death?		symptom
+who.va.q:W610167-b	Did the fast breathing last for at least 2 weeks before death?		symptom
+who.va.q:W610168-o	Did he or she have breathlessness?		symptom
+who.va.q:W610169-a	Did the breathlessness last for less than 2 weeks before death?		symptom
+who.va.q:W610169-b	Did the breathlessness last for at least 2 weeks before death?		symptom
+who.va.q:W610170-o	Was he or she unable to carry out daily routines due to breathlessness?		symptom
+who.va.q:W610171-o	Was he or she breathless while lying flat?		symptom
+who.va.q:W610172-o	Did you see the lower chest wall/ribs being pulled in as the child breathed?		symptom
+who.va.q:W610173-a	Did his or her breathing sound like wheezing or grunting?		symptom
+who.va.q:W610174-o	During the illness that led to death, did he or she have chest pain?		symptom
+who.va.q:W610175-o	Was the chest pain severe?		symptom
+who.va.q:W610176-a	Did he or she experience chest pain at least 3 days before death?		symptom
+who.va.q:W610178-a	Did the chest pain last for at least 30 minutes?		symptom
+who.va.q:W610181-o	Did he or she have diarrhoea?		symptom
+who.va.q:W610182-a	Did he or she have diarrhoea for less than 2 weeks before death?		symptom
+who.va.q:W610182-b	Did he or she have diarrhoea for at least 2 weeks but less than 4 weeks before death?		symptom
+who.va.q:W610182-c	Did he or she have diarrhoea for at least 4 weeks before death?		symptom
+who.va.q:W610183-a	Did the baby or child have at least 4 stools on the day that loose liquid stools were most frequent?		symptom
+who.va.q:W610184-a	Did the frequent loose or liquid stools start at least 3 days before death?		symptom
+who.va.q:W610185-o	Did the frequent loose or liquid stools continue up until death?		symptom
+who.va.q:W610186-o	At any time during the final illness was there blood in the stools?		symptom
+who.va.q:W610187-o	Was there blood in the stool up until death?		symptom
+who.va.q:W610188-o	During the illness that led to death, did he or she vomit?		symptom
+who.va.q:W610189-o	Did he or she vomit in the week preceding the death?		symptom
+who.va.q:W610190-o	Did he or she vomit for at least 3 days before death?		symptom
+who.va.q:W610191-o	Was there blood in the vomit?		symptom
+who.va.q:W610192-o	Was the vomit black?		symptom
+who.va.q:W610193-o	During the illness that led to death, did he or she have any abdominal (belly) problem?		symptom
+who.va.q:W610194-o	Did he or she have abdominal pain?		symptom
+who.va.q:W610195-o	Was the abdominal pain severe?		symptom
+who.va.q:W610197-a	Did he or she have severe abdominal pain for less than 2 weeks before death?		symptom
+who.va.q:W610197-b	Did he or she have severe abdominal pain for at least 2 weeks before death?		symptom
+who.va.q:W610199-a	Was the pain in the upper abdomen?		symptom
+who.va.q:W610199-b	Was the pain in the lower abdomen?		symptom
+who.va.q:W610200-o	Did he or she have a more than usually protruding abdomen?		symptom
+who.va.q:W610201-a	Did he or she have a more than usually protruding abdomen for less than 2 weeks before death?		symptom
+who.va.q:W610201-b	Did he or she have a more than usually protruding abdomen for at least 2 weeks before death?		symptom
+who.va.q:W610203-a	Did he or she develop the protruding abdomen rapidly?		symptom
+who.va.q:W610204-o	Did he or she have any mass in the abdomen?		symptom
+who.va.q:W610205-a	Did he or she have a mass in the abdomen for less than 2 weeks before death?		symptom
+who.va.q:W610205-b	Did he or she have a mass in the abdomen for at least 2 weeks before death?		symptom
+who.va.q:W610207-o	During the illness that led to death, did he or she have a severe headache?		symptom
+who.va.q:W610208-o	During the illness that led to death, did he or she have a stiff neck?		symptom
+who.va.q:W610209-a	Did he or she have a stiff neck for less than one week before death?		symptom
+who.va.q:W610209-b	Did he or she have a stiff neck for at least one week before death?		symptom
+who.va.q:W610210-o	During the illness that led to death, did he or she have a painful neck?		symptom
+who.va.q:W610211-a	Did he or she have a painful neck for at least one week before death?		symptom
+who.va.q:W610212-o	During the illness that led to death, did he or she have mental confusion?		symptom
+who.va.q:W610213-o	Did he or she have mental confusion for at least 3 months before death?		symptom
+who.va.q:W610214-o	During the illness that led to death, was he or she unconscious?		symptom
+who.va.q:W610215-o	Was he or she unconscious for at least 24 hours before death?		symptom
+who.va.q:W610216-a	Was he or she unsconscious for at least 6 hours before death?		symptom
+who.va.q:W610217-o	Did the unconsciousness start suddenly, quickly (at least within a single day)?		symptom
+who.va.q:W610218-o	Did the unconsciousness continue until death?		symptom
+who.va.q:W610219-o	During the illness that led to death, did he or she have any convulsions?		symptom
+who.va.q:W610220-o	Did he or she experience any generalized convulsions or fits?		symptom
+who.va.q:W610221-a	Did the convulsions last for less than 10 minutes?		symptom
+who.va.q:W610221-b	Did the convulsions last for at least 10 minutes?		symptom
+who.va.q:W610222-o	Did he or she become unconscious immediately after the convulsion?		symptom
+who.va.q:W610223-o	During the illness that led to death, did he or she have any urine problems?		symptom
+who.va.q:W610224-o	Did he or she stop urinating?		symptom
+who.va.q:W610225-o	Did he or she go to urinate more often than usual?		symptom
+who.va.q:W610226-o	Did he or she pass blood in the urine?		symptom
+who.va.q:W610227-o	During the illness that led to death, did he or she have any sores or ulcers anywhere?		symptom
+who.va.q:W610228-o	Did he or she have sores?		symptom
+who.va.q:W610229-o	Did the sores have clear fluid and/or pus?		symptom
+who.va.q:W610230-o	Did he or she have an ulcer (pit) on the foot?		symptom
+who.va.q:W610231-o	Did any ulcer ooze pus?		symptom
+who.va.q:W610232-a	Did the ulcer ooze pus for at least 2 weeks?		symptom
+who.va.q:W610233-o	During the illness that led to death, did he or she have any skin rash?		symptom
+who.va.q:W610234-a	Did he or she have the skin rash for less than one week?		symptom
+who.va.q:W610234-b	Did he or she have the skin rash for at least one week?		symptom
+who.va.q:W610235-a	Did he or she have a rash on the face?		symptom
+who.va.q:W610235-b	Did he or she have a rash on the trunk or abdomen?		symptom
+who.va.q:W610235-c	Did he or she have a rash on the extremities?		symptom
+who.va.q:W610235-d	Did he or she have a rash everywhere?		symptom
+who.va.q:W610236-o	Did he or she have measles rash?		symptom
+who.va.q:W610237-o	Did he or she ever have shingles or herpes zoster?		symptom
+who.va.q:W610238-o	During the illness that led to death, did his or her skin flake off in patches?		symptom
+who.va.q:W610239-o	During the illness that led to death, did he/she have areas of the skin that turned black?		symptom
+who.va.q:W610240-o	During the illness that led to death, did he/she have areas of the skin with redness and swelling?		symptom
+who.va.q:W610241-o	During the illness that led to death, did he or she bleed from anywhere?		symptom
+who.va.q:W610242-o	Did he or she bleed from the nose, mouth or anus?		symptom
+who.va.q:W610243-o	During the illness that led to death, did he or she have noticeable weight loss?		symptom
+who.va.q:W610244-o	Was he or she severely thin or wasted?		symptom
+who.va.q:W610245-o	During the illness that led to death, did he or she have a whitish rash inside the mouth or on the tongue?		symptom
+who.va.q:W610246-o	During the illness that led to death, did he or she have stiffness of the whole body or was unable to open the mouth?		symptom
+who.va.q:W610247-o	During the illness that led to death, did he or she have puffiness of the face?		symptom
+who.va.q:W610248-a	Did he or she have puffiness of the face for at least one week before death?		symptom
+who.va.q:W610249-o	During the illness that led to death, did he or she have swollen legs or feet?		symptom
+who.va.q:W610250-a	Did the swelling of the legs or feet last for at least 3 days before death?		symptom
+who.va.q:W610251-o	Did he or she have both feet swollen?		symptom
+who.va.q:W610252-o	During the illness that led to death, did he or she have general puffiness all over his or her body?		symptom
+who.va.q:W610253-o	During the illness that led to death, did he or she have any lumps?		symptom
+who.va.q:W610254-o	Did he or she have any lumps or lesions in the mouth?		symptom
+who.va.q:W610255-o	Did he or she have any lumps in the neck?		symptom
+who.va.q:W610256-o	Did he or she have any lumps in the armpit?		symptom
+who.va.q:W610257-o	Did he or she have any lumps in the groin?		symptom
+who.va.q:W610258-o	During the illness that led to death, was he or she in any way paralysed?		symptom
+who.va.q:W610259-o	Did he or she have paralysis of only one side of the body?		symptom
+who.va.q:W610260-a	Was only the right side of the body paralysed?		symptom
+who.va.q:W610260-b	Was only the left side of the body paralysed?		symptom
+who.va.q:W610260-c	Was only the lower part of the body paralysed?		symptom
+who.va.q:W610260-d	Was only the upper part of the body paralysed?		symptom
+who.va.q:W610260-e	Was only one leg paralysed?		symptom
+who.va.q:W610260-f	Was only one arm paralysed?		symptom
+who.va.q:W610260-g	Was the entire body paralysed?		symptom
+who.va.q:W610261-o	During the illness that led to death, did he or she have difficulty swallowing?		symptom
+who.va.q:W610262-a	Did he or she have difficulty swallowing for at least one week before death?		symptom
+who.va.q:W610263-a	Did he or she have difficulty with swallowing solids?		symptom
+who.va.q:W610263-b	Did he or she have difficulty with swallowing liquids?		symptom
+who.va.q:W610264-o	Did he or she have pain upon swallowing?		symptom
+who.va.q:W610265-o	During the illness that led to death, did he or she have yellow discolouration of the eyes?		symptom
+who.va.q:W610266-a	Did he or she have the yellow discolouration for at least 3 weeks before death?		symptom
+who.va.q:W610267-o	During the illness that led to death, did his or her hair change to a reddish or yellowish colour?		symptom
+who.va.q:W610268-o	During the illness that led to death, did he or she look pale (thinning/lack of blood) or have pale palms, eyes or nail beds?		symptom
+who.va.q:W610269-o	During the illness that led to death, did he or she have sunken eyes?		symptom
+who.va.q:W610270-o	During the illness that led to death, did he or she drink a lot more water than usual?		symptom
+who.va.q:W610271-o	Was the baby able to suckle or bottle-feed within the first 24 hours after birth?		symptom
+who.va.q:W610272-o	Did the baby ever suckle in a normal way?		symptom
+who.va.q:W610273-o	Did the baby stop suckling?		symptom
+who.va.q:W610274-a	Did the baby stop suckling on the 2nd day of life or later?		symptom
+who.va.q:W610275-o	Did the baby have convulsions starting within the first 24 hours of life?		symptom
+who.va.q:W610276-o	Did the baby have convulsions starting more than 24 hours after birth?		symptom
+who.va.q:W610277-o	Did the baby's body become stiff, with the back arched backwards?		symptom
+who.va.q:W610278-o	During the illness that led to death, did the baby have a bulging or raised fontanelle?		symptom
+who.va.q:W610279-o	During the illness that led to death, did the baby have a sunken fontanelle?		symptom
+who.va.q:W610281-o	During the illness that led to death, did the baby become unresponsive or unconscious?		symptom
+who.va.q:W610282-o	Did the baby become unresponsive or unconscious soon after birth, within less than 24 hours?		symptom
+who.va.q:W610283-o	Did the baby become unresponsive or unconscious more than 24 hours after birth?		symptom
+who.va.q:W610284-o	During the illness that led to death, did the baby become cold to touch?		symptom
+who.va.q:W610285-a	Was the baby more than 3 days old when it started feeling cold to touch?		symptom
+who.va.q:W610286-o	During the illness that led to death, did the baby become lethargic, after a period of normal activity?		symptom
+who.va.q:W610287-o	Did the baby have redness or discharge from the umbilical cord stump?		symptom
+who.va.q:W610288-o	During the illness that led to death, did the baby have skin ulcer(s) or pits?		symptom
+who.va.q:W610289-o	During the illness that led to death, did the baby have yellow skin, palms (hand) or soles (foot)?		symptom
+who.va.q:W610290-o	Did the baby or infant appear to be healthy and then just die suddenly?		symptom
+who.va.q:W610294-o	During the illness that led to death, did she have any swelling or lump in the breast?		symptom
+who.va.q:W610295-o	During the illness that led to death, did she have any ulcers (pits) in the breast?		symptom
+who.va.q:W610296-o	Did she ever have a period or menstruate?		symptom
+who.va.q:W610297-o	During the illness that led to death, did she have excessive vaginal bleeding in between menstrual periods?		symptom
+who.va.q:W610298-o	Was her menstrual bleeding excessive?		symptom
+who.va.q:W610299-o	Did her menstrual period stop naturally because of menopause?		symptom
+who.va.q:W610300-o	Did she have vaginal bleeding after cessation of menstruation?		symptom
+who.va.q:W610301-o	Was there excessive vaginal bleeding in the week prior to death?		symptom
+who.va.q:W610302-o	At the time of death was her period overdue?		symptom
+who.va.q:W610303-a	Had her period been overdue for at least 4 weeks?		symptom
+who.va.q:W610304-o	Did she have a sharp pain in her abdomen shortly before death?		symptom
+who.va.q:W610305-o	Was she pregnant (incl. in labour) at the time of death?		symptom
+who.va.q:W610306-o	Did she die within 6 weeks of delivery, abortion or miscarriage?		symptom
+who.va.q:W610309-o	Was she, or had she been, pregnant for less than 6 months when she died?		symptom
+who.va.q:W610310-o	Please confirm: When she died, she was NEITHER pregnant NOR had recently been pregnant NOR had recently delivered when she died - is that right?		symptom
+who.va.q:W610312-o	Did she die during labour or delivery?		symptom
+who.va.q:W610313-o	Did she die after delivering a baby?		symptom
+who.va.q:W610314-o	Did she die within 24 hours after delivery?		symptom
+who.va.q:W610315-o	Did she die within 6 weeks of childbirth?		symptom
+who.va.q:W610316-o	Did she give birth to a live baby (within 6 weeks of her death)?		symptom
+who.va.q:W610317-o	Did she die during or after a multiple pregnancy?		symptom
+who.va.q:W610318-o	Was she breastfeeding the child in the days before death?		symptom
+who.va.q:W610319-a	Did she die during or after her first pregnancy?		symptom
+who.va.q:W610319-b	Did she have four or more pregnancies before this one?		symptom
+who.va.q:W610320-o	Had she had any previous Caesarean section?		symptom
+who.va.q:W610321-o	During pregnancy, did she suffer from high blood pressure?		symptom
+who.va.q:W610322-o	Did she have foul smelling vaginal discharge during pregnancy or after delivery?		symptom
+who.va.q:W610323-o	During the last 3 months of pregnancy, did she suffer from convulsions?		symptom
+who.va.q:W610324-o	During the last 3 months of pregnancy did she suffer from blurred vision?		symptom
+who.va.q:W610325-o	Did she have excessive bleeding during pregnancy or shortly after delivery?		symptom
+who.va.q:W610326-o	Was there vaginal bleeding during the first 6 months of pregnancy?		symptom
+who.va.q:W610327-o	Was there vaginal bleeding during the last 3 months of pregnancy but before labour started?		symptom
+who.va.q:W610328-o	Did she have excessive bleeding during labour, before delivery?		symptom
+who.va.q:W610329-o	Did she have excessive bleeding after delivery or abortion?		symptom
+who.va.q:W610330-o	Was the placenta completely delivered?		symptom
+who.va.q:W610331-o	Did she deliver or try to deliver an abnormally positioned baby?		symptom
+who.va.q:W610332-a	Did her labour last longer than 24 hours?		symptom
+who.va.q:W610333-o	Did she attempt to terminate the pregnancy?		symptom
+who.va.q:W610334-o	Did she recently have a pregnancy that ended in an abortion (spontaneous or induced)?		symptom
+who.va.q:W610335-o	Did she die during an abortion?		symptom
+who.va.q:W610336-o	Did she die within 6 weeks of having an abortion?		symptom
+who.va.q:W610337-a	Did she give birth at a health facility or clinic?		symptom
+who.va.q:W610337-b	Did she give birth at home?		symptom
+who.va.q:W610337-c	Did she give birth elsewhere (not at a health facility nor at home)?		symptom
+who.va.q:W610338-o	Did she receive professional assistance during the delivery?		symptom
+who.va.q:W610340-o	Did she have an operation to remove her uterus shortly before death?		symptom
+who.va.q:W610342-o	Did she give birth by normal vaginal delivery, without forceps or vacuum?		symptom
+who.va.q:W610343-o	Did she give birth vaginally, with forceps or vacuum?		symptom
+who.va.q:W610344-o	Did she give birth by Caesarean section?		symptom
+who.va.q:W610347-o	Was her baby born more than one month early?		symptom
+who.va.q:W610354-o	Was the child part of a multiple  birth?		symptom
+who.va.q:W610355-a	If the child was part of a multiple birth, was it born first?		symptom
+who.va.q:W610356-o	Is the child's mother still alive?		symptom
+who.va.q:W610357-o	Did the child's mother die during or shortly after the delivery?		symptom
+who.va.q:W610358-a	Did the child's mother die in the baby's first year of life?		symptom
+who.va.q:W610360-a	Was the baby born in a health facility or clinic?		symptom
+who.va.q:W610360-b	Was the baby born at home?		symptom
+who.va.q:W610360-c	Was the baby born somewhere else (e.g. on the way to a clinic)?		symptom
+who.va.q:W610361-o	Did the mother receive professional assistance during the delivery?		symptom
+who.va.q:W610362-o	At birth, was the baby of usual size?		symptom
+who.va.q:W610363-o	At birth, was the baby smaller than normal (weighing under 2.5 kg)?		symptom
+who.va.q:W610364-o	At birth, was the baby very much smaller than usual, (weighing under 1 kg)?		symptom
+who.va.q:W610365-o	At birth, was the baby larger than normal (weighing over 4.5 kg)?		symptom
+who.va.q:W610367-a	Was the baby born during the ninth month (at least 37 weeks) of pregnancy?		symptom
+who.va.q:W610367-b	Was the baby born during the eighth month (34 to 37 weeks) of pregnancy?		symptom
+who.va.q:W610367-c	Was the baby born before the eighth month (less than 34 weeks) of pregnancy?		symptom
+who.va.q:W610368-o	Were there any complications in the late part of the pregnancy (defined as the last 3 months), but before labour?		symptom
+who.va.q:W610369-o	Were there any complications during labour or delivery?		symptom
+who.va.q:W610370-o	Was any part of the baby physically abnormal at time of delivery? (for example: body part too large or too small, additional growth on body)?		symptom
+who.va.q:W610371-o	Did the baby/child have a swelling or defect on the back?		symptom
+who.va.q:W610372-o	Did the baby/child have a very large head?		symptom
+who.va.q:W610373-o	Did the baby/child have a very small head?		symptom
+who.va.q:W610376-o	Was the baby moving in the last few days before the birth?		symptom
+who.va.q:W610377-o	Did the baby stop moving in the womb before labour started?		symptom
+who.va.q:W610382-a	Did labour and delivery take more than 24 hours?		symptom
+who.va.q:W610383-o	Was the baby born 24 hours or more after the waters broke?		symptom
+who.va.q:W610384-o	Was the liquor foul smelling when the waters broke?		symptom
+who.va.q:W610385-a	Was the liquor a green or brown colour when the waters broke?		symptom
+who.va.q:W610387-o	Was the baby born by normal vaginal delivery, without forceps or vacuum?		symptom
+who.va.q:W610388-o	Was the baby born vaginally, with forceps or vacuum?		symptom
+who.va.q:W610389-o	Was the baby born by Caesarean section?		symptom
+who.va.q:W610391-o	Did the child's mother receive any vaccinations since reaching adulthood including during this pregnancy?		symptom
+who.va.q:W610393-o	Did the mother receive tetanus toxoid (TT) vaccine?		symptom
+who.va.q:W610394-a	Was this baby born from the mother's first pregnancy?		symptom
+who.va.q:W610394-b	Did the baby's mother have four or more births before this one?		symptom
+who.va.q:W610395-o	During labour, did the baby's mother suffer from fever?		symptom
+who.va.q:W610396-o	During the last 3 months of pregnancy, labour or delivery, did the baby's mother suffer from high blood pressure?		symptom
+who.va.q:W610397-o	Did the baby's mother have diabetes mellitus?		symptom
+who.va.q:W610398-o	Did the baby's mother have foul smelling vaginal discharge during pregnancy or after delivery?		symptom
+who.va.q:W610399-o	During the last 3 months of pregnancy, labour or delivery, did the baby's mother suffer from convulsions?		symptom
+who.va.q:W610400-o	During the last 3 months of pregnancy did the baby's mother suffer from blurred vision?		symptom
+who.va.q:W610401-o	Did the baby's mother have severe anaemia?		symptom
+who.va.q:W610402-o	Did the baby's mother have vaginal bleeding during the last 3 months of pregnancy but before labour started?		symptom
+who.va.q:W610403-o	Did the baby's bottom, feet, arm or hand come out of the vagina before its head?		symptom
+who.va.q:W610404-o	Was the umbilical cord wrapped more than once around the baby's neck at birth?		symptom
+who.va.q:W610405-o	Was the umbilical cord delivered first?		symptom
+who.va.q:W610406-o	Was the baby blue in colour at birth?		symptom
+who.va.q:W610408-o	Before the illness that led to death, was the baby/child growing normally?		symptom
+who.va.q:W610411-o	Did he or she drink alcohol?		background
+who.va.q:W610412-o	Did he or she use tobacco?		background
+who.va.q:W610413-o	Did he or she smoke tobacco (cigarette, cigar, pipe, etc.)?		background
+who.va.q:W610414-a	Did he or she use non-smoking tobacco?		background
+who.va.q:W610415-a	Did he or she smoke at least 10 cigarettes daily?		background
+who.va.q:W610418-o	Did he or she receive any treatment for the illness that led to death?		background
+who.va.q:W610419-o	Did he or she receive oral rehydration salts?		background
+who.va.q:W610420-o	Did he or she receive (or need) intravenous fluids (drip) treatment?		background
+who.va.q:W610421-o	Did he or she receive (or need) a blood transfusion?		background
+who.va.q:W610422-o	Did he or she receive (or need) treatment/food through a tube passed through the nose?		background
+who.va.q:W610423-o	Did he or she receive (or need) injectable antibiotics?		background
+who.va.q:W610424-o	Did he or she receive (or need) antiretroviral therapy (ART)?		background
+who.va.q:W610425-o	Did he or she have (or need) an operation for the illness?		background
+who.va.q:W610426-o	Did he or she have the operation within 1 month before death?		background
+who.va.q:W610427-o	Was he or she discharged from hospital very ill?		background
+who.va.q:W610428-o	Did he or she receive appropriate immunizations?		background
+who.va.q:W610450-o	In the final days before death, did he or she travel to a hospital or health facility?		background
+who.va.q:W610451-o	Did he or she use motorised transport to get to the hospital or health facility?		background
+who.va.q:W610452-o	Were there any problems during admission to the hospital or health facility?		background
+who.va.q:W610453-o	Were there any problems with the way he or she was treated (medical treatment, procedures, interpersonal attitudes, respect, dignity) in the hospital or health facility?		background
+who.va.q:W610454-o	Were there any problems getting medications, or diagnostic tests in the hospital or health facility?		background
+who.va.q:W610455-o	Does it take more than 2 hours to get to the nearest hospital or health facility from the deceased's household?		background
+who.va.q:W610456-o	In the final days before death, were there any doubts about whether medical care was needed?		background
+who.va.q:W610457-o	In the final days before death, was traditional medicine used?		background
+who.va.q:W610458-o	In the final days before death, did anyone use a telephone or cell phone to call for help?		background
+who.va.q:W610459-o	Over the course of illness, did the total costs of care and treatment prohibit other household payments?		background

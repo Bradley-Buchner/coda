@@ -91,7 +91,7 @@ where = ["src"]
 [tool.setuptools.package-data]
 "coda.app" = ["templates/*.html"]
 "coda.grounding.rag_grounder" = ["grounder_config/*.yaml", "prompt_configs/*.yaml"]
-"coda.resources" = ["*.csv", "*.tsv", "*.json", "champs/*.txt", "champs/*.tsv"]
+"coda.resources" = ["*.csv", "*.tsv", "*.json", "champs/*.txt", "champs/*.tsv", "questionnaires/*.tsv"]
 
 [tool.setuptools.dynamic]
 version = {attr = "coda.__version__"}
