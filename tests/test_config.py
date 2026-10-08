@@ -161,6 +161,7 @@ def test_prompts_loaded():
     assert set(PROMPTS) == {
         "extractor_default",
         "extractor_medcoder",
+        "questionnaire_answerer_default",
         "reranker_default",
     }
     # The prompt referenced by the default extractor config exists and is usable.
