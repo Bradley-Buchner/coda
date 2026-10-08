@@ -15,6 +15,8 @@ UNKNOWN = "unknown"
 DEFAULT_RESPONSES = ("yes", "no")
 DEFAULT_BANK = get_resource_path("questionnaires/who_va_probbase.tsv")
 COLUMNS = ["id", "question", "responses", "category"]
+# Options of one multi-option item share an id stem: who.va.q:W610148-a, -b, -c.
+OPTION_ID = re.compile(r"^(.+)-[a-z]$")
 
 PROBBASE_CATEGORIES = {"M": "symptom", "B": "background"}
 
@@ -64,6 +66,12 @@ class Question:
         if UNKNOWN in self.responses:
             return self.responses
         return self.responses + (UNKNOWN,)
+
+    @property
+    def group(self) -> Optional[str]:
+        """Shared id stem of a multi-option item's options (W610148-a/b/c -> W610148)."""
+        match = OPTION_ID.match(self.id)
+        return match.group(1) if match else None
 
 
 def load_question_bank(path: Optional[str] = None) -> List[Question]:
