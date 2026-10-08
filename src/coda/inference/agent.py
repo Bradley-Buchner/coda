@@ -103,7 +103,9 @@ class InferenceAgent:
         result["chunk_id"] = chunk_id
         result["timestamp"] = timestamp
         result["chunks_processed"] = len(self.dialogue_history)
-        result["timings"] = {"inference_s": round(infer_s, 3)}
+        # Merge, so timings reported by infer() (e.g. its sub-steps) are kept
+        result["timings"] = {**result.get("timings", {}),
+                             "inference_s": round(infer_s, 3)}
 
         # Log top cause for monitoring
         causes = result.get('causes', {})
