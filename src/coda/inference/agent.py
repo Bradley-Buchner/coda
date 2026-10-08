@@ -87,7 +87,9 @@ class InferenceAgent:
         result["chunk_id"] = chunk_id
         result["timestamp"] = timestamp
         result["chunks_processed"] = len(self.dialogue_history)
-        result["timings"] = {"inference_s": round(infer_s, 3)}
+        # Merge, so timings reported by infer() (e.g. its sub-steps) are kept
+        result["timings"] = {**result.get("timings", {}),
+                             "inference_s": round(infer_s, 3)}
 
         # Log top cause for monitoring
         causes = result.get('causes', {})
@@ -362,7 +364,8 @@ if __name__ == "__main__":
         agent = create_champs_prompted_agent(provider=args.provider, model=args.model)
         info.update(provider=args.provider, model=agent.llm_client.model,
                     num_questions=agent.num_questions,
-                    question_style=agent.question_style)
+                    question_style=agent.question_style,
+                    questionnaire=agent.question_retriever is not None)
 
     server = InferenceServer(agent, host=args.host, port=args.port, info=info)
     server.run()

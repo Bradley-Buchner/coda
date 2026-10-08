@@ -58,6 +58,10 @@ settings = Dynaconf(
         # Coerce env-var strings (which always arrive as text) to the right type.
         Validator("app.port", "inference.port", cast=int),
         Validator("inference.num_questions", cast=int),
+        Validator("inference.questionnaire.enabled", cast=bool),
+        Validator("inference.questionnaire.top_k",
+                  "inference.questionnaire.window", cast=int),
+        Validator("inference.questionnaire.min_similarity", cast=float),
         Validator("grounder.rag.retriever.top_k", cast=int),
         Validator("grounder.rag.retriever.min_similarity", cast=float),
         Validator("grounder.rag.reranker.enabled", cast=bool),
@@ -77,6 +81,7 @@ settings = Dynaconf(
         Validator(
             "app.onboarding_notice.file",
             "app.onboarding_notice.version",
+            "inference.questionnaire.bank",
             "storage.output_dir",
             "logging.file",
             cast=str,

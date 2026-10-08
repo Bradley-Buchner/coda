@@ -11,6 +11,7 @@ import csv
 import difflib
 import logging
 import os
+import textwrap
 import time
 from typing import Dict, Any, List, Optional
 
@@ -18,8 +19,11 @@ from gilda import Annotation
 
 from coda.inference.agent import InferenceAgent, InferenceServer
 from coda.llm_api.client import LLMClient
+from coda.questionnaire.answerer import QuestionAnswerer, format_answers
+from coda.questionnaire.bank import UNKNOWN, load_question_bank
+from coda.questionnaire.retriever import QuestionRetriever
 from coda.resources import get_resource_path
-from coda.config import settings
+from coda.config import PROMPTS, settings
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +62,10 @@ DIAGNOSIS_STANDARD = read_champs_resource("diagnosis_standard.txt")
 
 DEFAULT_NUM_QUESTIONS = 3
 DEFAULT_QUESTION_STYLE = "default"
+
+# Questionnaire retrieval searches for only the most recent chunks -> each new
+# topic gets its own questions (answers from earlier chunks are kept).
+QUESTIONNAIRE_RECENT_CHUNKS = 2
 
 # Schema-level phrasing of the questions field, one entry per question style.
 QUESTION_SCHEMA_DESCRIPTIONS = {
@@ -144,10 +152,17 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
                  use_diagnosis_standard: bool = False,
                  llm_semaphore: asyncio.Semaphore | None = None,
                  num_questions=DEFAULT_NUM_QUESTIONS,
-                 question_style=DEFAULT_QUESTION_STYLE):
+                 question_style=DEFAULT_QUESTION_STYLE,
+                 question_retriever: QuestionRetriever | None = None,
+                 question_answerer: QuestionAnswerer | None = None):
         super().__init__()
         self.llm_client = llm_client
         self.llm_semaphore = llm_semaphore or asyncio.Semaphore(1)
+
+        # Questionnaire retrieval runs only when both are given
+        self.question_retriever = question_retriever
+        self.question_answerer = question_answerer
+        self.questionnaire_answers = {}
 
         self.allowed_causes = CHAMPS_GROUP_CAUSES
         self.cause_to_icd10 = CHAMPS_GROUP_TO_ICD10
@@ -173,6 +188,12 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
     async def infer(self, chunk_id: str, text: str,
                     annotations: List[Annotation]):
         """Perform COD inference using accumulated dialogue via LLM."""
+        use_questionnaire = self.question_retriever is not None \
+            and self.question_answerer is not None
+        if use_questionnaire:
+            questionnaire_timings = await self._update_questionnaire_answers(
+                chunk_id)
+
         if self.use_diagnosis_standard:
             user_prompt = f"## DIAGNOSIS STANDARD\n{DIAGNOSIS_STANDARD}\n\n"
         else:
@@ -182,7 +203,61 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             f"- narrative:\n"
             f"  {self.all_text.strip()}"
         )
+        answers = format_answers(self.questionnaire_answers.values())
+        if answers:
+            user_prompt += (
+                "\n- structured VA answers (extracted automatically from the "
+                "narrative; the narrative takes precedence if they conflict):\n"
+                + textwrap.indent(answers, "  ")
+            )
 
+        result = await self._call_cod(chunk_id, user_prompt)
+        if use_questionnaire:
+            result["questionnaire_answers"] = [
+                a.to_dict() for a in self.questionnaire_answers.values()]
+            result["timings"] = questionnaire_timings
+        return result
+
+    async def _update_questionnaire_answers(self, chunk_id: str) -> dict:
+        """Retrieve questions for the latest dialogue, answer them from the
+        whole transcript, and merge the known answers. Return step timings."""
+        timings = {}
+        try:
+            recent = " ".join(
+                text for _, _, text, _
+                in self.dialogue_history[-QUESTIONNAIRE_RECENT_CHUNKS:])
+            started = time.perf_counter()
+            retrieved = await asyncio.to_thread(
+                self.question_retriever.retrieve, recent)
+            timings["questionnaire_retrieval_s"] = round(
+                time.perf_counter() - started, 3)
+            if not retrieved:
+                return timings
+
+            started = time.perf_counter()
+            async with self.llm_semaphore:
+                answers = await asyncio.to_thread(
+                    self.question_answerer.answer,
+                    self.all_text,
+                    [r.question for r in retrieved],
+                )
+            timings["questionnaire_answering_s"] = round(
+                time.perf_counter() - started, 3)
+        except Exception:
+            logger.exception("Questionnaire step failed for chunk %s", chunk_id)
+            return timings
+
+        # A later "unknown" never erases a known answer, whereas a later yes/no
+        # does replace an earlier one.
+        for answer in answers:
+            if answer.answer != UNKNOWN:
+                self.questionnaire_answers[answer.id] = answer
+        logger.info("Questionnaire for chunk %s: %d retrieved, %d known so far",
+                    chunk_id, len(retrieved), len(self.questionnaire_answers))
+        return timings
+
+    async def _call_cod(self, chunk_id: str, user_prompt: str) -> dict:
+        """Call the LLM for cause-of-death classification and parse the result."""
         try:
             logger.info(f'Inferring causes up to chunk {chunk_id}...')
             started = time.perf_counter()
@@ -240,6 +315,10 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             name, self.allowed_causes, n=1, cutoff=self.FUZZY_MATCH_CUTOFF)
         return close[0] if close else None
 
+    def reset(self):
+        super().reset()
+        self.questionnaire_answers = {}
+
     def create_session_agent(self) -> "ChampsPromptedInferenceAgent":
         return ChampsPromptedInferenceAgent(
             llm_client=self.llm_client,
@@ -247,6 +326,8 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             llm_semaphore=self.llm_semaphore,
             num_questions=self.num_questions,
             question_style=self.question_style,
+            question_retriever=self.question_retriever,
+            question_answerer=self.question_answerer,
         )
 
     def _parse_response(self, response: Dict[str, Any]) -> dict:
@@ -306,11 +387,24 @@ def create_champs_prompted_agent(
                                                DEFAULT_NUM_QUESTIONS))
     question_style = str(settings.inference.get("question_style",
                                                 DEFAULT_QUESTION_STYLE))
+    question_retriever = question_answerer = None
+    questionnaire = settings.inference.get("questionnaire", {})
+    if questionnaire.get("enabled", False):
+        question_retriever = QuestionRetriever(
+            load_question_bank(questionnaire.bank or None),
+            model_name=questionnaire.embedding_model,
+            top_k=questionnaire.top_k,
+            min_similarity=questionnaire.min_similarity,
+            window=questionnaire.window,
+        )
+        question_answerer = QuestionAnswerer(client, PROMPTS[questionnaire.prompt])
     return ChampsPromptedInferenceAgent(
         llm_client=client,
         llm_semaphore=asyncio.Semaphore(max_concurrency),
         num_questions=num_questions,
         question_style=question_style,
+        question_retriever=question_retriever,
+        question_answerer=question_answerer,
     )
 
 

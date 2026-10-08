@@ -60,6 +60,19 @@ inference:
   llm:
     provider: openai        # alternatives: openai | ollama
     model: gpt-5.4-mini
+  # Questionnaire retrieval (champs_prompted agent only): on each inference,
+  # retrieve the standardized VA questions that best match the latest dialogue,
+  # have the LLM answer them from the transcript (one extra LLM call), and add
+  # the known answers to the cause-of-death prompt. Needs the embedding model,
+  # which is downloaded on first use.
+  questionnaire:
+    enabled: false
+    bank: ""                # question bank TSV. Empty -> packaged WHO VA (InterVA probbase) questions
+    embedding_model: all-MiniLM-L6-v2
+    top_k: 10               # questions retrieved per inference
+    min_similarity: 0.5     # below this, nothing is retrieved and the LLM call is skipped
+    window: 2               # sentences per dialogue window when matching
+    prompt: questionnaire_answerer_default   # prompt key into config/prompts/
   champs_finetuned:         # CHAMPS-fine-tuned classifier agent (MedGemma LoRA)
     adapter_path: ""        # local path to the LoRA adapter; set via CODA_INFERENCE__CHAMPS_FINETUNED__ADAPTER_PATH
     menu: icd_all_labels.json

@@ -128,6 +128,8 @@ class CaseRecorder:
             "reasoning": result.get("reasoning"),
             "questions": result.get("questions"),
         }
+        if "questionnaire_answers" in result:
+            record["questionnaire_answers"] = result["questionnaire_answers"]
         if self.store.get("metadata"):
             record["metadata"] = request.get("metadata")
         self._append_json(self._inference, record)

@@ -224,6 +224,9 @@ def write_outputs(output_dir: Path, full_text: str, per_chunk: list, meta: dict)
                 "reasoning": inf.get("reasoning"),
                 "questions": inf.get("questions", []),
                 "timing": timings,
+                # Only present when questionnaire retrieval is enabled
+                **({"questionnaire_answers": inf["questionnaire_answers"]}
+                   if "questionnaire_answers" in inf else {}),
             }) + "\n")
 
     # Roll up timing across all chunks (steps timed separately; the text path
@@ -252,6 +255,8 @@ def write_outputs(output_dir: Path, full_text: str, per_chunk: list, meta: dict)
         "reasoning": final.get("reasoning"),
         "questions": final.get("questions", []),
         "chunks_processed": final.get("chunks_processed"),
+        **({"questionnaire_answers": final["questionnaire_answers"]}
+           if "questionnaire_answers" in final else {}),
     }, indent=2))
 
 

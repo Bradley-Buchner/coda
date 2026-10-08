@@ -67,6 +67,13 @@ def test_defaults():
     assert settings.inference.port == 5123
     assert settings.inference.llm.provider == "openai"
     assert settings.inference.llm.model == "gpt-5.4-mini"
+    assert settings.inference.questionnaire.enabled is False
+    assert settings.inference.questionnaire.bank == ""
+    assert settings.inference.questionnaire.embedding_model == "all-MiniLM-L6-v2"
+    assert settings.inference.questionnaire.top_k == 10
+    assert settings.inference.questionnaire.min_similarity == 0.5
+    assert settings.inference.questionnaire.window == 2
+    assert settings.inference.questionnaire.prompt == "questionnaire_answerer_default"
     assert settings.llm.ollama.base_url == "http://localhost:11434"
     assert settings.kg.url == "bolt://localhost:7687"
     assert settings.grounder.type == "gilda"
@@ -98,6 +105,16 @@ def test_types_are_coerced():
     assert isinstance(settings.grounder.rag.retriever.top_k, int)
     assert isinstance(settings.grounder.rag.retriever.min_similarity, float)
     assert isinstance(settings.grounder.rag.reranker.enabled, bool)
+
+
+def test_questionnaire_env_overrides_are_coerced(monkeypatch):
+    monkeypatch.setenv("CODA_INFERENCE__QUESTIONNAIRE__ENABLED", "true")
+    monkeypatch.setenv("CODA_INFERENCE__QUESTIONNAIRE__TOP_K", "15")
+    monkeypatch.setenv("CODA_INFERENCE__QUESTIONNAIRE__MIN_SIMILARITY", "0.45")
+    reload_settings()
+    assert settings.inference.questionnaire.enabled is True
+    assert settings.inference.questionnaire.top_k == 15
+    assert settings.inference.questionnaire.min_similarity == 0.45
 
 
 def test_onboarding_notice_version_stays_a_string(monkeypatch):
