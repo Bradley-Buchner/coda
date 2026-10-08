@@ -9,6 +9,8 @@ import argparse
 import json
 import sys
 
+from coda.config import PROMPTS, settings
+from coda.questionnaire.answerer import QuestionAnswerer
 from coda.questionnaire.bank import load_question_bank
 from coda.questionnaire.retriever import QuestionRetriever
 
@@ -25,6 +27,12 @@ def main():
     parser.add_argument("--bank", default=None,
                         help="Question bank TSV (default: packaged WHO VA bank)")
     parser.add_argument("--json", default=None, help="Also write results to this file")
+    parser.add_argument("--answer", action="store_true",
+                        help="Also answer the retrieved questions with the LLM")
+    parser.add_argument("--provider", default=None,
+                        help="LLM provider (default: inference.llm.provider)")
+    parser.add_argument("--model", default=None,
+                        help="LLM model (default: inference.llm.model)")
     args = parser.parse_args()
 
     text = sys.stdin.read() if args.text == "-" else open(args.text).read()
@@ -41,12 +49,29 @@ def main():
     if not retrieved:
         print("No questions above the similarity threshold.")
 
+    answers = []
+    if args.answer and retrieved:
+        from coda.llm_api import create_llm_client
+        client = create_llm_client(
+            provider=args.provider or settings.inference.llm.provider,
+            model=args.model or settings.inference.llm.model)
+        answerer = QuestionAnswerer(client, PROMPTS["questionnaire_answerer_default"])
+        answers = answerer.answer(text, [r.question for r in retrieved])
+        print()
+        for a in answers:
+            print(f"{a.answer:>8}  {a.id}  {a.question}")
+            if a.evidence:
+                print(f"           evidence: {a.evidence}")
+
     if args.json:
         with open(args.json, "w") as fh:
-            json.dump([{"id": r.question.id, "question": r.question.text,
-                        "score": round(r.score, 4), "matched_text": r.matched_text,
-                        "sibling_of": r.sibling_of}
-                       for r in retrieved], fh, indent=2)
+            json.dump({
+                "retrieved": [{"id": r.question.id, "question": r.question.text,
+                               "score": round(r.score, 4),
+                               "matched_text": r.matched_text,
+                               "sibling_of": r.sibling_of} for r in retrieved],
+                "answers": [a.to_dict() for a in answers],
+            }, fh, indent=2)
 
 
 if __name__ == "__main__":
