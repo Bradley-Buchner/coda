@@ -2,10 +2,14 @@
 
 The LLM is asked for structured output: one entry per question, each with a
 verbatim evidence quote followed by an answer restricted to that question's
-allowed answers. A yes/no (or other non-"unknown") answer is kept only if its
-evidence quote appears word for word in the dialogue (ignoring case and
-punctuation); otherwise it is downgraded to "unknown". Quotes must be exact: a
-fuzzy match would accept "he was vomiting" for "he was not vomiting".
+allowed answers.
+
+A yes/no (or other non-"unknown") answer is kept only if its surfaced evidence
+quote appears word for word in the dialogue (ignoring case and punctuation);
+otherwise it is downgraded to "unknown".
+
+Quotes must be exact: a fuzzy match would accept "he was vomiting" for "he was
+not vomiting".
 """
 import logging
 import re
