@@ -68,7 +68,8 @@ def format_answers(answers: Iterable[QuestionAnswer]) -> str:
 
 
 def _words(text: str) -> str:
-    return " ".join(re.findall(r"[a-z0-9']+", text.lower()))
+    text = re.sub(r"['‘’]", "", text.lower())
+    return " ".join(re.findall(r"[^\W_]+", text))
 
 
 def evidence_in_text(evidence: str, text: str) -> bool:
