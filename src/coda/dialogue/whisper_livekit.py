@@ -6,6 +6,8 @@ import uuid
 from typing import AsyncIterator
 
 from . import StreamingTranscriber, TranscriptEvent
+from .finetuned_whisper import FINETUNED_LANGUAGES, FINETUNED_MODELS, \
+    decode_options, get_model_path
 from .util import get_whisper_languages
 
 # Model size used when none is supplied (matches the other backends).
@@ -45,6 +47,25 @@ def _events_from_response(msg: dict, state: dict):
     state["preview"] = buf
 
 
+def _disable_text_conditioning(asr):
+    """Decode each buffer of a LocalAgreement ASR without its previous text.
+
+    The backends always prompt with the committed text and condition on it,
+    which sends some fine-tunes into repetition loops. The faster-whisper
+    backend holds a WhisperModel, the MLX one a transcribe function.
+    """
+    def unconditioned(decode):
+        def wrapper(audio, **kwargs):
+            kwargs.update(initial_prompt=None, condition_on_previous_text=False)
+            return decode(audio, **kwargs)
+        return wrapper
+
+    if hasattr(asr.model, "transcribe"):
+        asr.model.transcribe = unconditioned(asr.model.transcribe)
+    else:
+        asr.model = unconditioned(asr.model)
+
+
 class WhisperLiveKitTranscriber(StreamingTranscriber):
     """Streaming backend running WhisperLiveKit's engine in-process.
 
@@ -55,9 +76,9 @@ class WhisperLiveKitTranscriber(StreamingTranscriber):
     `faster-whisper` backend; the engine (model) is loaded once and shared.
     """
     MODELS = ("tiny", "base", "small", "medium",
-              "large", "large-v2", "large-v3")
+              "large", "large-v2", "large-v3", *FINETUNED_MODELS)
     DEFAULT_MODEL = DEFAULT_MODEL_SIZE
-    LANGUAGES = get_whisper_languages()
+    LANGUAGES = {**get_whisper_languages(), **FINETUNED_LANGUAGES}
 
     @classmethod
     def create(cls, model=None):
@@ -70,13 +91,21 @@ class WhisperLiveKitTranscriber(StreamingTranscriber):
         # The language is fixed when the engine is built, so this backend
         # transcribes whatever dialogue.language was set to at startup and
         # ignores the per-stream language argument.
+        lan, condition = decode_options(model_size, settings.dialogue.language)
+        if model_size in FINETUNED_MODELS:
+            mlx = wlk.backend == "mlx-whisper"
+            model = {"model_dir": get_model_path(model_size, mlx=mlx)}
+        else:
+            model = {"model_size": model_size}
         self._engine = TranscriptionEngine(
-            model_size=model_size,
-            lan=settings.dialogue.language,
+            **model,
+            lan=lan,
             backend=wlk.backend,
             backend_policy=wlk.policy,
             pcm_input=True,
         )
+        if not condition and wlk.policy == "localagreement":
+            _disable_text_conditioning(self._engine.asr)
 
     async def stream(self, audio: AsyncIterator[bytes], *,
                      language: str = "en",
