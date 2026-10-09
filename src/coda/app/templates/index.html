@@ -2386,6 +2386,20 @@
           font-size: 16px;
         }
 
+        /* No room for the badges and level meter beside the controls. The
+           stop and play buttons and the muted timer show the state. */
+        body.recording .rec-badge,
+        body.recording.paused .paused-badge,
+        body.recording #recordingStatus {
+          display: none !important;
+        }
+        .top-left {
+          gap: 8px;
+        }
+        .top-right {
+          gap: 4px;
+        }
+
         /* Ensure tap targets meet 44px minimum */
         .btn,
         #settingsToggle,
@@ -3588,6 +3602,7 @@
             "Xitsundzuxo ntsena · Xiboho xo hetelela xi tekiwa hi mutshunguri",
           "idle.recent": "Swa sweswinyana",
           "record.recording": "KU RHEKHODA",
+          "record.paused": "KU YIMISIWE SWA NKARHINYANA",
           "record.transcript": "Tsalwa",
           "record.probableCause": "Xivangelo lexi nga ni nkoteko lowukulu",
           "record.differentials": "Swivangelo swin'wana leswi kotekaka",
