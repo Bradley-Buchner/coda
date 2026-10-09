@@ -53,6 +53,10 @@ inference_client = httpx.AsyncClient(base_url=INFERENCE_URL, timeout=120.0)
 
 logger = logging.getLogger(__name__)
 
+# One second of 16 kHz s16le silence, fed to a streaming transcriber at pause so
+# it commits the words still in its buffer instead of holding them until resume
+PAUSE_SILENCE_BYTES = 32000
+
 here = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(here, "templates")
 
@@ -640,12 +644,28 @@ async def websocket_endpoint(websocket: WebSocket):
 async def capture_audio(websocket: WebSocket, queue: asyncio.Queue):
     """Capture: drain the socket into the queue. Never blocks transcription.
 
-    Surfaces WebSocketDisconnect to the gather; the sentinel lets the consumer's
-    audio iterator (and thus the transcriber stream) end cleanly.
+    Binary frames are audio. Text frames are JSON control messages, `pause` and
+    `resume`, queued in order with the audio around them. Surfaces
+    WebSocketDisconnect to the gather; the sentinel lets the consumer's audio
+    iterator (and thus the transcriber stream) end cleanly.
     """
     try:
         while True:
-            queue.put_nowait(await websocket.receive_bytes())
+            message = await websocket.receive()
+            if message["type"] == "websocket.disconnect":
+                raise WebSocketDisconnect(message.get("code", 1000))
+            if message.get("bytes") is not None:
+                queue.put_nowait(message["bytes"])
+            elif message.get("text") is not None:
+                try:
+                    control = json.loads(message["text"]).get("type")
+                except (ValueError, AttributeError):
+                    control = None
+                if control in ("pause", "resume"):
+                    queue.put_nowait(control)
+                else:
+                    logger.warning("Ignoring control message %r",
+                                   message["text"][:100])
     finally:
         queue.put_nowait(None)
 
@@ -655,13 +675,34 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
     """Process: consume transcript events from the active transcriber and, for
     each committed event, translate, ground, save, and display it. Inference
     runs on the accumulated text once enough has arrived (see INFERENCE_MIN_WORDS).
+
+    While paused no audio arrives and no new inference starts. Text committed
+    from audio sent before the pause is still shown and stored, and held until
+    resume.
     """
+    paused = False
+    streaming = isinstance(transcriber, StreamingTranscriber)
 
     async def audio_iter():
+        nonlocal paused
         while True:
             data = await queue.get()
             if data is None:
                 return
+            if data == "pause":
+                paused = True
+                if inference_session.recorder is not None:
+                    inference_session.recorder.write_pause()
+                if streaming:
+                    yield bytes(PAUSE_SILENCE_BYTES)
+                continue
+            if data == "resume":
+                paused = False
+                if inference_session.recorder is not None:
+                    inference_session.recorder.write_resume()
+                if buf.ready:
+                    await flush()
+                continue
             if inference_session.recorder is not None:
                 inference_session.recorder.write_audio(data)
             yield data
@@ -678,8 +719,7 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
     # backends use INFERENCE_MIN_WORDS; chunked backends emit whole chunks and
     # infer per chunk (min_words=0).
     buf = StreamingInferenceBuffer(
-        min_words=INFERENCE_MIN_WORDS
-        if isinstance(transcriber, StreamingTranscriber) else 0)
+        min_words=INFERENCE_MIN_WORDS if streaming else 0)
     last_infer = time.monotonic()
 
     async def flush():
@@ -696,7 +736,7 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
         # waited long enough, so a short trailing utterance still gets inferred.
         while True:
             await asyncio.sleep(1.0)
-            if buf.has_pending and \
+            if not paused and buf.has_pending and \
                     time.monotonic() - last_infer >= INFERENCE_MAX_WAIT_S:
                 await flush()
 
@@ -719,7 +759,7 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
                 continue
             chunk_id, timestamp, text, anns = committed
             buf.add(text, anns, chunk_id, timestamp)
-            if buf.ready:
+            if buf.ready and not paused:
                 await flush()
         await flush()
     finally:
