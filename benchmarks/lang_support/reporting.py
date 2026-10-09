@@ -21,7 +21,8 @@ def load_results(results_dir):
     results = {}
     for path in sorted(Path(results_dir).glob("transcripts_*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
-        clips = [clip for clip in data.get("clips", []) if "wer" in clip]
+        clips = [clip for clip in data.get("clips", [])
+                 if "wer" in clip and not clip.get("excluded")]
         if not clips:
             continue
         engine = data.get("engine", path.stem.removeprefix("transcripts_"))

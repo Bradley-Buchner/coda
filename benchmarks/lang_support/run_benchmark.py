@@ -55,7 +55,9 @@ def score(adapter, case_id, reference, hypothesis, strip_accents):
     """Return the scored fields of one clip.
 
     Words before the first reference word are not counted for a recording that
-    opens with a spoken title missing from its reference.
+    opens with a spoken title missing from its reference. A recording read from
+    a different translation is scored but marked excluded, keeping it out of the
+    means.
     """
     def normalize(text):
         return adapter.normalize(text, strip_accents)
@@ -65,13 +67,17 @@ def score(adapter, case_id, reference, hypothesis, strip_accents):
                                           lead_in)
     c = cer(reference, hypothesis, normalize, lead_in)
     return {"wer": round(w, 3), "cer": round(c, 3), "S": s, "D": d, "I": i,
-            "N": n, "accuracy": round(accuracy, 3)}
+            "N": n, "accuracy": round(accuracy, 3),
+            "excluded": case_id in getattr(adapter, "MISMATCHED", ())}
 
 
-def scored_samples(language, adapter):
-    """Load samples, dropping recordings the adapter marks as mismatched."""
-    mismatched = getattr(adapter, "MISMATCHED", set())
-    return [s for s in load_samples(language) if s.case_id not in mismatched]
+def means(clips):
+    """Return mean WER, mean CER, and the number of clips not excluded."""
+    scored = [clip for clip in clips if not clip.get("excluded")]
+    if not scored:
+        return float("nan"), float("nan"), 0
+    return (sum(clip["wer"] for clip in scored) / len(scored),
+            sum(clip["cer"] for clip in scored) / len(scored), len(scored))
 
 
 def run(language, registry, engines=None, *, strip_accents=False, **options):
@@ -86,7 +92,7 @@ def run(language, registry, engines=None, *, strip_accents=False, **options):
     def normalize(text):
         return adapter.normalize(text, strip_accents)
 
-    samples = scored_samples(language, adapter)
+    samples = load_samples(language)
     durations = {s.case_id: clip_duration(s.audio_path) for s in samples}
     host = hardware()
     compute_type = options.get("compute_type")
@@ -128,19 +134,20 @@ def run(language, registry, engines=None, *, strip_accents=False, **options):
                           "ref_norm": normalize(sample.reference),
                           "hyp_norm": normalize(hypothesis)})
             suffix = f"  {elapsed:5.1f}s  RTF={rtf:.2f}" if rtf else ""
+            if scores["excluded"]:
+                suffix += "  (excluded)"
             print(f"  {sample.case_id:<14} WER={w:.3f} CER={c:.3f}{suffix}",
                   flush=True)
 
         if not clips:
             continue
-        mean_wer = sum(clip["wer"] for clip in clips) / len(clips)
-        mean_cer = sum(clip["cer"] for clip in clips) / len(clips)
+        mean_wer, mean_cer, scored = means(clips)
         rtfs = [clip["rtf"] for clip in clips if clip["rtf"] is not None]
         mean_rtf = sum(rtfs) / len(rtfs) if rtfs else None
         tail = f"  mean_RTF={mean_rtf:.2f}" if mean_rtf else ""
         note = f"  FAILED={len(failed)}" if failed else ""
         print(f"  MEAN WER={mean_wer:.3f}  MEAN CER={mean_cer:.3f}  "
-              f"load={load_sec}s{tail}  (n={len(clips)}){note}", flush=True)
+              f"load={load_sec}s{tail}  (n={scored}){note}", flush=True)
 
         path = output_dir / f"transcripts_{name}.json"
         path.write_text(json.dumps(
@@ -154,28 +161,22 @@ def run(language, registry, engines=None, *, strip_accents=False, **options):
 def rescore(language):
     """Rescore saved transcripts in place against the current references."""
     adapter = load_adapter(language)
-    samples = {s.case_id: s for s in scored_samples(language, adapter)}
+    samples = {s.case_id: s for s in load_samples(language)}
     for path in sorted((Path(__file__).parent / "results" / language)
                        .glob("transcripts_*.json")):
         result = json.loads(path.read_text())
         strip_accents = result.get("strip_accents", False)
-        clips = []
         for clip in result["clips"]:
-            sample = samples.get(clip["case_id"])
-            if sample is None:
-                continue
+            sample = samples[clip["case_id"]]
             clip.update(score(adapter, sample.case_id, sample.reference,
                               clip["hyp"], strip_accents),
                         ref=sample.reference,
                         ref_norm=adapter.normalize(sample.reference,
                                                    strip_accents))
-            clips.append(clip)
-        result["clips"] = clips
         path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
-        mean_wer = sum(clip["wer"] for clip in clips) / len(clips)
-        mean_cer = sum(clip["cer"] for clip in clips) / len(clips)
+        mean_wer, mean_cer, scored = means(result["clips"])
         print(f"{result['engine']:<28} WER={mean_wer:.3f} CER={mean_cer:.3f} "
-              f"(n={len(clips)})")
+              f"(n={scored})")
 
 
 def build_parser(description=None):
