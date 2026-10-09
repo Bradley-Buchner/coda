@@ -15,7 +15,7 @@ import logging
 import re
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from coda.llm_api.client import LLMClient
 from coda.questionnaire.bank import OPTION_ID, Question, UNKNOWN
@@ -62,12 +62,16 @@ def format_questions(questions: Sequence[Question]) -> str:
                      for i, q in enumerate(questions, 1))
 
 
-def format_answers(answers: Iterable[QuestionAnswer]) -> str:
+def format_answers(answers: Iterable[QuestionAnswer], transcript: str) -> str:
     """Format known answers as prompt lines, one line per quoted statement.
 
-    Answers whose quotes overlap come from one statement, so they share a line.
-    When several options of one question are answered, only the "yes" options
-    are kept, since the "no" ones are implied. "unknown" answers are left out.
+    An answer shares a line with a longer quote that contains its quote at the
+    same place in the transcript; a quote found more than once gets its own
+    line.
+
+    A question's options are left out when another option is "yes", or
+    when all are "no" and their line has another answer. "unknown" answers are
+    left out.
     """
     known = [a for a in answers if a.answer != UNKNOWN]
     options = defaultdict(list)
@@ -75,29 +79,48 @@ def format_answers(answers: Iterable[QuestionAnswer]) -> str:
         match = OPTION_ID.match(a.id)
         if match:
             options[match.group(1)].append(a)
-    implied = {a.id for group in options.values() if len(group) > 1
+    groups = [group for group in options.values() if len(group) > 1]
+    implied = {a.id for group in groups if any(a.answer == "yes" for a in group)
                for a in group if a.answer != "yes"}
+    all_no = {a.id for group in groups if all(a.answer == "no" for a in group)
+              for a in group}
+    shown = [a for a in known if a.id not in implied]
 
-    statements = []  # [quote, answers], in order of first appearance
-    for a in known:
-        if a.id in implied:
-            continue
-        for statement in statements:
-            if evidence_in_text(a.evidence, statement[0]) or \
-                    evidence_in_text(statement[0], a.evidence):
-                statement[0] = max(statement[0], a.evidence, key=len)
-                statement[1].append(a)
-                break
-        else:
-            statements.append([a.evidence, [a]])
-    return "\n".join(
-        f'- "{quote}": ' + "; ".join(f"{a.question} {a.answer}" for a in group)
-        for quote, group in statements)
+    words = _words(transcript).split()
+    spans = {a.id: _find_quote(a.evidence, words) for a in shown}
+    statements = {}  # longest answer quoting the statement -> its answers
+    for a in shown:
+        outer = max((b for b in shown if _within(spans[a.id], spans[b.id])),
+                    key=lambda b: spans[b.id][1] - spans[b.id][0], default=a)
+        statements.setdefault(outer, []).append(a)
+
+    lines = []
+    for outer, group in statements.items():
+        if any(a.id not in all_no for a in group):
+            group = [a for a in group if a.id not in all_no]
+        lines.append(f'- "{outer.evidence}": '
+                     + "; ".join(f"{a.question} {a.answer}" for a in group))
+    return "\n".join(lines)
 
 
 def _words(text: str) -> str:
     text = re.sub(r"['‘’]", "", text.lower())
     return " ".join(re.findall(r"[^\W_]+", text))
+
+
+def _find_quote(quote: str, words: List[str]) -> Optional[Tuple[int, int]]:
+    """The word span of the quote in the transcript words, if it occurs once."""
+    quote = _words(quote).split()
+    starts = [i for i in range(len(words) - len(quote) + 1)
+              if words[i:i + len(quote)] == quote]
+    if not quote or len(starts) != 1:
+        return None
+    return starts[0], starts[0] + len(quote)
+
+
+def _within(inner: Optional[Tuple[int, int]],
+            outer: Optional[Tuple[int, int]]) -> bool:
+    return bool(inner and outer) and outer[0] <= inner[0] and inner[1] <= outer[1]
 
 
 def evidence_in_text(evidence: str, text: str) -> bool:

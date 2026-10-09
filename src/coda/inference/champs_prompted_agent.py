@@ -203,7 +203,8 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             f"- narrative:\n"
             f"  {self.all_text.strip()}"
         )
-        answers = format_answers(self.questionnaire_answers.values())
+        answers = format_answers(self.questionnaire_answers.values(),
+                                 self.all_text)
         if answers:
             user_prompt += (
                 "\n- structured VA answers (each quote is one statement from the "
