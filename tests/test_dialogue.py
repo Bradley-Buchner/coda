@@ -95,14 +95,17 @@ def test_faster_whisper_filter_uses_higher_threshold_non_english():
     assert transcriber._filter_segments(result, language="bn") == "জ্বর ছিল"
 
 
-def test_tsonga_model_selectable():
+def test_finetuned_models_selectable():
     for cls in (FasterWhisperTranscriber, WhisperLiveKitTranscriber):
-        assert "anv-tso-turbo" in cls.MODELS
-        assert cls.normalize_language("ts") == "ts"
+        for model, language in (("anv-tso-turbo", "ts"),
+                                ("anv-zul-turbo", "zu")):
+            assert model in cls.MODELS
+            assert cls.normalize_language(language) == language
 
 
 def test_decode_options():
     assert decode_options("anv-tso-turbo", "ts") == ("sw", False)
+    assert decode_options("anv-zul-turbo", "zu") == ("en", False)
     assert decode_options("small", "ts") == ("ts", True)
     assert decode_options("small", "en") == ("en", True)
 
