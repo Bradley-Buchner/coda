@@ -5,7 +5,12 @@ import pandas as pd
 import pytest
 
 from coda.config import PROMPTS
-from coda.questionnaire.answerer import QuestionAnswerer, build_answer_schema
+from coda.questionnaire.answerer import (
+    QuestionAnswer,
+    QuestionAnswerer,
+    build_answer_schema,
+    format_answers,
+)
 from coda.questionnaire.bank import (
     UNKNOWN,
     Question,
@@ -195,3 +200,21 @@ def test_answer_requires_exact_evidence():
 def test_answer_returns_nothing_when_llm_fails():
     answers, _ = _answer({"api_failed": True})
     assert answers == []
+
+
+def test_format_answers_one_line_per_statement():
+    quote = "He had a high fever for five days"
+    answers = [
+        QuestionAnswer("q:147-o", "Did he or she have a fever?", "yes", quote),
+        QuestionAnswer("q:148-a", "Did the fever last less than a week?", "yes", quote),
+        QuestionAnswer("q:148-b", "Did the fever last 1 to 2 weeks?", "no", quote),
+        QuestionAnswer("q:150-a", "Was the fever severe?", "yes", "a high fever"),
+        QuestionAnswer("q:182-a", "Diarrhoea for less than 2 weeks?", "no", "no diarrhoea"),
+        QuestionAnswer("q:182-b", "Diarrhoea for at least 2 weeks?", "no", "no diarrhoea"),
+        QuestionAnswer("q:153-o", "Did he or she have a cough?", UNKNOWN, ""),
+    ]
+    # Implied "no" options are dropped, and overlapping quotes share one line
+    assert format_answers(answers) == (
+        f'- "{quote}": Did he or she have a fever? yes; '
+        "Did the fever last less than a week? yes; Was the fever severe? yes")
+

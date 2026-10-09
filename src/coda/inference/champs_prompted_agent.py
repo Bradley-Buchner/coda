@@ -206,8 +206,10 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
         answers = format_answers(self.questionnaire_answers.values())
         if answers:
             user_prompt += (
-                "\n- structured VA answers (extracted automatically from the "
-                "narrative; the narrative takes precedence if they conflict):\n"
+                "\n- structured VA answers (each quote is one statement from the "
+                "narrative above, restated as standard VA questions; weigh each "
+                "statement once, ignore an answer its quote does not support, and "
+                "let the narrative take precedence if they conflict):\n"
                 + textwrap.indent(answers, "  ")
             )
 
