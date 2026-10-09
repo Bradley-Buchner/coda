@@ -4,8 +4,7 @@ Whisper itself ships no model for either language, so the engines are MMS
 language adapters, Whisper checkpoints fine-tuned on the African Next Voices
 corpus and other community data, a w2v-BERT CTC fine-tune, and Omnilingual ASR,
 with stock Whisper as an untuned baseline. Run through run_benchmark with
---language zu or st. The Omnilingual engines pin old dependencies and need their
-own environment.
+--language zu or st.
 """
 import os
 
