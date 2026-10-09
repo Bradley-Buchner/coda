@@ -4,6 +4,9 @@ Usage:
 
     python -m coda.questionnaire --text transcript.txt [--top-k 10]
         [--min-similarity 0.5] [--window 2] [--bank bank.tsv] [--json out.json]
+        [--answer] [--provider PROVIDER] [--model MODEL]
+
+Defaults come from inference.questionnaire and inference.llm in settings.yaml.
 """
 import argparse
 import json
@@ -16,15 +19,16 @@ from coda.questionnaire.retriever import QuestionRetriever
 
 
 def main():
+    config = settings.inference.questionnaire
     parser = argparse.ArgumentParser(
         description="Retrieve questions from a bank that best align with a transcript.")
     parser.add_argument("--text", required=True,
                         help="Transcript text file, or - for stdin")
-    parser.add_argument("--top-k", type=int, default=10)
-    parser.add_argument("--min-similarity", type=float, default=0.5)
-    parser.add_argument("--window", type=int, default=2,
+    parser.add_argument("--top-k", type=int, default=config.top_k)
+    parser.add_argument("--min-similarity", type=float, default=config.min_similarity)
+    parser.add_argument("--window", type=int, default=config.window,
                         help="Sentences per dialogue window")
-    parser.add_argument("--bank", default=None,
+    parser.add_argument("--bank", default=config.bank or None,
                         help="Question bank TSV (default: packaged WHO VA bank)")
     parser.add_argument("--json", default=None, help="Also write results to this file")
     parser.add_argument("--answer", action="store_true",
@@ -37,6 +41,7 @@ def main():
 
     text = sys.stdin.read() if args.text == "-" else open(args.text).read()
     retriever = QuestionRetriever(load_question_bank(args.bank),
+                                  model_name=config.embedding_model,
                                   top_k=args.top_k,
                                   min_similarity=args.min_similarity,
                                   window=args.window)
@@ -55,7 +60,7 @@ def main():
         client = create_llm_client(
             provider=args.provider or settings.inference.llm.provider,
             model=args.model or settings.inference.llm.model)
-        answerer = QuestionAnswerer(client, PROMPTS["questionnaire_answerer_default"])
+        answerer = QuestionAnswerer(client, PROMPTS[config.prompt])
         answers = answerer.answer(text, [r.question for r in retrieved])
         print()
         for a in answers:
