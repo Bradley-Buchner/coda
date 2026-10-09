@@ -269,6 +269,27 @@
       body.recording .rec-badge {
         display: inline-flex;
       }
+      .paused-badge {
+        display: none;
+        align-items: center;
+        height: 26px;
+        padding: 0 10px;
+        background: var(--border-warm);
+        border-radius: 999px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: var(--ink-muted);
+      }
+      body.recording.paused .rec-badge {
+        display: none;
+      }
+      body.recording.paused .paused-badge {
+        display: inline-flex;
+      }
+      body.recording.paused .timer {
+        color: var(--ink-muted);
+      }
 
       .timer {
         display: none;
@@ -381,6 +402,27 @@
       }
       .btn-record-stop:hover {
         transform: scale(1.04);
+      }
+      /* Pause / resume, next to the stop button while recording */
+      .btn-pause {
+        display: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--border-warm-strong);
+        background: var(--paper-elevated);
+        color: var(--ink);
+        font-size: 16px;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .btn-pause:hover {
+        background: var(--border-warm);
+      }
+      body.recording .btn-pause {
+        display: inline-flex;
       }
 
       /* Thin waveform strip during recording */
@@ -506,6 +548,10 @@
         background: var(--record-red);
         border-radius: 2px;
         transition: width 0.05s linear;
+      }
+      body.paused .audio-meter,
+      body.paused .waveform {
+        opacity: 0.4;
       }
 
       /* ---- Main body: transcript | inference ------------------------- */
@@ -2340,12 +2386,30 @@
           font-size: 16px;
         }
 
+        /* No room for the badges and level meter beside the controls. The
+           stop and play buttons and the muted timer show the state. */
+        body.recording .rec-badge,
+        body.recording.paused .paused-badge,
+        body.recording #recordingStatus {
+          display: none !important;
+        }
+        .top-left {
+          gap: 8px;
+        }
+        .top-right {
+          gap: 4px;
+        }
+
         /* Ensure tap targets meet 44px minimum */
         .btn,
         #settingsToggle,
         .btn-record,
+        .btn-pause,
         .audio-bar-play {
           min-height: 44px;
+        }
+        .btn-pause {
+          width: 44px;
         }
         .btn {
           min-width: 44px;
@@ -2466,8 +2530,17 @@
           >
             <i class="bi bi-mic-fill"></i>
           </button>
+          <button
+            id="pauseBtn"
+            class="btn-pause"
+            aria-label="Pause recording"
+            title="Pause recording"
+          >
+            <i class="bi bi-pause-fill"></i>
+          </button>
 
           <span class="rec-badge" data-i18n="record.recording">RECORDING</span>
+          <span class="paused-badge" data-i18n="record.paused">PAUSED</span>
           <span id="timer" class="timer">00:00</span>
 
           <div id="recordingStatus" style="display: none; align-items: center">
@@ -2837,6 +2910,7 @@
           <option value="ar">العربية</option>
           <option value="bn">বাংলা</option>
           <option value="es">Español</option>
+          <option value="ts">Xitsonga</option>
         </select>
       </div>
 
@@ -3071,6 +3145,7 @@
             "Advisory only · Final determination remains with the clinician",
           "idle.recent": "Recent",
           "record.recording": "RECORDING",
+          "record.paused": "PAUSED",
           "record.transcript": "Transcript",
           "record.probableCause": "Probable cause",
           "record.differentials": "Differentials",
@@ -3145,6 +3220,7 @@
           "idle.advisory": "Ushauri tu · Uamuzi wa mwisho ni wa daktari",
           "idle.recent": "Hivi karibuni",
           "record.recording": "INAREKODI",
+          "record.paused": "IMESITISHWA",
           "record.transcript": "Maandishi",
           "record.probableCause": "Sababu inayowezekana",
           "record.differentials": "Tofauti",
@@ -3221,6 +3297,7 @@
             "Consultatif uniquement · La décision finale appartient au clinicien",
           "idle.recent": "Récent",
           "record.recording": "ENREGISTREMENT",
+          "record.paused": "EN PAUSE",
           "record.transcript": "Transcription",
           "record.probableCause": "Cause probable",
           "record.differentials": "Diagnostics différentiels",
@@ -3295,6 +3372,7 @@
           "idle.advisory": "استشاري فقط · القرار النهائي يعود للطبيب",
           "idle.recent": "الحديثة",
           "record.recording": "يسجل",
+          "record.paused": "متوقف مؤقتًا",
           "record.transcript": "النص",
           "record.probableCause": "السبب المحتمل",
           "record.differentials": "التشخيصات التفريقية",
@@ -3370,6 +3448,7 @@
           "idle.advisory": "শুধু পরামর্শ · চূড়ান্ত সিদ্ধান্ত চিকিৎসকের",
           "idle.recent": "সাম্প্রতিক",
           "record.recording": "রেকর্ড হচ্ছে",
+          "record.paused": "বিরতি",
           "record.transcript": "প্রতিলিপি",
           "record.probableCause": "সম্ভাব্য কারণ",
           "record.differentials": "পৃথকীকরণ",
@@ -3446,6 +3525,7 @@
             "Solo orientativo · La decisión final es del clínico",
           "idle.recent": "Recientes",
           "record.recording": "GRABANDO",
+          "record.paused": "EN PAUSA",
           "record.transcript": "Transcripción",
           "record.probableCause": "Causa probable",
           "record.differentials": "Diagnósticos diferenciales",
@@ -3485,6 +3565,85 @@
           "history.title": "Sesiones anteriores",
           "history.subtitle":
             "Todo se almacena localmente en este dispositivo. Nada se sincroniza ni sube.",
+        },
+        ts: {
+          "common.new": "Leyintshwa",
+          "profile.title": "Vuxokoxoko bya mhaka",
+          "profile.age": "Malembe",
+          "profile.stillbirth": "Ku velekiwa ka n'wana a file",
+          "common.copy": "Kopa tsalwa",
+          "common.back": "Tlhelela endzhaku",
+          "common.clearAll": "Sula hinkwaswo",
+          "common.learnMore": "Dyondza swo tala",
+          "common.continue": "Yana eka CODA",
+          "common.retry": "Ringeta nakambe sweswi",
+          "common.checkSettings": "Kambela swiyimiso",
+          "common.seeAll": "Vona hinkwaswo",
+          "common.history": "Matimu",
+          "tagline.line1": "Mupfuni wo kumisisa",
+          "tagline.line2": "xivangelo xa rifu",
+          "onboard.eyebrow": "U NGA SI SUNGULA",
+          "onboard.headline":
+            "CODA yi ku pfuna ku ehleketa. A yi sivi maavanyiselo ya wena.",
+          "onboard.body1":
+            "Loko u hlamusela hi nomu vuxokoxoko bya swa vutshunguri mayelana ni rifu ra muvabyi, CODA yi tsala leswi u swi vulaka naswona yi komba swivangelo swa rifu leswi nga ha vaka kona ni mipimo ya nkoteko wa swona loko u ri karhi u vulavula. Ntirho lowu hinkwawo wu endliwa eka xitirhisiwa xa wena.",
+          "onboard.body2":
+            "Mbuyelo i xitsundzuxo ntsena. Xiboho xo hetelela mayelana ni xivangelo xa rifu xi tekiwa hi wena — naswona, laha swi faneleke, xi tiyisisiwa hi vukambelantsumbu.",
+          "onboard.consent":
+            "Ndza swi twisisa leswaku mbuyelo wa CODA i xitsundzuxo ntsena naswona a wu sivi maavanyiselo ya swa vutshunguri.",
+          "onboard.note":
+            "U nga cinca leswi u swi hlawuleke eka Swiyimiso nkarhi wun'wana ni wun'wana.",
+          "onboard.footLeft":
+            "A ku na vuxokoxoko lebyi humaka eka xitirhisiwa lexi. A swi laveki ku nghena.",
+          "idle.begin": "Sungula ku hlamusela hi nomu",
+          "idle.helper":
+            "Tshikilela batheni kumbe u tirhisa batheni yo siya xivandla (space bar). Marito ya wena ya tsariwa eka xitirhisiwa lexi.",
+          "idle.advisory":
+            "Xitsundzuxo ntsena · Xiboho xo hetelela xi tekiwa hi mutshunguri",
+          "idle.recent": "Swa sweswinyana",
+          "record.recording": "KU RHEKHODA",
+          "record.paused": "KU YIMISIWE SWA NKARHINYANA",
+          "record.transcript": "Tsalwa",
+          "record.probableCause": "Xivangelo lexi nga ni nkoteko lowukulu",
+          "record.differentials": "Swivangelo swin'wana leswi kotekaka",
+          "record.suggestedQuestions":
+            "Swivutiso swo landzelela leswi ringanyetiweke",
+          "record.updating": "Ku pfuxetiwa",
+          "record.offlinePill": "Handle ka inthanete",
+          "record.placeholder":
+            "Tshikilela batheni ya mayikhirofoni ku sungula. Marito ya wena ya tsariwa eka xitirhisiwa lexi.",
+          "record.inferenceUnavailable": "Nkumbetelo a wu kumeki",
+          "record.inferenceBody":
+            "Modlele wo kumisisa xivangelo xa rifu a wu hlamuli. Leswi u swi vulaka swa ha tsariwa ni ku hlayisiwa eka xitirhisiwa lexi.",
+          "record.lastError": "Xihoxo xo hetelela",
+          "record.autoRetry":
+            "CODA yi ta ringeta nakambe hi yoxe eka xiphemu lexi landzelaka…",
+          "result.primary": "Xiboho lexikulu",
+          "result.confidence": "mpimo wa ntshembo",
+          "chart.evolution": "Ndlela leyi mipimo ya nkoteko yi cinceke ha yona",
+          "chart.paused": "CHATI YI YIMISIWE SWA NKARHINYANA",
+          "advisory.short": "Xitsundzuxo ntsena — xiboho xo hetelela i xa wena",
+          "settings.title": "Swiyimiso",
+          "settings.interfaceLang": "Ririmi ra xikirini",
+          "settings.transcriptionLang": "Ririmi ra ku tsala leswi vuriwaka",
+          "settings.transcriptionModel": "Modlele wo tsala leswi vuriwaka",
+          "settings.microphone": "Mayikhirofoni",
+          "settings.transcriptionBackend": "Njhini yo tsala leswi vuriwaka",
+          "settings.grounder": "Njhini yo fambelanisa marito ni minongoti",
+          "settings.appearance": "Xivumbeko",
+          "settings.localStorage": "Vuhlayiselo",
+          "settings.themeLight": "Ku vonakala",
+          "settings.themeDark": "Munyama",
+          "settings.themeSystem": "Sisiteme",
+          "settings.storageOnTitle": "Vuxokoxoko bya mhaka bya hlayisiwa",
+          "settings.storageOnBody":
+            "Sevha leyi yi hlayisa rhekhodo ya ntshamo wun'wana ni wun'wana hi ku landza swiyimiso leswi vekiweke hi mulawuri wa yona. Mitshamo leyi hundzeke na yona yi hlayisiwa eka xitirhisiwa lexi.",
+          "settings.storageOffTitle": "Vuxokoxoko bya mhaka a byi hlayisiwi",
+          "settings.storageOffBody":
+            "A ku na vuxokoxoko bya mitshamo ya wena leswi hlayisiwaka eka sevha kumbe eka xitirhisiwa lexi.",
+          "history.title": "Mitshamo leyi hundzeke",
+          "history.subtitle":
+            "Vuxokoxoko hinkwabyo byi hlayisiwa eka xitirhisiwa lexi. A byi fambelanisiwi ni switirhisiwa swin'wana naswona a byi rhumeriwi eka sevha.",
         },
       };
 
@@ -3527,6 +3686,16 @@
       let analyser = null;
       let meterAnimFrame = null;
       let isRecording = false;
+      let isPaused = false;
+      let resuming = false;
+      let micStream = null;
+      let micSource = null;
+      let micConstraints = null;
+      let audioProcessor = null;
+      let recordDest = null;
+      // Paused time so far this session, excluded from the timer and duration
+      let pausedMs = 0;
+      let pausedAt = 0;
       let transcriptText = "";
       let chunkCount = 0;
       let timerInterval = null;
@@ -3538,6 +3707,7 @@
 
       const body = document.body;
       const recordBtn = document.getElementById("recordBtn");
+      const pauseBtn = document.getElementById("pauseBtn");
       const heroMicBtn = document.getElementById("heroMicBtn");
       const recordingStatus = document.getElementById("recordingStatus");
       const transcript = document.getElementById("transcript");
@@ -4287,7 +4457,8 @@
 
       function updateModelWarning() {
         const val = transcriberModelSelect.value || "";
-        modelWarning.style.display = val.startsWith("large") ? "flex" : "none";
+        const isLarge = val.startsWith("large") || val.endsWith("-turbo");
+        modelWarning.style.display = isLarge ? "flex" : "none";
       }
 
       // Labels for known transcription models; unknown ids show their raw value.
@@ -4299,6 +4470,9 @@
         large: "Whisper large (1.5G)",
         "large-v2": "Whisper large-v2 (1.5G)",
         "large-v3": "Whisper large-v3 (1.5G)",
+        "anv-tso-turbo": "ANV Xitsonga turbo (809M)",
+        "anv-zul-turbo": "ANV isiZulu turbo (809M)",
+        "anv-sot-turbo": "ANV Sesotho turbo (809M)",
       };
 
       function populateModelOptions(models, selected) {
@@ -4689,12 +4863,19 @@
         }, 3000);
       }
 
-      // Timer: show mm:ss since recording started
+      // Recording time so far, excluding pauses
+      function activeMs() {
+        const pausing = isPaused ? Date.now() - pausedAt : 0;
+        return Date.now() - timerStart - pausedMs - pausing;
+      }
+
+      // Timer: show mm:ss of recording time, frozen while paused
       function startTimer() {
         timerStart = Date.now();
+        pausedMs = 0;
         if (timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(() => {
-          const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+          const elapsed = Math.floor(activeMs() / 1000);
           const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
           const ss = String(elapsed % 60).padStart(2, "0");
           timerEl.textContent = `${mm}:${ss}`;
@@ -4866,13 +5047,16 @@
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: audioConstraints,
           });
+          micConstraints = audioConstraints;
 
           audioContext = new AudioContext({ sampleRate: 16000 });
-          const source = audioContext.createMediaStreamSource(stream);
           const processor = audioContext.createScriptProcessor(4096, 1, 1);
-
-          source.connect(processor);
           processor.connect(audioContext.destination);
+          audioProcessor = processor;
+          // MediaRecorder records this node rather than the mic stream, so the
+          // recording carries on when a pause releases and reacquires the mic
+          recordDest = audioContext.createMediaStreamDestination();
+          connectMic(stream);
 
           // Simultaneously capture the mic stream as a compressed Blob
           // for playback in the result state. Independent of the
@@ -4891,7 +5075,7 @@
             ) {
               recorderOpts.mimeType = "audio/webm";
             }
-            mediaRecorder = new MediaRecorder(stream, recorderOpts);
+            mediaRecorder = new MediaRecorder(recordDest.stream, recorderOpts);
             mediaRecorder.ondataavailable = (e) => {
               if (e.data && e.data.size) audioChunks.push(e.data);
             };
@@ -4913,7 +5097,7 @@
           const audioMeterFill = document.getElementById("audioMeterFill");
 
           processor.onaudioprocess = (e) => {
-            if (!isRecording) return;
+            if (!isRecording || isPaused) return;
 
             const inputData = e.inputBuffer.getChannelData(0);
             const pcmData = new Int16Array(inputData.length);
@@ -4951,8 +5135,96 @@
         }
       }
 
+      function connectMic(stream) {
+        micStream = stream;
+        micSource = audioContext.createMediaStreamSource(stream);
+        micSource.connect(audioProcessor);
+        micSource.connect(recordDest);
+      }
+
+      // Stopping the tracks releases the device, which turns off the browser
+      // and OS mic indicators
+      function releaseMic() {
+        if (micSource) {
+          micSource.disconnect();
+          micSource = null;
+        }
+        if (micStream) {
+          micStream.getTracks().forEach((track) => track.stop());
+          micStream = null;
+        }
+      }
+
+      // Release the mic and hold the session open. No audio reaches the
+      // server and MediaRecorder skips the paused stretch.
+      function pauseRecording() {
+        if (!isRecording || isPaused) return;
+        isPaused = true;
+        pausedAt = Date.now();
+        releaseMic();
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.pause();
+        }
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "pause" }));
+        }
+        document.getElementById("audioMeterFill").style.width = "0%";
+        body.classList.add("paused");
+        pauseBtn.innerHTML = '<i class="bi bi-play-fill"></i>';
+        pauseBtn.setAttribute("aria-label", "Resume recording");
+        pauseBtn.title = "Resume recording";
+      }
+
+      async function resumeRecording() {
+        if (!isRecording || !isPaused || resuming) return;
+        resuming = true;
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: micConstraints,
+          });
+        } catch (error) {
+          console.error("Error reacquiring microphone:", error);
+          showStatus(
+            "Failed to resume recording. Please check microphone permissions.",
+            "danger",
+          );
+          return;
+        } finally {
+          resuming = false;
+        }
+        // Stopped while waiting for the mic
+        if (!isRecording) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        connectMic(stream);
+        isPaused = false;
+        pausedMs += Date.now() - pausedAt;
+        if (mediaRecorder && mediaRecorder.state === "paused") {
+          mediaRecorder.resume();
+        }
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "resume" }));
+        }
+        showPauseButton();
+      }
+
+      function showPauseButton() {
+        body.classList.remove("paused");
+        pauseBtn.innerHTML = '<i class="bi bi-pause-fill"></i>';
+        pauseBtn.setAttribute("aria-label", "Pause recording");
+        pauseBtn.title = "Pause recording";
+      }
+
       function stopRecording() {
+        if (isPaused) {
+          pausedMs += Date.now() - pausedAt;
+          isPaused = false;
+        }
+        showPauseButton();
         isRecording = false;
+        releaseMic();
 
         if (meterAnimFrame) {
           cancelAnimationFrame(meterAnimFrame);
@@ -5003,7 +5275,7 @@
 
         // Transition to result state if we captured anything worth reviewing
         // (transcript OR inference). Only revert to idle on a truly empty session.
-        lastDuration = Math.floor((Date.now() - timerStart) / 1000);
+        lastDuration = Math.floor((Date.now() - timerStart - pausedMs) / 1000);
         const hasInference =
           latestCauses && Object.keys(latestCauses).length > 0;
         const hasTranscript = transcriptText.trim().length > 0;
@@ -5031,6 +5303,11 @@
         } else {
           stopRecording();
         }
+      });
+
+      pauseBtn.addEventListener("click", () => {
+        if (isPaused) resumeRecording();
+        else pauseRecording();
       });
 
       heroMicBtn.addEventListener("click", () => {

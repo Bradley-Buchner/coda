@@ -15,8 +15,10 @@ from coda.dialogue import (
     TranscriptEvent,
 )
 from coda.dialogue.faster_whisper import FasterWhisperTranscriber
+from coda.dialogue.finetuned_whisper import decode_options
 from coda.dialogue.indic_conformer import IndicConformerTranscriber
-from coda.dialogue.whisper_livekit import _events_from_response
+from coda.dialogue.whisper_livekit import WhisperLiveKitTranscriber, \
+    _events_from_response
 
 
 class _FakeTranscriber(ChunkedTranscriber):
@@ -91,6 +93,22 @@ def test_faster_whisper_filter_uses_higher_threshold_non_english():
         "segments": [{"text": "জ্বর ছিল", "no_speech_prob": 0.7}],
     }
     assert transcriber._filter_segments(result, language="bn") == "জ্বর ছিল"
+
+
+def test_finetuned_models_selectable():
+    for cls in (FasterWhisperTranscriber, WhisperLiveKitTranscriber):
+        for model, language in (("anv-tso-turbo", "ts"),
+                                ("anv-zul-turbo", "zu"),
+                                ("anv-sot-turbo", "st")):
+            assert model in cls.MODELS
+            assert cls.normalize_language(language) == language
+
+
+def test_decode_options():
+    assert decode_options("anv-tso-turbo", "ts") == ("sw", False)
+    assert decode_options("anv-zul-turbo", "zu") == ("en", False)
+    assert decode_options("small", "ts") == ("ts", True)
+    assert decode_options("small", "en") == ("en", True)
 
 
 def test_indic_conformer_backend_registered():

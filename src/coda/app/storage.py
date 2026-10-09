@@ -48,6 +48,7 @@ class CaseRecorder:
             "generation": generation,
             "started_at": started.isoformat(),
             "ended_at": None,
+            "pauses": [],
             "coda_version": coda.__version__,
             "run_info": run_info,
         }
@@ -92,6 +93,17 @@ class CaseRecorder:
     def write_audio(self, data: bytes):
         if self._audio is not None:
             self._audio.writeframes(data)
+
+    def write_pause(self):
+        self.manifest["pauses"].append(
+            {"paused_at": datetime.now().isoformat(), "resumed_at": None})
+        self._write_manifest()
+
+    def write_resume(self):
+        pauses = self.manifest["pauses"]
+        if pauses and pauses[-1]["resumed_at"] is None:
+            pauses[-1]["resumed_at"] = datetime.now().isoformat()
+            self._write_manifest()
 
     def write_chunk(self, chunk_id: str, timestamp: float, english_text: str,
                     annotations: list, timings: dict,

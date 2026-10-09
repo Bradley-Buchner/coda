@@ -135,6 +135,19 @@ def test_store_flags_disable_files(storage_dir, monkeypatch):
     assert not (recorder.case_dir / "inference.jsonl").exists()
 
 
+def test_pauses_recorded_in_manifest(storage_dir):
+    recorder = CaseRecorder("session-a", 0, {})
+    recorder.write_pause()
+    recorder.write_resume()
+    recorder.write_pause()
+    recorder.close()
+
+    manifest = json.loads((recorder.case_dir / "manifest.json").read_text())
+    first, second = manifest["pauses"]
+    assert first["paused_at"] <= first["resumed_at"]
+    assert second["resumed_at"] is None
+
+
 def test_audio_is_written_as_wav(storage_dir, monkeypatch):
     monkeypatch.setenv("CODA_STORAGE__STORE__AUDIO", "true")
     reload_settings()
