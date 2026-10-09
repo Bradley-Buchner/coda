@@ -209,12 +209,32 @@ def test_format_answers_one_line_per_statement():
         QuestionAnswer("q:148-a", "Did the fever last less than a week?", "yes", quote),
         QuestionAnswer("q:148-b", "Did the fever last 1 to 2 weeks?", "no", quote),
         QuestionAnswer("q:150-a", "Was the fever severe?", "yes", "a high fever"),
+        QuestionAnswer("q:181-o", "Did he or she have diarrhoea?", "no", "no diarrhoea"),
         QuestionAnswer("q:182-a", "Diarrhoea for less than 2 weeks?", "no", "no diarrhoea"),
         QuestionAnswer("q:182-b", "Diarrhoea for at least 2 weeks?", "no", "no diarrhoea"),
         QuestionAnswer("q:153-o", "Did he or she have a cough?", UNKNOWN, ""),
     ]
-    # Implied "no" options are dropped, and overlapping quotes share one line
-    assert format_answers(answers) == (
+    # Implied options are dropped, and quotes inside a longer one share its line
+    assert format_answers(answers, f"{quote}. There was no diarrhoea.") == (
         f'- "{quote}": Did he or she have a fever? yes; '
-        "Did the fever last less than a week? yes; Was the fever severe? yes")
+        "Did the fever last less than a week? yes; Was the fever severe? yes\n"
+        '- "no diarrhoea": Did he or she have diarrhoea? no')
+    # Regression: options that were all "no" vanished along with their statement
+    answers = [
+        QuestionAnswer("q:319-a", "Was it her first pregnancy?", "no", "her third pregnancy"),
+        QuestionAnswer("q:319-b", "Four or more pregnancies before?", "no", "her third pregnancy"),
+    ]
+    assert format_answers(answers, "It was her third pregnancy.") == (
+        '- "her third pregnancy": Was it her first pregnancy? no; '
+        "Four or more pregnancies before? no")
+    # Regression: the baby's fever was shown under the mother's statement
+    answers = [
+        QuestionAnswer("q:147-o", "Did he or she have a fever?", "yes", "a high fever"),
+        QuestionAnswer("q:395-o", "Did the baby's mother have a fever?", "yes",
+                       "His mother also had a high fever"),
+    ]
+    assert format_answers(answers, "The baby had a high fever. "
+                                   "His mother also had a high fever.") == (
+        '- "a high fever": Did he or she have a fever? yes\n'
+        '- "His mother also had a high fever": Did the baby\'s mother have a fever? yes')
 
