@@ -130,7 +130,7 @@ who.va.q:W610212-o	During the illness that led to death, did he or she have ment
 who.va.q:W610213-o	Did he or she have mental confusion for at least 3 months before death?		symptom
 who.va.q:W610214-o	During the illness that led to death, was he or she unconscious?		symptom
 who.va.q:W610215-o	Was he or she unconscious for at least 24 hours before death?		symptom
-who.va.q:W610216-a	Was he or she unsconscious for at least 6 hours before death?		symptom
+who.va.q:W610216-a	Was he or she unconscious for at least 6 hours before death?		symptom
 who.va.q:W610217-o	Did the unconsciousness start suddenly, quickly (at least within a single day)?		symptom
 who.va.q:W610218-o	Did the unconsciousness continue until death?		symptom
 who.va.q:W610219-o	During the illness that led to death, did he or she have any convulsions?		symptom

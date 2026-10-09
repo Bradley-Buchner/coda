@@ -21,8 +21,9 @@ OPTION_ID = re.compile(r"^(.+)-[a-z]$")
 PROBBASE_CATEGORIES = {"M": "symptom", "B": "background"}
 
 # Some questions need re-wording for clarity (e.g., follow-up questions that lose
-# context on their own, or unclear sentence subjects)
+# context on their own, unclear sentence subjects, or typos in the source)
 PROBBASE_REWORDED = {
+    "who.va.q:W610216-a": "Was he or she unconscious for at least 6 hours before death?",
     "who.va.q:W610250-a":
         "Did the swelling of the legs or feet last for at least 3 days before death?",
     "who.va.q:W610298-o": "Was her menstrual bleeding excessive?",
