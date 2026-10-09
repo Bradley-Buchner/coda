@@ -141,6 +141,8 @@ class InferenceSessionCoordinator:
         self._pending: list[PendingInferenceChunk] = []
         self._drain_task: asyncio.Task | None = None
         self.recorder: CaseRecorder | None = None
+        # While the client has paused recording, no new inference starts
+        self.paused = False
 
     async def start_case(self):
         """Begin recording a new case for the current generation, if enabled."""
@@ -622,7 +624,8 @@ async def websocket_endpoint(websocket: WebSocket):
         "session_generation": inference_session.generation,
     })
     audio_queue: asyncio.Queue = asyncio.Queue()
-    capture = asyncio.create_task(capture_audio(websocket, audio_queue))
+    capture = asyncio.create_task(
+        capture_audio(websocket, audio_queue, inference_session))
     consume = asyncio.create_task(
         consume_transcripts(websocket, audio_queue, inference_session)
     )
@@ -641,13 +644,15 @@ async def websocket_endpoint(websocket: WebSocket):
         active_inference_sessions.discard(inference_session)
 
 
-async def capture_audio(websocket: WebSocket, queue: asyncio.Queue):
+async def capture_audio(websocket: WebSocket, queue: asyncio.Queue,
+                        inference_session: InferenceSessionCoordinator):
     """Capture: drain the socket into the queue. Never blocks transcription.
 
     Binary frames are audio. Text frames are JSON control messages, `pause` and
-    `resume`, queued in order with the audio around them. Surfaces
-    WebSocketDisconnect to the gather; the sentinel lets the consumer's audio
-    iterator (and thus the transcriber stream) end cleanly.
+    `resume`, which take effect on arrival even when transcription lags behind
+    the audio. A pause also queues a marker after the audio sent before it.
+    Surfaces WebSocketDisconnect to the gather; the sentinel lets the consumer's
+    audio iterator (and thus the transcriber stream) end cleanly.
     """
     try:
         while True:
@@ -661,9 +666,16 @@ async def capture_audio(websocket: WebSocket, queue: asyncio.Queue):
                     control = json.loads(message["text"]).get("type")
                 except (ValueError, AttributeError):
                     control = None
-                if control in ("pause", "resume"):
-                    queue.put_nowait(control)
-                else:
+                if control == "pause" and not inference_session.paused:
+                    inference_session.paused = True
+                    if inference_session.recorder is not None:
+                        inference_session.recorder.write_pause()
+                    queue.put_nowait("pause")
+                elif control == "resume" and inference_session.paused:
+                    inference_session.paused = False
+                    if inference_session.recorder is not None:
+                        inference_session.recorder.write_resume()
+                elif control not in ("pause", "resume"):
                     logger.warning("Ignoring control message %r",
                                    message["text"][:100])
     finally:
@@ -680,28 +692,16 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
     from audio sent before the pause is still shown and stored, and held until
     resume.
     """
-    paused = False
     streaming = isinstance(transcriber, StreamingTranscriber)
 
     async def audio_iter():
-        nonlocal paused
         while True:
             data = await queue.get()
             if data is None:
                 return
             if data == "pause":
-                paused = True
-                if inference_session.recorder is not None:
-                    inference_session.recorder.write_pause()
                 if streaming:
                     yield bytes(PAUSE_SILENCE_BYTES)
-                continue
-            if data == "resume":
-                paused = False
-                if inference_session.recorder is not None:
-                    inference_session.recorder.write_resume()
-                if buf.ready:
-                    await flush()
                 continue
             if inference_session.recorder is not None:
                 inference_session.recorder.write_audio(data)
@@ -732,12 +732,15 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
         await _start_inference(inference_session, chunk_id, timestamp, text, anns)
 
     async def idle_flush():
-        # Flush pending text that never reached the word threshold once it has
-        # waited long enough, so a short trailing utterance still gets inferred.
+        # Flush text held over a pause once recording resumes, and pending text
+        # that never reached the word threshold once it has waited long enough,
+        # so a short trailing utterance still gets inferred.
         while True:
             await asyncio.sleep(1.0)
-            if not paused and buf.has_pending and \
-                    time.monotonic() - last_infer >= INFERENCE_MAX_WAIT_S:
+            if inference_session.paused:
+                continue
+            if buf.ready or (buf.has_pending and time.monotonic() - last_infer
+                             >= INFERENCE_MAX_WAIT_S):
                 await flush()
 
     timer = asyncio.create_task(idle_flush())
@@ -759,7 +762,7 @@ async def consume_transcripts(websocket: WebSocket, queue: asyncio.Queue,
                 continue
             chunk_id, timestamp, text, anns = committed
             buf.add(text, anns, chunk_id, timestamp)
-            if buf.ready and not paused:
+            if buf.ready and not inference_session.paused:
                 await flush()
         await flush()
     finally:

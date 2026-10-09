@@ -38,19 +38,20 @@ class LaggingTranscriber(StreamingTranscriber):
 
 
 @pytest.mark.asyncio
-async def test_capture_queues_control_messages_in_order():
+async def test_capture_applies_control_messages_on_arrival():
     websocket = FakeReceiveWebSocket([
         {"type": "websocket.receive", "bytes": b"a"},
         {"type": "websocket.receive", "text": json.dumps({"type": "pause"})},
         {"type": "websocket.receive", "text": "not json"},
-        {"type": "websocket.receive", "text": json.dumps({"type": "resume"})},
         {"type": "websocket.disconnect", "code": 1000},
     ])
+    session = server.InferenceSessionCoordinator(None, session_id="s")
     queue = asyncio.Queue()
     with pytest.raises(WebSocketDisconnect):
-        await server.capture_audio(websocket, queue)
-    items = [queue.get_nowait() for _ in range(queue.qsize())]
-    assert items == [b"a", "pause", "resume", None]
+        await server.capture_audio(websocket, queue, session)
+    assert session.paused
+    assert [queue.get_nowait() for _ in range(queue.qsize())] == \
+        [b"a", "pause", None]
 
 
 @pytest.mark.asyncio
@@ -58,20 +59,38 @@ async def test_no_inference_while_paused(monkeypatch):
     log = []
 
     async def fake_handle_committed(session, event, direct_translate):
+        log.append(f"commit {event.text}")
         return event.id, event.timestamp, event.text, []
 
     async def fake_start_inference(session, chunk_id, timestamp, text, anns):
-        log.append(text)
+        log.append(f"infer {text}")
+
+    async def wait_for(entry):
+        while entry not in log:
+            await asyncio.sleep(0.05)
 
     monkeypatch.setattr(server, "transcriber", LaggingTranscriber(log))
     monkeypatch.setattr(server, "_handle_committed", fake_handle_committed)
     monkeypatch.setattr(server, "_start_inference", fake_start_inference)
     monkeypatch.setattr(server, "INFERENCE_MIN_WORDS", 2)
 
-    queue = asyncio.Queue()
-    for item in (b"fever for days", "pause", "resume", b"then cough", None):
-        queue.put_nowait(item)
     session = server.InferenceSessionCoordinator(None, session_id="s")
-    await server.consume_transcripts(None, queue, session)
+    queue = asyncio.Queue()
+    consume = asyncio.create_task(
+        server.consume_transcripts(None, queue, session))
+    # Paused before the transcriber has caught up with the earlier audio
+    queue.put_nowait(b"fever for days")
+    session.paused = True
+    queue.put_nowait("pause")
+    await asyncio.wait_for(wait_for("commit fever for days"), 2)
+    await asyncio.sleep(1.5)
+    assert "infer fever for days" not in log
 
-    assert log == ["silence", "fever for days", "then cough"]
+    session.paused = False
+    await asyncio.wait_for(wait_for("infer fever for days"), 3)
+    queue.put_nowait(b"then cough")
+    queue.put_nowait(None)
+    await asyncio.wait_for(consume, 2)
+
+    assert log == ["silence", "commit fever for days", "infer fever for days",
+                   "commit then cough", "infer then cough"]

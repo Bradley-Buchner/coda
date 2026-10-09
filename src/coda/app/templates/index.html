@@ -3687,7 +3687,12 @@
       let meterAnimFrame = null;
       let isRecording = false;
       let isPaused = false;
+      let resuming = false;
       let micStream = null;
+      let micSource = null;
+      let micConstraints = null;
+      let audioProcessor = null;
+      let recordDest = null;
       // Paused time so far this session, excluded from the timer and duration
       let pausedMs = 0;
       let pausedAt = 0;
@@ -5042,14 +5047,16 @@
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: audioConstraints,
           });
-          micStream = stream;
+          micConstraints = audioConstraints;
 
           audioContext = new AudioContext({ sampleRate: 16000 });
-          const source = audioContext.createMediaStreamSource(stream);
           const processor = audioContext.createScriptProcessor(4096, 1, 1);
-
-          source.connect(processor);
           processor.connect(audioContext.destination);
+          audioProcessor = processor;
+          // MediaRecorder records this node rather than the mic stream, so the
+          // recording carries on when a pause releases and reacquires the mic
+          recordDest = audioContext.createMediaStreamDestination();
+          connectMic(stream);
 
           // Simultaneously capture the mic stream as a compressed Blob
           // for playback in the result state. Independent of the
@@ -5068,7 +5075,7 @@
             ) {
               recorderOpts.mimeType = "audio/webm";
             }
-            mediaRecorder = new MediaRecorder(stream, recorderOpts);
+            mediaRecorder = new MediaRecorder(recordDest.stream, recorderOpts);
             mediaRecorder.ondataavailable = (e) => {
               if (e.data && e.data.size) audioChunks.push(e.data);
             };
@@ -5128,15 +5135,33 @@
         }
       }
 
-      // Mute the mic and hold the session open. No audio reaches the server
-      // and MediaRecorder skips the paused stretch.
+      function connectMic(stream) {
+        micStream = stream;
+        micSource = audioContext.createMediaStreamSource(stream);
+        micSource.connect(audioProcessor);
+        micSource.connect(recordDest);
+      }
+
+      // Stopping the tracks releases the device, which turns off the browser
+      // and OS mic indicators
+      function releaseMic() {
+        if (micSource) {
+          micSource.disconnect();
+          micSource = null;
+        }
+        if (micStream) {
+          micStream.getTracks().forEach((track) => track.stop());
+          micStream = null;
+        }
+      }
+
+      // Release the mic and hold the session open. No audio reaches the
+      // server and MediaRecorder skips the paused stretch.
       function pauseRecording() {
         if (!isRecording || isPaused) return;
         isPaused = true;
         pausedAt = Date.now();
-        if (micStream) {
-          micStream.getAudioTracks().forEach((track) => (track.enabled = false));
-        }
+        releaseMic();
         if (mediaRecorder && mediaRecorder.state === "recording") {
           mediaRecorder.pause();
         }
@@ -5150,13 +5175,32 @@
         pauseBtn.title = "Resume recording";
       }
 
-      function resumeRecording() {
-        if (!isRecording || !isPaused) return;
+      async function resumeRecording() {
+        if (!isRecording || !isPaused || resuming) return;
+        resuming = true;
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: micConstraints,
+          });
+        } catch (error) {
+          console.error("Error reacquiring microphone:", error);
+          showStatus(
+            "Failed to resume recording. Please check microphone permissions.",
+            "danger",
+          );
+          return;
+        } finally {
+          resuming = false;
+        }
+        // Stopped while waiting for the mic
+        if (!isRecording) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        connectMic(stream);
         isPaused = false;
         pausedMs += Date.now() - pausedAt;
-        if (micStream) {
-          micStream.getAudioTracks().forEach((track) => (track.enabled = true));
-        }
         if (mediaRecorder && mediaRecorder.state === "paused") {
           mediaRecorder.resume();
         }
@@ -5180,7 +5224,7 @@
         }
         showPauseButton();
         isRecording = false;
-        micStream = null;
+        releaseMic();
 
         if (meterAnimFrame) {
           cancelAnimationFrame(meterAnimFrame);
