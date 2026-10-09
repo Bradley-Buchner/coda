@@ -13,11 +13,12 @@ not vomiting".
 """
 import logging
 import re
+from collections import defaultdict
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
 from coda.llm_api.client import LLMClient
-from coda.questionnaire.bank import Question, UNKNOWN
+from coda.questionnaire.bank import OPTION_ID, Question, UNKNOWN
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +63,36 @@ def format_questions(questions: Sequence[Question]) -> str:
 
 
 def format_answers(answers: Iterable[QuestionAnswer]) -> str:
-    """Format known answers as prompt lines, leaving out "unknown" answers."""
-    return "\n".join(f"- {a.question} {a.answer}" for a in answers
-                     if a.answer != UNKNOWN)
+    """Format known answers as prompt lines, one line per quoted statement.
+
+    Answers whose quotes overlap come from one statement, so they share a line.
+    When several options of one question are answered, only the "yes" options
+    are kept, since the "no" ones are implied. "unknown" answers are left out.
+    """
+    known = [a for a in answers if a.answer != UNKNOWN]
+    options = defaultdict(list)
+    for a in known:
+        match = OPTION_ID.match(a.id)
+        if match:
+            options[match.group(1)].append(a)
+    implied = {a.id for group in options.values() if len(group) > 1
+               for a in group if a.answer != "yes"}
+
+    statements = []  # [quote, answers], in order of first appearance
+    for a in known:
+        if a.id in implied:
+            continue
+        for statement in statements:
+            if evidence_in_text(a.evidence, statement[0]) or \
+                    evidence_in_text(statement[0], a.evidence):
+                statement[0] = max(statement[0], a.evidence, key=len)
+                statement[1].append(a)
+                break
+        else:
+            statements.append([a.evidence, [a]])
+    return "\n".join(
+        f'- "{quote}": ' + "; ".join(f"{a.question} {a.answer}" for a in group)
+        for quote, group in statements)
 
 
 def _words(text: str) -> str:

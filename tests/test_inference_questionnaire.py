@@ -80,7 +80,7 @@ async def test_questionnaire_answers_reach_cod_prompt():
 
     prompt = _cod_prompt(llm)
     assert "structured VA answers" in prompt
-    assert "- Did he or she have a fever? yes" in prompt
+    assert '- "He had a fever": Did he or she have a fever? yes' in prompt
     assert [(a["id"], a["answer"]) for a in result["questionnaire_answers"]] == \
         [("q:fever-o", "yes")]
     assert set(result["timings"]) == {"questionnaire_retrieval_s",
