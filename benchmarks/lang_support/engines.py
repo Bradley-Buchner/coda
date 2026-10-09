@@ -164,3 +164,30 @@ def make_mms(repo, language, device):
         return " ".join(texts)
 
     return transcribe
+
+
+def make_hf_ctc(repo, device):
+    """Build a run(path) -> str closure over a CTC checkpoint on the Hub."""
+    import torch
+    from transformers import AutoModelForCTC, AutoProcessor
+
+    processor = AutoProcessor.from_pretrained(repo)
+    model = AutoModelForCTC.from_pretrained(repo).to(device).eval()
+
+    def transcribe(path):
+        audio = load_audio(path)
+        window = MMS_WINDOW_SEC * SAMPLE_RATE
+        texts = []
+        for start in range(0, len(audio), window):
+            chunk = audio[start:start + window]
+            if len(chunk) < MIN_SAMPLES:
+                continue
+            inputs = processor(chunk, sampling_rate=SAMPLE_RATE,
+                               return_tensors="pt").to(device)
+            with torch.no_grad():
+                logits = model(**inputs).logits
+            predicted = torch.argmax(logits, dim=-1)
+            texts.append(processor.batch_decode(predicted)[0])
+        return " ".join(texts)
+
+    return transcribe

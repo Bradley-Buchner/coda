@@ -17,6 +17,12 @@ CASE_IDS = {
     "Diarrhoea rec2.m4a.mp4": "diarrhea_2",
 }
 
+# Recordings of a different translation from the reference, left unscored
+MISMATCHED = {"lri_1"}
+
+# Recordings that open with a spoken title missing from the reference
+SPOKEN_TITLE = {"lri_2", "diarrhea_1"}
+
 
 def normalize(text, strip_accents=False):
     """Lowercase Zulu and replace punctuation, keeping word-internal hyphens.

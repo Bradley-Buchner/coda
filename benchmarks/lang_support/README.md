@@ -36,9 +36,13 @@ and `reference`. The Bengali adapter uses `cases_bn_filtered.json`; the full
 `cases_bn.json` is retained as supplied. The Portuguese adapter handles `Iri_*`
 filenames and Portuguese text stored under the stale `bn_narrative` field.
 The Zulu and Sesotho recordings arrived in one batch with inconsistent
-filenames, so their adapters map each supplied filename to its case. Three Zulu
-recordings (`lri_1`, `lri_2`, `diarrhea_1`) open with a spoken title that is not
-in the reference, which adds a few insertions to their scores.
+filenames, so their adapters map each supplied filename to its case. An adapter
+can mark data artifacts. `MISMATCHED` recordings were read from a different
+translation than the reference and are left unscored (Zulu `lri_1`).
+`SPOKEN_TITLE` recordings open with a title that is not in the reference, and
+words before the first reference word are not counted (Zulu `lri_2`,
+`diarrhea_1`). After changing references or these markers, rescore saved
+transcripts with `run_benchmark.py --language <tag> --rescore`.
 Duplicate cases, unmatched audio, conflicting references, or missing recordings
 produce explicit errors. Place the original recordings under the corresponding
 `audio/` directory before running; recordings are not committed to Git.
