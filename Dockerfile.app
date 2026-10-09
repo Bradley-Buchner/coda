@@ -47,8 +47,8 @@ ENV CODA_DIALOGUE__DEVICE=${COMPUTE_DEVICE}
 RUN python -c "from faster_whisper import WhisperModel; WhisperModel('small', device='cpu')"
 
 # Fine-tuned transcription models to pre-download, space separated. Empty by
-# default. E.g. anv-tso-turbo or anv-zul-turbo for Xitsonga or isiZulu
-# (~0.8GB each).
+# default. E.g. anv-tso-turbo, anv-zul-turbo or anv-sot-turbo for
+# Xitsonga, isiZulu or Sesotho (~0.8GB each).
 ARG FINETUNED_MODELS=""
 RUN for name in $FINETUNED_MODELS; do \
       python -c "from coda.dialogue.finetuned_whisper import get_model_path; get_model_path('$name')" || exit 1 ; \

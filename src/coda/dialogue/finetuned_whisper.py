@@ -42,10 +42,19 @@ FINETUNED_MODELS = {
         decode_language="en",
         condition_on_previous_text=False,
     ),
+    "anv-sot-turbo": FinetunedWhisper(
+        ct2=Checkpoint("gyorilab/whisper-large-v3-turbo-anv-sot-ct2",
+                       "5bdfcfab559a7e86a944d2438112dfe02378d687"),
+        mlx=Checkpoint("gyorilab/whisper-large-v3-turbo-anv-sot-mlx",
+                       "0d126d19c04c4ebb4d1be6fe63239ab268a58735"),
+        language="st",
+        decode_language="en",
+        condition_on_previous_text=False,
+    ),
 }
 
 # Languages the fine-tunes add beyond Whisper's own
-FINETUNED_LANGUAGES = {"ts": "Tsonga", "zu": "Zulu"}
+FINETUNED_LANGUAGES = {"ts": "Tsonga", "zu": "Zulu", "st": "Sesotho"}
 
 
 def decode_options(name, language):

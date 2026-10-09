@@ -98,7 +98,8 @@ def test_faster_whisper_filter_uses_higher_threshold_non_english():
 def test_finetuned_models_selectable():
     for cls in (FasterWhisperTranscriber, WhisperLiveKitTranscriber):
         for model, language in (("anv-tso-turbo", "ts"),
-                                ("anv-zul-turbo", "zu")):
+                                ("anv-zul-turbo", "zu"),
+                                ("anv-sot-turbo", "st")):
             assert model in cls.MODELS
             assert cls.normalize_language(language) == language
 
