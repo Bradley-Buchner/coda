@@ -11,7 +11,8 @@ from reporting import hardware
 
 # Dataset tag to the module holding its normalization and ASR language code
 LANGUAGES = {"bn": "languages.bn", "pt_br": "languages.pt_br",
-             "ts": "languages.ts", "zu": "languages.zu", "st": "languages.st"}
+             "ts": "languages.ts", "zu": "languages.zu", "st": "languages.st",
+             "syl": "languages.syl"}
 
 # Engines backed by a rate-limited remote API reject requests intermittently.
 # Retry here rather than inside an engine so each attempt is timed separately.
@@ -71,9 +72,15 @@ def score(adapter, case_id, reference, hypothesis, strip_accents):
             "excluded": case_id in getattr(adapter, "MISMATCHED", ())}
 
 
+def label(sample):
+    return f"{sample.case_id}/{sample.recording_set}" \
+        if sample.recording_set else sample.case_id
+
+
 def means(clips):
-    """Return mean WER, mean CER, and the number of clips not excluded."""
-    scored = [clip for clip in clips if not clip.get("excluded")]
+    """Return mean WER, mean CER, and the number of scored clips not excluded."""
+    scored = [clip for clip in clips
+              if "wer" in clip and not clip.get("excluded")]
     if not scored:
         return float("nan"), float("nan"), 0
     return (sum(clip["wer"] for clip in scored) / len(scored),
@@ -93,7 +100,7 @@ def run(language, registry, engines=None, *, strip_accents=False, **options):
         return adapter.normalize(text, strip_accents)
 
     samples = load_samples(language)
-    durations = {s.case_id: clip_duration(s.audio_path) for s in samples}
+    durations = {s.audio_path: clip_duration(s.audio_path) for s in samples}
     host = hardware()
     compute_type = options.get("compute_type")
     output_dir = Path(__file__).parent / "results" / language
@@ -114,40 +121,46 @@ def run(language, registry, engines=None, *, strip_accents=False, **options):
         clips = []
         failed = []
         for sample in samples:
-            duration = durations[sample.case_id]
+            duration = durations[sample.audio_path]
             try:
                 hypothesis, elapsed = transcribe_clip(
                     transcribe, sample.audio_path)
             except Exception as exc:
-                failed.append(sample.case_id)
-                print(f"  {sample.case_id:<14} FAILED {str(exc)[:90]}", flush=True)
+                failed.append(label(sample))
+                print(f"  {label(sample):<16} FAILED {str(exc)[:90]}", flush=True)
                 continue
-            scores = score(adapter, sample.case_id, sample.reference,
-                           hypothesis, strip_accents)
-            w, c = scores["wer"], scores["cer"]
             rtf = elapsed / duration if duration else None
-            clips.append({"case_id": sample.case_id, **scores,
-                          "audio_sec": round(duration, 1) if duration else None,
-                          "time_sec": round(elapsed, 2),
-                          "rtf": round(rtf, 3) if rtf else None,
-                          "ref": sample.reference, "hyp": hypothesis,
-                          "ref_norm": normalize(sample.reference),
-                          "hyp_norm": normalize(hypothesis)})
+            clip = {"case_id": sample.case_id}
+            if sample.recording_set:
+                clip["recording_set"] = sample.recording_set
+            if sample.reference is not None:
+                clip.update(score(adapter, sample.case_id, sample.reference,
+                                  hypothesis, strip_accents))
+            clip.update({"audio_sec": round(duration, 1) if duration else None,
+                         "time_sec": round(elapsed, 2),
+                         "rtf": round(rtf, 3) if rtf else None})
+            if sample.reference is not None:
+                clip["ref"] = sample.reference
+            clip["hyp"] = hypothesis
+            if sample.reference is not None:
+                clip["ref_norm"] = normalize(sample.reference)
+            clip["hyp_norm"] = normalize(hypothesis)
+            clips.append(clip)
+
+            prefix = f"WER={clip['wer']:.3f} CER={clip['cer']:.3f}" \
+                if "wer" in clip else "unscored"
             suffix = f"  {elapsed:5.1f}s  RTF={rtf:.2f}" if rtf else ""
-            if scores["excluded"]:
+            if clip.get("excluded"):
                 suffix += "  (excluded)"
-            print(f"  {sample.case_id:<14} WER={w:.3f} CER={c:.3f}{suffix}",
-                  flush=True)
+            print(f"  {label(sample):<16} {prefix}{suffix}", flush=True)
 
         if not clips:
             continue
-        mean_wer, mean_cer, scored = means(clips)
         rtfs = [clip["rtf"] for clip in clips if clip["rtf"] is not None]
         mean_rtf = sum(rtfs) / len(rtfs) if rtfs else None
         tail = f"  mean_RTF={mean_rtf:.2f}" if mean_rtf else ""
         note = f"  FAILED={len(failed)}" if failed else ""
-        print(f"  MEAN WER={mean_wer:.3f}  MEAN CER={mean_cer:.3f}  "
-              f"load={load_sec}s{tail}  (n={scored}){note}", flush=True)
+        print(f"  {summary(clips)}  load={load_sec}s{tail}{note}", flush=True)
 
         path = output_dir / f"transcripts_{name}.json"
         path.write_text(json.dumps(
@@ -158,25 +171,44 @@ def run(language, registry, engines=None, *, strip_accents=False, **options):
         print(f"  transcripts -> {path}", flush=True)
 
 
+def summary(clips):
+    """Describe mean WER and CER, and per recording set when there are several."""
+    mean_wer, mean_cer, scored = means(clips)
+    if not scored:
+        return f"unscored, no references (n={len(clips)})"
+    text = f"MEAN WER={mean_wer:.3f}  MEAN CER={mean_cer:.3f}  (n={scored})"
+    sets = sorted({clip["recording_set"] for clip in clips
+                   if clip.get("recording_set")})
+    for set_name in sets if len(sets) > 1 else ():
+        set_wer, set_cer, set_n = means(
+            [clip for clip in clips if clip.get("recording_set") == set_name])
+        text += f"\n    {set_name:<6} WER={set_wer:.3f}  CER={set_cer:.3f}  " \
+            f"(n={set_n})"
+    return text
+
+
 def rescore(language):
     """Rescore saved transcripts in place against the current references."""
     adapter = load_adapter(language)
-    samples = {s.case_id: s for s in load_samples(language)}
+    samples = {(s.case_id, s.recording_set): s
+               for s in load_samples(language)}
     for path in sorted((Path(__file__).parent / "results" / language)
                        .glob("transcripts_*.json")):
         result = json.loads(path.read_text())
         strip_accents = result.get("strip_accents", False)
         for clip in result["clips"]:
-            sample = samples[clip["case_id"]]
+            sample = samples[clip["case_id"], clip.get("recording_set", "")]
+            if sample.reference is None:
+                continue
             clip.update(score(adapter, sample.case_id, sample.reference,
                               clip["hyp"], strip_accents),
                         ref=sample.reference,
                         ref_norm=adapter.normalize(sample.reference,
+                                                   strip_accents),
+                        hyp_norm=adapter.normalize(clip["hyp"],
                                                    strip_accents))
         path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
-        mean_wer, mean_cer, scored = means(result["clips"])
-        print(f"{result['engine']:<28} WER={mean_wer:.3f} CER={mean_cer:.3f} "
-              f"(n={scored})")
+        print(f"{result['engine']:<28} {summary(result['clips'])}")
 
 
 def build_parser(description=None):
@@ -207,7 +239,8 @@ def main_for(language, build_engines):
 
 
 RUNNERS = {"bn": "bn_asr_bench", "pt_br": "pt_br_asr_bench",
-           "ts": "ts_asr_bench", "zu": "za_asr_bench", "st": "za_asr_bench"}
+           "ts": "ts_asr_bench", "zu": "za_asr_bench", "st": "za_asr_bench",
+           "syl": "bn_asr_bench"}
 
 
 def main():
