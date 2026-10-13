@@ -1,6 +1,6 @@
 """Build a question bank TSV file used for questionnaire retrieval. The default bank
 holds the symptom and background VA interview questions linked to WHO VA causes in
-ProbBase.
+ProbBase, along with ProbBase's skip rules.
 """
 
 import csv
@@ -14,11 +14,23 @@ from coda.resources import get_resource_path
 UNKNOWN = "unknown"
 DEFAULT_RESPONSES = ("yes", "no")
 DEFAULT_BANK = get_resource_path("questionnaires/who_va_probbase.tsv")
-COLUMNS = ["id", "question", "responses", "category"]
+COLUMNS = ["id", "question", "responses", "category", "ask_if", "skip_if"]
 # Options of one multi-option item share an id stem: who.va.q:W610148-a, -b, -c.
 OPTION_ID = re.compile(r"^(.+)-[a-z]$")
 
 PROBBASE_CATEGORIES = {"M": "symptom", "B": "background"}
+PROBBASE_RULES = {"ask_if": "ask_if", "dont_ask_if": "skip_if"}
+PROBBASE_ANSWERS = {"Y": "yes", "N": "no"}
+# ProbBase age bands, oldest first, with each band's lower bound in days
+AGE_BANDS = [
+    ("who.va.q:W610022-a", 65 * 365.25),  # 65 years or more
+    ("who.va.q:W610022-b", 50 * 365.25),
+    ("who.va.q:W610022-c", 15 * 365.25),
+    ("who.va.q:W610022-d", 5 * 365.25),
+    ("who.va.q:W610022-e", 365.25),
+    ("who.va.q:W610022-f", 28),
+    ("who.va.q:W610022-g", 0),            # neonate
+]
 
 # Some questions need re-wording for clarity (e.g., follow-up questions that lose
 # context on their own, unclear sentence subjects, or typos in the source)
@@ -61,6 +73,8 @@ class Question:
     text: str
     responses: Tuple[str, ...] = DEFAULT_RESPONSES
     category: str = ""
+    ask_if: Tuple[Tuple[str, str], ...] = ()   # (question id, answer) pairs
+    skip_if: Tuple[Tuple[str, str], ...] = ()
 
     @property
     def allowed_answers(self) -> Tuple[str, ...]:
@@ -73,6 +87,27 @@ class Question:
         """Shared id stem of a multi-option item's options (W610148-a/b/c -> W610148)."""
         match = OPTION_ID.match(self.id)
         return match.group(1) if match else None
+
+
+def _conditions(text: Optional[str]) -> Tuple[Tuple[str, str], ...]:
+    """Parse "id=answer;id=answer" into (id, answer) pairs."""
+    return tuple(tuple(c.strip().rsplit("=", 1)) for c in (text or "").split(";")
+                 if c.strip())
+
+
+def applicable(question: Question, age_days: Optional[float] = None,
+               known: Optional[dict] = None) -> bool:
+    """Whether a question applies to the deceased under its skip rules. Facts come
+    from the age at death and from known yes/no answers.
+    """
+    facts = {}
+    if age_days is not None:
+        band = next(qid for qid, lower in AGE_BANDS if age_days >= lower)
+        facts = {qid: "yes" if qid == band else "no" for qid, _ in AGE_BANDS}
+    facts.update({qid: a for qid, a in (known or {}).items() if a in ("yes", "no")})
+    if any(facts.get(qid) == answer for qid, answer in question.skip_if):
+        return False
+    return all(facts.get(qid, answer) == answer for qid, answer in question.ask_if)
 
 
 def load_question_bank(path: Optional[str] = None) -> List[Question]:
@@ -100,13 +135,26 @@ def load_question_bank(path: Optional[str] = None) -> List[Question]:
                 text=text,
                 responses=responses or DEFAULT_RESPONSES,
                 category=(row.get("category") or "").strip(),
+                ask_if=_conditions(row.get("ask_if")),
+                skip_if=_conditions(row.get("skip_if")),
             ))
     return questions
 
 
-def question_bank_from_probbase(nodes_file: str, out_file: str) -> None:
-    """Write the default question bank from the KG's probbase nodes file."""
+def question_bank_from_probbase(nodes_file: str, out_file: str,
+                                edges_file: Optional[str] = None) -> None:
+    """Write the default question bank from the KG's probbase nodes file, with the
+    skip rules from its edges file."""
     import pandas as pd
+
+    rules = {column: {} for column in PROBBASE_RULES.values()}
+    if edges_file:
+        edges = pd.read_csv(edges_file, sep="\t", dtype=str)
+        edges = edges[edges[":TYPE"].isin(PROBBASE_RULES)].sort_values([":END_ID", "value"])
+        for e in edges.itertuples(index=False):
+            start, end, answer, edge_type = e
+            column = rules[PROBBASE_RULES[edge_type]]
+            column.setdefault(start, []).append(f"{end}={PROBBASE_ANSWERS[answer]}")
 
     nodes = pd.read_csv(nodes_file, sep="\t", dtype=str)
     nodes = nodes[nodes["samb"].isin(PROBBASE_CATEGORIES)]
@@ -116,16 +164,20 @@ def question_bank_from_probbase(nodes_file: str, out_file: str) -> None:
                     .map(_gender_neutral),
         "responses": "",
         "category": nodes["samb"].map(PROBBASE_CATEGORIES),
+        **{column: nodes["id:ID"].map(lambda qid, c=conditions: ";".join(c.get(qid, [])))
+           for column, conditions in rules.items()},
     })
     bank.sort_values("id").to_csv(out_file, sep="\t", index=False,
                                   columns=COLUMNS, lineterminator="\n")
 
 
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) not in (3, 4):
         sys.exit("usage: python -m coda.questionnaire.bank "
-                 "<probbase_nodes.tsv.gz> <output.tsv>")
-    question_bank_from_probbase(sys.argv[1], sys.argv[2])
+                 "<probbase_nodes.tsv.gz> <output.tsv> [probbase_edges.tsv.gz]")
+    edges_file = sys.argv[3] if len(sys.argv) == 4 else \
+        sys.argv[1].replace("_nodes", "_edges")
+    question_bank_from_probbase(sys.argv[1], sys.argv[2], edges_file)
 
 
 if __name__ == "__main__":

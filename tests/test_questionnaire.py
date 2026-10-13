@@ -14,6 +14,7 @@ from coda.questionnaire.answerer import (
 from coda.questionnaire.bank import (
     UNKNOWN,
     Question,
+    applicable,
     load_question_bank,
     question_bank_from_probbase,
 )
@@ -238,3 +239,16 @@ def test_format_answers_one_line_per_statement():
         '- "a high fever": Did he or she have a fever? yes\n'
         '- "His mother also had a high fever": Did the baby\'s mother have a fever? yes')
 
+
+
+def test_skip_rules():
+    questions = {q.id: q for q in load_question_bank()}
+    breathed = questions["who.va.q:W610110-o"]  # Did the baby ever breathe?
+    # Regression: newborn-only questions were answered for older children
+    assert not applicable(breathed, age_days=3 * 365)
+    assert applicable(breathed, age_days=3) and applicable(breathed)
+    cough_weeks = questions["who.va.q:W610154-a"]  # Did the cough last < 3 weeks?
+    # Regression: follow-ups of a denied sign were answered
+    assert not applicable(cough_weeks, known={"who.va.q:W610153-o": "no"})
+    assert applicable(cough_weeks, known={"who.va.q:W610153-o": "yes"})
+    assert applicable(cough_weeks)
