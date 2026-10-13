@@ -15,6 +15,7 @@ from coda.questionnaire.bank import (
     UNKNOWN,
     Question,
     applicable,
+    apply_rules,
     load_question_bank,
     question_bank_from_probbase,
 )
@@ -42,7 +43,7 @@ def _write_bank(path, rows, columns=("id", "question", "responses", "category"))
 
 def test_default_bank_loads():
     questions = load_question_bank()
-    assert len(questions) == 341
+    assert len(questions) == 343
     # Regression: maternal and newborn delivery questions shared identical text
     assert len({q.text for q in questions}) == len(questions)
     # Regression: the embedder reads "(s)he" as "he"
@@ -82,8 +83,10 @@ def test_bank_from_probbase_keeps_symptoms_and_background(tmp_path):
 
     questions = {q.id: q for q in load_question_bank(tmp_path / "bank.tsv")}
     assert set(questions) == {"who.va.q:W610147-o", "who.va.q:W610411-o",
-                              "who.va.q:W610344-o", "who.va.q:W610252-o"}
+                              "who.va.q:W610019-a", "who.va.q:W610344-o",
+                              "who.va.q:W610252-o"}
     assert questions["who.va.q:W610147-o"].text == "Did he or she have a fever?"
+    assert questions["who.va.q:W610019-a"].text == "Was the deceased male?"
     # Regression: replacing "s/he" first turned "his/her" into "hihe or sher"
     assert questions["who.va.q:W610252-o"].text == \
         "Did he or she have puffiness all over his or her body?"
@@ -246,9 +249,41 @@ def test_skip_rules():
     breathed = questions["who.va.q:W610110-o"]  # Did the baby ever breathe?
     # Regression: newborn-only questions were answered for older children
     assert not applicable(breathed, age_days=3 * 365)
-    assert applicable(breathed, age_days=3) and applicable(breathed)
+    assert applicable(breathed, age_days=0) and applicable(breathed)
     cough_weeks = questions["who.va.q:W610154-a"]  # Did the cough last < 3 weeks?
     # Regression: follow-ups of a denied sign were answered
     assert not applicable(cough_weeks, known={"who.va.q:W610153-o": "no"})
     assert applicable(cough_weeks, known={"who.va.q:W610153-o": "yes"})
     assert applicable(cough_weeks)
+
+
+def test_apply_rules():
+    q = lambda short: "who.va.q:" + short
+    answers = apply_rules(load_question_bank(), {
+        q("W610153-o"): "no", q("W610154-a"): "no",   # no cough; cough under 3 weeks
+        q("W610147-o"): "yes", q("W610148-a"): "yes",  # fever under a week
+        q("W610214-o"): "yes", q("W610215-o"): "no",   # unconscious, not for 24 hours
+        q("W610218-o"): "yes",                          # ...until death
+        q("W610281-o"): "yes",                          # baby became unresponsive
+    }, age_days=2 * 365)
+    # Regression: follow-ups of a denied sign were answered "no"
+    assert q("W610154-a") not in answers
+    # Regression: a baby-only question was answered for a 2-year-old
+    assert q("W610281-o") not in answers
+    # Exclusive options of a "yes" option are "no"; a follow-up "yes" stays
+    assert answers[q("W610148-b")] == answers[q("W610148-c")] == "no"
+    assert answers[q("W610218-o")] == "yes"
+    answers = apply_rules(load_question_bank(), {
+        q("W610148-a"): "yes",  # fever under a week
+        q("W610155-o"): "no",   # cough not productive
+        q("W610019-a"): "yes",  # male
+        q("W610312-o"): "no",   # died during labour
+    }, age_days=30 * 365)
+    # A follow-up that is yes implies its parent
+    assert answers[q("W610147-o")] == "yes"
+    # Regression: cough follow-ups were answered when no cough was mentioned
+    assert q("W610155-o") not in answers
+    # Pregnancy questions don't apply to a man
+    assert q("W610312-o") not in answers
+    # The age gives a newborn's day of death
+    assert apply_rules(load_question_bank(), {}, age_days=3) == {q("W610022-j"): "yes"}

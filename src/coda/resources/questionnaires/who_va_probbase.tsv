@@ -1,6 +1,8 @@
 id	question	responses	category	ask_if	skip_if
 who.va.q:W610004-a	Did he or she die during the wet season?		background		who.va.q:W610004-b=yes
 who.va.q:W610004-b	Did he or she die during the dry season?		background		who.va.q:W610004-a=yes
+who.va.q:W610019-a	Was the deceased male?		demographic		who.va.q:W610019-b=yes
+who.va.q:W610019-b	Was the deceased female?		demographic		who.va.q:W610019-a=yes
 who.va.q:W610022-h	Was he or she a live baby who died within 24 hours of birth?		background	who.va.q:W610022-g=yes	who.va.q:W610022-i=yes;who.va.q:W610022-j=yes;who.va.q:W610022-k=yes;who.va.q:W610114-o=yes
 who.va.q:W610022-i	Was he or she a baby who died between 24 and 48 hours of birth?		background	who.va.q:W610022-g=yes	who.va.q:W610022-h=yes;who.va.q:W610022-j=yes;who.va.q:W610022-k=yes
 who.va.q:W610022-j	Was he or she a baby who died more than 48 hours from birth, but within the first week?		background	who.va.q:W610022-g=yes	who.va.q:W610022-h=yes;who.va.q:W610022-i=yes;who.va.q:W610022-k=yes

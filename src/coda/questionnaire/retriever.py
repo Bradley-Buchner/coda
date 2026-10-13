@@ -58,7 +58,7 @@ class QuestionRetriever:
                  model_name: str = DEFAULT_EMBEDDING_MODEL,
                  top_k: int = 10, min_similarity: float = 0.5, window: int = 2,
                  encoder=None):
-        self.questions = list(questions)
+        self.questions = [q for q in questions if q.category != "demographic"]  # exclude sex
         self.top_k = top_k
         self.min_similarity = min_similarity
         self.window = window
