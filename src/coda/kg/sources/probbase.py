@@ -2,11 +2,13 @@
 This module gets the list of VA questions from the "probbase" associated
 with InterVA and construct nodes for the questions themselves, and
 build edges between the questions and the causes they relate to
-using the information in the probbase.
+using the information in the probbase. It also exports the probbase's skip
+rules as edges between questions.
 """
 
 __all__ = ["ProbBaseExporter"]
 
+import re
 import pandas as pd
 
 from coda.kg.sources import KGSourceExporter, write_tsv_gz
@@ -16,6 +18,12 @@ PROBBASE_URL = (
     "refs/heads/main/src/interva/data/probbase.xls"
 )
 
+RULE_CODE = re.compile(r"^(i\d{3}[a-z])([YN])$")
+RULE_COLUMNS = {
+    "ask_if": ["doaskif", "nnonly"],
+    "dont_ask_if": [f"dontask{i}" for i in range(1, 9)],
+}
+
 
 def process_va_col(col_name):
     code = col_name[2:]
@@ -24,6 +32,24 @@ def process_va_col(col_name):
     else:
         code = f"{code[:2]}.{code[2:]}"
     return f"who.va:VAs-{code}"
+
+
+def rule_edges(df):
+    """Edges for the probbase skip rules, as [start, end, type, answer] rows."""
+    questions = df.dropna(subset=["indic"])
+    curie_by_indic = dict(zip(questions["indic"], questions["who_curie"]))
+    edges = []
+    for _, row in questions.iterrows():
+        for edge_type, columns in RULE_COLUMNS.items():
+            for col in columns:
+                if pd.isna(row[col]) or not str(row[col]).strip():
+                    continue
+                match = RULE_CODE.match(str(row[col]).strip())
+                if not match:
+                    raise ValueError(f"Unrecognized rule code {row[col]!r} in {col}")
+                indic, answer = match.groups()
+                edges.append([row["who_curie"], curie_by_indic[indic], edge_type, answer])
+    return edges
 
 
 class ProbBaseExporter(KGSourceExporter):
@@ -60,6 +86,7 @@ class ProbBaseExporter(KGSourceExporter):
                     row[col],
                 ]
                 edges.append(edge)
+        edges.extend(rule_edges(df))
         edge_df = pd.DataFrame(
             edges, columns=[":START_ID", ":END_ID", ":TYPE", "value"]
         )
@@ -67,7 +94,7 @@ class ProbBaseExporter(KGSourceExporter):
             [edge_df.drop(columns=[":TYPE"]), edge_df[":TYPE"].apply(pd.Series).rename(columns={0: ':TYPE'}) ],
             axis=1,
         )
-        edge_df = edge_df.sort_values([":START_ID", ":END_ID"])
+        edge_df = edge_df.sort_values([":START_ID", ":END_ID", ":TYPE", "value"])
         write_tsv_gz(edge_df.drop_duplicates(), self.edges_file)
 
 
