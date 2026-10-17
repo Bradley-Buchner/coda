@@ -38,10 +38,10 @@ from coda.app.storage import (
     CaseRecorder,
     case_audio_path,
     cases_browsable,
-    cases_root,
     list_cases,
     load_case,
     storage_enabled,
+    storage_keeps_audio,
 )
 from coda.config import inference_url, settings
 from coda.dialogue import (
@@ -215,6 +215,16 @@ class InferenceSessionCoordinator:
             self.end_case()
         else:
             await self.start_case()
+            await _ws_send_safe(self.websocket, self.session_message())
+
+    def session_message(self) -> dict:
+        """Tells the client which session, generation and case it is on."""
+        return {
+            "type": "session",
+            "session_id": self.session_id,
+            "session_generation": self.generation,
+            "case_id": self.recorder.case_id if self.recorder is not None else None,
+        }
 
     async def wait_for_idle(self):
         task = None
@@ -534,6 +544,7 @@ async def get_settings():
         "language": current_language,
         "storage_enabled": storage_enabled(),
         "cases_browsable": cases_browsable(),
+        "storage_audio": storage_keeps_audio(),
         "transcriber_backend": current_transcriber_backend,
         "transcriber_model": current_transcriber_model,
         "grounder": current_grounder,
@@ -696,6 +707,7 @@ async def update_settings(req: SettingsRequest):
         "language": current_language,
         "storage_enabled": storage_enabled(),
         "cases_browsable": cases_browsable(),
+        "storage_audio": storage_keeps_audio(),
         "transcriber_backend": current_transcriber_backend,
         "transcriber_model": current_transcriber_model,
         "grounder": current_grounder,
