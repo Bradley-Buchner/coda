@@ -28,6 +28,9 @@ app:
   # differentials heading. Follow-up questions, transcript, and advisory
   # stay visible.
   show_cod_result: true
+  # When false, the clinical note upload button and transcript drop target
+  # are hidden.
+  show_clinical_note: false
   # Interface language the page starts in, used when the browser has no stored
   # choice. Must be one of the locales the UI ships translations for.
   ui_language: en

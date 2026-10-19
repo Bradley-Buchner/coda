@@ -250,6 +250,12 @@ class ResetRequest(BaseModel):
     session_generation: Optional[int] = None
 
 
+class UploadNoteRequest(BaseModel):
+    text: str
+    session_id: str
+    filename: Optional[str] = None
+
+
 def get_language_name(code: str) -> str:
     return get_transcriber_languages(current_transcriber_backend).get(code, code)
 
@@ -862,6 +868,46 @@ async def _start_inference(inference_session: InferenceSessionCoordinator,
     await inference_session.enqueue(chunk_id, timestamp, text, annotations)
 
 
+# Max clinical note size in characters
+MAX_NOTE_SIZE = 100_000
+
+
+@app.post("/upload-note")
+async def upload_note(req: UploadNoteRequest):
+    """Attach a clinical note to an active session and rerun inference."""
+    text = req.text.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Empty clinical note")
+    if len(text) > MAX_NOTE_SIZE:
+        raise HTTPException(status_code=413,
+                            detail="Clinical note too large (max 100KB)")
+    session = next((s for s in active_inference_sessions
+                    if s.session_id == req.session_id), None)
+    if session is None:
+        raise HTTPException(status_code=404, detail="No active session")
+
+    annotations = await asyncio.to_thread(grounder.annotate, text)
+    generation = session.generation
+    request = {
+        "chunk_id": "note-" + str(uuid.uuid4()),
+        "timestamp": time.time(),
+        "clinical_note": text,
+        "annotations": [a.to_json() for a in annotations],
+        "metadata": current_metadata.to_dict(),
+        "session_id": session.session_id,
+        "session_generation": generation,
+    }
+    response = await inference_client.post("/clinical_note", json=request)
+    response.raise_for_status()
+    result = response.json()
+    if await session.is_current_generation(generation):
+        if session.recorder is not None:
+            session.recorder.write_inference(request, result,
+                                             shown_at=time.time())
+        await _ws_send_safe(session.websocket, {"type": "inference", **result})
+    return {"filename": req.filename}
+
+
 @app.post("/reset")
 async def reset_session(req: Optional[ResetRequest] = None):
     """Reset session state: start a new case and reset the inference agent."""
@@ -914,6 +960,12 @@ async def get_index():
         html_content = html_content.replace(
             "<body",
             '<body data-show-cod-result="false"',
+            1,
+        )
+    if not settings.app.get("show_clinical_note", False):
+        html_content = html_content.replace(
+            "<body",
+            '<body data-show-clinical-note="false"',
             1,
         )
     return HTMLResponse(content=html_content)

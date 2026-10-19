@@ -26,13 +26,26 @@ class InferenceAgent:
         self.dialogue_history = []  # List of (chunk_id, timestamp, text, annotations) tuples
         self.all_text = ""  # Accumulated text from all chunks
         self.metadata = Metadata()
+        # Uploaded clinical note, used in all subsequent inferences
+        self.clinical_note = None
 
     def reset(self):
         """Reset dialogue history for a new interview."""
         self.dialogue_history = []
         self.all_text = ""
         self.metadata = Metadata()
+        self.clinical_note = None
         logger.info("Agent state reset for new interview")
+
+    async def set_clinical_note(self, chunk_id: str, clinical_note: str,
+                                annotations: List[Annotation],
+                                timestamp: float = None,
+                                metadata: dict = None) -> dict:
+        """Store a clinical note and rerun inference with it."""
+        self.clinical_note = clinical_note
+        logger.info("Clinical note set (%d chars)", len(clinical_note))
+        return await self.process_chunk(chunk_id, "", annotations, timestamp,
+                                        metadata)
 
     def create_session_agent(self) -> "InferenceAgent":
         """Create a fresh agent instance for one session/generation."""
@@ -74,9 +87,11 @@ class InferenceAgent:
         if metadata is not None:
             self.metadata = Metadata.from_dict(metadata)
 
-        # Add to dialogue history
-        self.dialogue_history.append((chunk_id, timestamp, text, annotations))
-        self.all_text += " " + text
+        # Add to dialogue history, unless rerunning with no new text
+        if text:
+            self.dialogue_history.append((chunk_id, timestamp, text,
+                                          annotations))
+            self.all_text += " " + text
 
         infer_start = time.perf_counter()
         # Call subclass inference implementation
@@ -205,6 +220,17 @@ class InferenceRequest(BaseModel):
     session_generation: int = 0
 
 
+class ClinicalNoteRequest(BaseModel):
+    """Request model for clinical note endpoint."""
+    chunk_id: str
+    clinical_note: str
+    annotations: list
+    timestamp: float = None
+    metadata: dict = None
+    session_id: str = "default"
+    session_generation: int = 0
+
+
 class ResetRequest(BaseModel):
     session_id: Optional[str] = None
     session_generation: Optional[int] = None
@@ -280,6 +306,22 @@ class InferenceServer:
                     exc_info=True
                 )
                 raise
+
+        @self.app.post("/clinical_note")
+        async def clinical_note(request: ClinicalNoteRequest):
+            """Store a clinical note for the session and rerun inference."""
+            runtime = await get_session_runtime(
+                request.session_id,
+                request.session_generation,
+            )
+            async with runtime.lock:
+                return await runtime.agent.set_clinical_note(
+                    request.chunk_id,
+                    request.clinical_note,
+                    request.annotations,
+                    request.timestamp,
+                    request.metadata,
+                )
 
         @self.app.get("/health")
         async def health():
