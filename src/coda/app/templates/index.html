@@ -580,6 +580,10 @@
         min-width: 0;
       }
 
+      body[data-show-clinical-note="false"] #noteBtn {
+        display: none;
+      }
+
       /* Hide live COD ranking, reasoning, and probability evolution.
          After stop, also hide the primary determination and differentials
          heading. Follow-up questions, transcript, and advisory stay visible. */
@@ -5503,20 +5507,22 @@
           noteInput.value = "";
         }
       });
-      transcript.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        transcript.classList.add("drag-over");
-      });
-      transcript.addEventListener("dragleave", () =>
-        transcript.classList.remove("drag-over"),
-      );
-      transcript.addEventListener("drop", (e) => {
-        e.preventDefault();
-        transcript.classList.remove("drag-over");
-        if (e.dataTransfer.files.length > 0) {
-          uploadClinicalNote(e.dataTransfer.files[0]);
-        }
-      });
+      if (body.dataset.showClinicalNote !== "false") {
+        transcript.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          transcript.classList.add("drag-over");
+        });
+        transcript.addEventListener("dragleave", () =>
+          transcript.classList.remove("drag-over"),
+        );
+        transcript.addEventListener("drop", (e) => {
+          e.preventDefault();
+          transcript.classList.remove("drag-over");
+          if (e.dataTransfer.files.length > 0) {
+            uploadClinicalNote(e.dataTransfer.files[0]);
+          }
+        });
+      }
 
       async function uploadClinicalNote(file) {
         if (!file.name.endsWith(".txt")) {

@@ -962,6 +962,12 @@ async def get_index():
             '<body data-show-cod-result="false"',
             1,
         )
+    if not settings.app.get("show_clinical_note", False):
+        html_content = html_content.replace(
+            "<body",
+            '<body data-show-clinical-note="false"',
+            1,
+        )
     return HTMLResponse(content=html_content)
 
 
