@@ -97,6 +97,9 @@ translation_mode = settings.dialogue.translation_mode
 # Per-interview metadata, set via /metadata and forwarded to the inference
 # agent with every inference request.
 current_metadata = Metadata()
+# Person using the app, set via /user and saved with each case but never
+# sent to the inference agent. Kept across case resets.
+current_user = {}
 transcriber: Transcriber
 active_inference_sessions: set["InferenceSessionCoordinator"] = set()
 
@@ -161,7 +164,7 @@ class InferenceSessionCoordinator:
 
     def end_case(self):
         if self.recorder is not None:
-            self.recorder.close(current_metadata.to_dict())
+            self.recorder.close(current_metadata.to_dict(), current_user)
             logger.info("Closed case %s", self.recorder.case_id)
             self.recorder = None
 
@@ -491,6 +494,15 @@ async def set_metadata(payload: dict = Body(...)):
     current_metadata = Metadata.from_dict(payload)
     logger.info(f"Metadata set: {current_metadata.to_dict()}")
     return current_metadata.to_dict()
+
+
+@app.post("/user")
+async def set_user(payload: dict = Body(...)):
+    """Set the name and ID of the person using the app."""
+    global current_user
+    current_user = {"name": payload.get("name", ""),
+                    "id": payload.get("id", "")}
+    return current_user
 
 
 @app.get("/transcriber_backends")
@@ -986,8 +998,15 @@ async def get_index():
     )
     if not settings.app.get("show_case_profile", True):
         html_content = html_content.replace(
-            '<div class="profile-bar" id="profileBar" data-expanded="false">',
-            '<div class="profile-bar" id="profileBar" data-expanded="false" hidden>',
+            "<body",
+            '<body data-show-case-profile="false"',
+            1,
+        )
+    if not settings.app.get("show_user_profile", False):
+        html_content = html_content.replace(
+            "<body",
+            '<body data-show-user-profile="false"',
+            1,
         )
     if not settings.app.get("show_cod_result", True):
         html_content = html_content.replace(

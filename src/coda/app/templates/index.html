@@ -434,12 +434,23 @@
       body[data-state="history"] .profile-bar {
         display: none;
       }
+      body[data-show-case-profile="false"] #profileToggle,
+      body[data-show-case-profile="false"] #profileFields,
+      body[data-show-user-profile="false"] #userToggle,
+      body[data-show-user-profile="false"] #userFields,
+      body[data-show-case-profile="false"][data-show-user-profile="false"]
+        .profile-bar {
+        display: none !important;
+      }
+      .profile-toggles {
+        display: flex;
+        padding: 0 16px;
+      }
       .profile-toggle {
         display: flex;
         align-items: center;
         gap: 8px;
-        width: 100%;
-        padding: 8px 32px;
+        padding: 8px 16px;
         background: none;
         border: none;
         cursor: pointer;
@@ -452,7 +463,8 @@
         font-size: 11px;
         transition: transform 0.15s ease;
       }
-      .profile-bar[data-expanded="true"] .profile-chevron {
+      .profile-bar[data-expanded="true"] #profileToggle .profile-chevron,
+      .profile-bar[data-user-expanded="true"] #userToggle .profile-chevron {
         transform: rotate(180deg);
       }
       .profile-summary {
@@ -460,7 +472,8 @@
         color: var(--ink);
         font-weight: 500;
       }
-      .profile-bar[data-expanded="true"] .profile-summary {
+      .profile-bar[data-expanded="true"] #profileSummary,
+      .profile-bar[data-user-expanded="true"] #userSummary {
         display: none;
       }
       .profile-fields {
@@ -469,7 +482,8 @@
         gap: 20px;
         padding: 0 32px 10px;
       }
-      .profile-bar[data-expanded="true"] .profile-fields {
+      .profile-bar[data-expanded="true"] #profileFields,
+      .profile-bar[data-user-expanded="true"] #userFields {
         display: flex;
       }
       .profile-field,
@@ -493,6 +507,15 @@
         color: var(--ink);
         font-size: 13px;
       }
+      .profile-field input[type="text"] {
+        width: 180px;
+        padding: 4px 8px;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        background: var(--paper);
+        color: var(--ink);
+        font-size: 13px;
+      }
       .profile-field select {
         padding: 4px 8px;
         border: 1px solid var(--border-warm);
@@ -504,7 +527,7 @@
       .profile-still {
         cursor: pointer;
       }
-      .profile-bar[data-stillbirth="true"] .profile-field {
+      .profile-bar[data-stillbirth="true"] #profileFields .profile-field {
         opacity: 0.4;
         pointer-events: none;
       }
@@ -2647,19 +2670,48 @@
         </div>
       </header>
 
-      <div class="profile-bar" id="profileBar" data-expanded="false">
-        <button
-          type="button"
-          class="profile-toggle"
-          id="profileToggle"
-          aria-expanded="false"
-          aria-controls="profileFields"
-        >
-          <i class="bi bi-person-vcard"></i>
-          <span data-i18n="profile.title">Case profile</span>
-          <i class="bi bi-chevron-down profile-chevron"></i>
-          <span class="profile-summary" id="profileSummary"></span>
-        </button>
+      <div
+        class="profile-bar"
+        id="profileBar"
+        data-expanded="false"
+        data-user-expanded="false"
+      >
+        <div class="profile-toggles">
+          <button
+            type="button"
+            class="profile-toggle"
+            id="profileToggle"
+            aria-expanded="false"
+            aria-controls="profileFields"
+          >
+            <i class="bi bi-person-vcard"></i>
+            <span data-i18n="profile.title">Case profile</span>
+            <i class="bi bi-chevron-down profile-chevron"></i>
+            <span class="profile-summary" id="profileSummary"></span>
+          </button>
+          <button
+            type="button"
+            class="profile-toggle"
+            id="userToggle"
+            aria-expanded="false"
+            aria-controls="userFields"
+          >
+            <i class="bi bi-person-badge"></i>
+            <span data-i18n="user.title">User</span>
+            <i class="bi bi-chevron-down profile-chevron"></i>
+            <span class="profile-summary" id="userSummary"></span>
+          </button>
+        </div>
+        <div class="profile-fields" id="userFields">
+          <div class="profile-field">
+            <label for="userName" data-i18n="user.name">Name</label>
+            <input type="text" id="userName" autocomplete="name" />
+          </div>
+          <div class="profile-field">
+            <label for="userId" data-i18n="user.id">ID</label>
+            <input type="text" id="userId" autocomplete="off" />
+          </div>
+        </div>
         <div class="profile-fields" id="profileFields">
           <div class="profile-field">
             <label for="ageValue" data-i18n="profile.age">Age</label>
@@ -3194,6 +3246,9 @@
           "profile.title": "Case profile",
           "profile.age": "Age",
           "profile.stillbirth": "Stillbirth",
+          "user.title": "User",
+          "user.name": "Name",
+          "user.id": "ID",
           "common.new": "New",
           "common.copy": "Copy transcript",
           "common.back": "Back",
@@ -3273,6 +3328,9 @@
           "profile.title": "Wasifu wa kesi",
           "profile.age": "Umri",
           "profile.stillbirth": "Aliyezaliwa mfu",
+          "user.title": "Mtumiaji",
+          "user.name": "Jina",
+          "user.id": "Kitambulisho",
           "common.new": "Mpya",
           "common.copy": "Nakili maandishi",
           "common.back": "Rudi",
@@ -3351,6 +3409,9 @@
           "profile.title": "Profil du cas",
           "profile.age": "Âge",
           "profile.stillbirth": "Mort-né",
+          "user.title": "Utilisateur",
+          "user.name": "Nom",
+          "user.id": "Identifiant",
           "common.new": "Nouveau",
           "common.copy": "Copier la transcription",
           "common.back": "Retour",
@@ -3433,6 +3494,9 @@
           "profile.title": "ملف الحالة",
           "profile.age": "العمر",
           "profile.stillbirth": "مولود ميت",
+          "user.title": "المستخدم",
+          "user.name": "الاسم",
+          "user.id": "المعرّف",
           "common.copy": "نسخ النص",
           "common.back": "رجوع",
           "common.clearAll": "مسح الكل",
@@ -3510,6 +3574,9 @@
           "profile.title": "কেসের প্রোফাইল",
           "profile.age": "বয়স",
           "profile.stillbirth": "মৃত জন্ম",
+          "user.title": "ব্যবহারকারী",
+          "user.name": "নাম",
+          "user.id": "আইডি",
           "common.copy": "প্রতিলিপি কপি করুন",
           "common.back": "ফিরে যান",
           "common.clearAll": "সব মুছুন",
@@ -3589,6 +3656,9 @@
           "profile.title": "Perfil del caso",
           "profile.age": "Edad",
           "profile.stillbirth": "Mortinato",
+          "user.title": "Usuario",
+          "user.name": "Nombre",
+          "user.id": "ID",
           "common.copy": "Copiar transcripción",
           "common.back": "Atrás",
           "common.clearAll": "Borrar todo",
@@ -3669,6 +3739,9 @@
           "profile.title": "Vuxokoxoko bya mhaka",
           "profile.age": "Malembe",
           "profile.stillbirth": "Ku velekiwa ka n'wana a file",
+          "user.title": "Mutirhisi",
+          "user.name": "Vito",
+          "user.id": "ID",
           "common.copy": "Kopa tsalwa",
           "common.back": "Tlhelela endzhaku",
           "common.clearAll": "Sula hinkwaswo",
@@ -3988,6 +4061,9 @@
           causes: latestCauses,
           evolution: evolution.slice(),
         };
+        if (body.dataset.showUserProfile !== "false") {
+          session.user = currentUser();
+        }
         const history = loadHistory();
         history.unshift(session);
         saveHistoryArr(history);
@@ -5479,6 +5555,54 @@
         applyStillbirthState();
         updateProfileSummary();
         setProfileExpanded(false);
+      }
+
+      // Person using the app, saved with each case but not used for inference
+      const USER_KEY = "codaUser";
+      const userToggle = document.getElementById("userToggle");
+      const userSummary = document.getElementById("userSummary");
+      const userNameInput = document.getElementById("userName");
+      const userIdInput = document.getElementById("userId");
+
+      function currentUser() {
+        return {
+          name: userNameInput.value.trim(),
+          id: userIdInput.value.trim(),
+        };
+      }
+
+      async function pushUser() {
+        const user = currentUser();
+        userSummary.textContent = [user.name, user.id && `(${user.id})`]
+          .filter(Boolean)
+          .join(" ");
+        try {
+          localStorage.setItem(USER_KEY, JSON.stringify(user));
+        } catch (e) {}
+        try {
+          await fetch("/user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(user),
+          });
+        } catch (e) {}
+      }
+
+      userToggle.addEventListener("click", () => {
+        const expanded =
+          profileBar.getAttribute("data-user-expanded") !== "true";
+        profileBar.setAttribute("data-user-expanded", String(expanded));
+        userToggle.setAttribute("aria-expanded", String(expanded));
+      });
+      userNameInput.addEventListener("change", pushUser);
+      userIdInput.addEventListener("change", pushUser);
+      if (body.dataset.showUserProfile !== "false") {
+        try {
+          const stored = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
+          userNameInput.value = stored.name || "";
+          userIdInput.value = stored.id || "";
+        } catch (e) {}
+        pushUser();
       }
 
       ageValueInput.addEventListener("change", pushMetadata);

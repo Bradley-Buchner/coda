@@ -31,6 +31,9 @@ app:
   # When false, the clinical note button, file cards and drag-and-drop are
   # hidden.
   show_clinical_note: false
+  # When false, the user (name and ID of the person using the app) selector
+  # is hidden.
+  show_user_profile: false
   # Interface language the page starts in, used when the browser has no stored
   # choice. Must be one of the locales the UI ships translations for.
   ui_language: en
@@ -151,6 +154,7 @@ storage:
     annotations: true       # per-chunk text with grounding annotations
     inference: true         # every inference result, incl. questions shown
     metadata: true          # case profile / demographics
+    user: true              # name and ID of the person using the app
     timing: true            # per-chunk and per-inference timings
 
 logging:
