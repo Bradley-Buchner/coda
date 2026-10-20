@@ -60,8 +60,8 @@ COD_OUTPUT_SCHEMA = {
 def build_system_prompt():
     causes = [c.strip() for c in
         (CHAMPS / "group_causes.txt").read_text().splitlines() if c.strip()]
-    system_prompt = (PROMPTS / "system_prompt.txt").read_text()
-    schema_guidance = (PROMPTS / "schema_guidance.txt").read_text()
+    system_prompt = (PROMPTS / "icd10" / "system_prompt.txt").read_text()
+    schema_guidance = (PROMPTS / "icd10" / "schema_guidance.txt").read_text()
     return system_prompt.format(allowed_causes=", ".join(causes)) + "\n\n" + schema_guidance
 
 

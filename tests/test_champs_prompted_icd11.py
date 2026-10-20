@@ -1,6 +1,6 @@
 import pytest
 
-from coda.inference.champs_prompted.icd11 import (
+from coda.inference.champs_prompted.icd11_agent import (
     ChampsPromptedIcd11SinglePassAgent,
     ChampsPromptedIcd11TwoPassAgent,
     age_group,

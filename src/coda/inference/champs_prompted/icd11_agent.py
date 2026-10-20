@@ -4,24 +4,24 @@ import json
 import logging
 import os
 from functools import lru_cache
-from pathlib import Path
 
 import yaml
 
-from coda.inference.champs_prompted.agent import (
+from coda.inference.champs_prompted.base_agent import (
     CLINICAL_NOTE_GUIDANCE,
+    PROMPTS_DIR,
     ChampsPromptedInferenceAgent,
     LLMCallFailed,
     failed_result,
     load_question_style_guidance,
     normalize_scores,
     question_schema,
+    read_prompt,
 )
 from coda.resources import get_resource_path
 
 logger = logging.getLogger(__name__)
 
-PROMPTS_DIR = Path(__file__).resolve().parent / "prompts" / "icd11"
 NUM_RANKS = 5
 
 # Upper age bounds in days of the CHAMPS age groups born alive
@@ -34,13 +34,8 @@ AGE_GROUP_LIMITS = [
 ]
 
 
-def read_prompt(filename):
-    """Read an ICD-11 prompt text file."""
-    return (PROMPTS_DIR / filename).read_text().strip()
-
-
 AGE_GROUP_GUIDANCE = yaml.safe_load(
-    (PROMPTS_DIR / "age_group_guidance.yaml").read_text())
+    (PROMPTS_DIR / "icd11" / "age_group_guidance.yaml").read_text())
 
 
 def age_group(profile):
@@ -90,7 +85,7 @@ class ChampsPromptedIcd11Agent(ChampsPromptedInferenceAgent):
     Subclasses implement rank_codes.
     """
 
-    diagnosis_standard = read_prompt("diagnosis_standard.txt")
+    diagnosis_standard = read_prompt("icd11/diagnosis_standard.txt")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -142,8 +137,8 @@ class ChampsPromptedIcd11Agent(ChampsPromptedInferenceAgent):
 class ChampsPromptedIcd11SinglePassAgent(ChampsPromptedIcd11Agent):
     """ICD-11 agent reasoning and ranking codes in one structured call."""
 
-    system_prompt = read_prompt("system_prompt.txt").replace(
-        "{output_steps}", read_prompt("single_pass_output.txt"))
+    system_prompt = read_prompt("icd11/system_prompt.txt").replace(
+        "{output_steps}", read_prompt("icd11/single_pass_output.txt"))
 
     async def rank_codes(self, chunk_id, labels, group):
         system_prompt = self.fill_prompt(self.system_prompt, labels, group) \
@@ -174,10 +169,10 @@ class ChampsPromptedIcd11TwoPassAgent(ChampsPromptedIcd11Agent):
     final codes from the allowed list given that assessment.
     """
 
-    pass1_system_prompt = read_prompt("system_prompt.txt").replace(
-        "{output_steps}", read_prompt("pass1_output.txt"))
-    pass2_system_prompt = read_prompt("pass2_system_prompt.txt")
-    pass2_instruction = read_prompt("pass2_instruction.txt")
+    pass1_system_prompt = read_prompt("icd11/system_prompt.txt").replace(
+        "{output_steps}", read_prompt("icd11/pass1_output.txt"))
+    pass2_system_prompt = read_prompt("icd11/pass2_system_prompt.txt")
+    pass2_instruction = read_prompt("icd11/pass2_instruction.txt")
     PASS1_TEMPERATURE = 0.7
     PASS2_TEMPERATURE = 0.1
 
