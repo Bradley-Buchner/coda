@@ -160,12 +160,17 @@ def render_profile(profile):
 
 
 class ChampsPromptedInferenceAgent(InferenceAgent):
-    """CHAMPS LLM-based cause-of-death inference agent.
+    """Base class for CHAMPS LLM-based cause-of-death inference agents.
 
-    Uses a CODA LLMClient to call an LLM with the CHAMPS COD classification
-    prompt and structured output schema. Works with dialogue text, the case
-    profile and clinical notes - no MITS, structured VA, or clinical
-    abstraction sections.
+    Uses a CODA LLMClient to call an LLM with a COD classification prompt and
+    structured output schema. Works with dialogue text, the case profile and
+    clinical notes - no MITS, structured VA, or clinical abstraction sections.
+
+    Subclasses set the cause list and its coding as class attributes:
+    allowed_causes (cause names), cause_codes (cause name to code),
+    coding_system (the identifier namespace of the codes), and the prompt
+    texts system_prompt, schema_guidance, clinical_note_guidance and
+    diagnosis_standard.
     """
 
     def __init__(self, llm_client: LLMClient,
@@ -177,9 +182,6 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
         self.llm_client = llm_client
         self.llm_semaphore = llm_semaphore or asyncio.Semaphore(1)
 
-        self.allowed_causes = CHAMPS_GROUP_CAUSES
-        self.cause_to_icd10 = CHAMPS_GROUP_TO_ICD10
-        self.schema_guidance = SCHEMA_GUIDANCE
         self.use_diagnosis_standard = use_diagnosis_standard
         self.num_questions = num_questions
         self.question_style = question_style
@@ -193,17 +195,19 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
         # Spliced in before the format pass so its own {num_questions} renders
         question_guidance = load_question_style_guidance(question_style)
         self.rendered_system_prompt = \
-            SYSTEM_PROMPT.replace("{question_guidance}", question_guidance) \
-                         .format(allowed_causes=allowed_str,
-                                 num_questions=num_questions) + "\n\n" \
+            self.system_prompt \
+                .replace("{question_guidance}", question_guidance) \
+                .format(allowed_causes=allowed_str,
+                        num_questions=num_questions) + "\n\n" \
             + self.schema_guidance + "\n\n" \
-            + CLINICAL_NOTE_GUIDANCE
+            + self.clinical_note_guidance
 
     async def infer(self, chunk_id: str, text: str,
                     annotations: List[Annotation]):
         """Perform COD inference using accumulated dialogue via LLM."""
         if self.use_diagnosis_standard:
-            user_prompt = f"## DIAGNOSIS STANDARD\n{DIAGNOSIS_STANDARD}\n\n"
+            user_prompt = f"## DIAGNOSIS STANDARD\n" \
+                          f"{self.diagnosis_standard}\n\n"
         else:
             user_prompt = ''
         user_prompt += (
@@ -266,7 +270,7 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
         name = (cause_name or "").strip()
         if not name:
             return None
-        if name in self.cause_to_icd10:
+        if name in self.cause_codes:
             return name
         ci = self._causes_by_lower.get(name.lower())
         if ci is not None:
@@ -276,7 +280,7 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
         return close[0] if close else None
 
     def create_session_agent(self) -> "ChampsPromptedInferenceAgent":
-        return ChampsPromptedInferenceAgent(
+        return self.__class__(
             llm_client=self.llm_client,
             use_diagnosis_standard=self.use_diagnosis_standard,
             llm_semaphore=self.llm_semaphore,
@@ -302,11 +306,10 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
                 logger.info("Mapped cause name '%s' -> '%s'",
                             cause_name, matched)
 
-            icd10 = self.cause_to_icd10[matched]
-            curie = f"icd10:{icd10}"
-            causes[curie] = {
+            code = self.cause_codes[matched]
+            causes[f"{self.coding_system}:{code}"] = {
                 "name": matched,
-                "identifiers": {"icd10": icd10},
+                "identifiers": {self.coding_system: code},
                 "score": probability,
             }
 
@@ -322,12 +325,24 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
                 "questions": questions}
 
 
+class ChampsPromptedIcd10Agent(ChampsPromptedInferenceAgent):
+    """Prompted agent choosing among CHAMPS group causes coded in ICD-10."""
+
+    allowed_causes = CHAMPS_GROUP_CAUSES
+    cause_codes = CHAMPS_GROUP_TO_ICD10
+    coding_system = "icd10"
+    system_prompt = SYSTEM_PROMPT
+    schema_guidance = SCHEMA_GUIDANCE
+    clinical_note_guidance = CLINICAL_NOTE_GUIDANCE
+    diagnosis_standard = DIAGNOSIS_STANDARD
+
+
 def create_champs_prompted_agent(
     provider: Optional[str] = None,
     model: Optional[str] = None,
     **kwargs,
 ) -> ChampsPromptedInferenceAgent:
-    """Create a ChampsPromptedInferenceAgent with a new LLM client.
+    """Create a ChampsPromptedIcd10Agent with a new LLM client.
 
     Defaults to the configured inference provider/model.
     """
@@ -341,7 +356,7 @@ def create_champs_prompted_agent(
                                                DEFAULT_NUM_QUESTIONS))
     question_style = str(settings.inference.get("question_style",
                                                 DEFAULT_QUESTION_STYLE))
-    return ChampsPromptedInferenceAgent(
+    return ChampsPromptedIcd10Agent(
         llm_client=client,
         llm_semaphore=asyncio.Semaphore(max_concurrency),
         num_questions=num_questions,
