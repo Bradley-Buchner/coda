@@ -24,7 +24,6 @@ from fastapi import Body, FastAPI, HTTPException, Request, WebSocket, \
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from pypdf import PdfReader
-from pypdf.errors import PdfReadError
 
 from coda.app.storage import CaseRecorder, cases_root, storage_enabled
 from coda.app.onboarding_notice import (
@@ -906,13 +905,18 @@ async def _start_inference(inference_session: InferenceSessionCoordinator,
 MAX_NOTE_SIZE = 100_000
 
 
+def extract_pdf_text(data):
+    """Return the text of all pages of a PDF."""
+    reader = PdfReader(BytesIO(data))
+    return "\n\n".join(page.extract_text() for page in reader.pages)
+
+
 @app.post("/pdf-text")
 async def pdf_text(request: Request):
     """Return the text of a PDF sent as the raw request body."""
     try:
-        reader = PdfReader(BytesIO(await request.body()))
-        text = "\n\n".join(page.extract_text() for page in reader.pages)
-    except PdfReadError:
+        text = await asyncio.to_thread(extract_pdf_text, await request.body())
+    except Exception:
         raise HTTPException(status_code=400, detail="Unreadable PDF")
     if not text.strip():
         raise HTTPException(status_code=422, detail="No text found in PDF")
@@ -952,11 +956,14 @@ async def set_clinical_notes(req: ClinicalNotesRequest):
         "session_id": session_id,
         "session_generation": generation,
     }
-    response = await inference_client.post("/clinical_note", json=request)
-    response.raise_for_status()
-    result = response.json()
+    try:
+        response = await inference_client.post("/clinical_note", json=request)
+        response.raise_for_status()
+        result = response.json()
+    finally:
+        if session is None:
+            await _reset_inference_session(session_id, generation)
     if session is None:
-        await _reset_inference_session(session_id, generation)
         return result
     if await session.is_current_generation(generation):
         if session.recorder is not None:
