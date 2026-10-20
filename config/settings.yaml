@@ -33,7 +33,7 @@ app:
   show_clinical_note: false
   # When false, the user (name and ID of the person using the app) selector
   # is hidden.
-  show_user_profile: false
+  show_user_profile: true
   # When false, the button that drafts a medical certificate of cause of
   # death (MCCD) from the case is hidden.
   show_mccd: false

@@ -1015,7 +1015,7 @@ async def get_index():
             '<body data-show-case-profile="false"',
             1,
         )
-    if not settings.app.get("show_user_profile", False):
+    if not settings.app.get("show_user_profile", True):
         html_content = html_content.replace(
             "<body",
             '<body data-show-user-profile="false"',
