@@ -635,6 +635,9 @@
       }
 
       body[data-show-clinical-note="false"] #noteBtn,
+      body[data-show-clinical-note="false"] #noteTypeBtn,
+      body[data-show-clinical-note="false"] .note-editor,
+      body[data-state="history"] .note-editor,
       body[data-show-clinical-note="false"] .note-strip {
         display: none !important;
       }
@@ -684,6 +687,30 @@
       }
       .note-card-remove:hover {
         color: var(--ink);
+      }
+      .note-editor:not([hidden]) {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 32px;
+        background: var(--paper-elevated);
+        border-bottom: 1px solid var(--border-warm);
+      }
+      .note-editor textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        background: var(--paper);
+        color: var(--ink);
+        font: inherit;
+        font-size: 14px;
+        resize: vertical;
+      }
+      .note-editor-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
       }
       .note-drop-hint {
         color: var(--ink-muted);
@@ -2683,8 +2710,12 @@
             class="btn btn-ghost"
             title="Add .txt or .pdf clinical notes, or drop them on the page"
           >
-            <i class="bi bi-file-earmark-text"></i>
-            <span data-i18n="common.note">Clinical note</span>
+            <i class="bi bi-upload"></i>
+            <span data-i18n="note.upload">Upload note</span>
+          </button>
+          <button id="noteTypeBtn" class="btn btn-ghost" title="Type a clinical note">
+            <i class="bi bi-pencil-square"></i>
+            <span data-i18n="note.type">Type note</span>
           </button>
           <input type="file" id="noteInput" accept=".txt,.pdf" multiple hidden />
           <button id="resetBtn" class="btn btn-ghost" title="New session">
@@ -2827,6 +2858,24 @@
           <i class="bi bi-play-fill"></i>
           <span data-i18n="note.run">Run inference</span>
         </button>
+      </div>
+
+      <div class="note-editor" id="noteEditor" hidden>
+        <textarea
+          id="noteText"
+          rows="5"
+          data-i18n-placeholder="note.placeholder"
+          placeholder="Type clinical notes for this case"
+        ></textarea>
+        <div class="note-editor-actions">
+          <button id="noteCancelBtn" class="btn btn-ghost">
+            <span data-i18n="note.cancel">Cancel</span>
+          </button>
+          <button id="noteSaveBtn" class="btn btn-ghost">
+            <i class="bi bi-plus-lg"></i>
+            <span data-i18n="note.save">Add to case</span>
+          </button>
+        </div>
       </div>
 
       <div class="waveform" aria-hidden="true">
@@ -3360,9 +3409,13 @@
           "common.checkSettings": "Check settings",
           "common.seeAll": "See all",
           "common.history": "History",
-          "common.note": "Clinical note",
+          "note.upload": "Upload note",
           "note.run": "Run inference",
           "note.dropHint": "Drop .txt/.pdf clinical notes here",
+          "note.type": "Type note",
+          "note.placeholder": "Type clinical notes for this case",
+          "note.cancel": "Cancel",
+          "note.save": "Add to case",
           "tagline.line1": "Cause of Death",
           "tagline.line2": "Determination Assistant",
           "onboard.eyebrow": "BEFORE YOU BEGIN",
@@ -3454,9 +3507,13 @@
           "common.checkSettings": "Angalia mipangilio",
           "common.seeAll": "Ona zote",
           "common.history": "Historia",
-          "common.note": "Maelezo ya kliniki",
+          "note.upload": "Pakia maelezo",
           "note.run": "Endesha uchambuzi",
           "note.dropHint": "Dondosha maelezo ya kliniki (.txt/.pdf) hapa",
+          "note.type": "Andika maelezo",
+          "note.placeholder": "Andika maelezo ya kliniki ya kesi hii",
+          "note.cancel": "Ghairi",
+          "note.save": "Ongeza kwenye kesi",
           "tagline.line1": "Sababu ya Kifo",
           "tagline.line2": "Msaidizi wa Uamuzi",
           "onboard.eyebrow": "KABLA HUJAANZA",
@@ -3547,9 +3604,13 @@
           "common.checkSettings": "Vérifier les paramètres",
           "common.seeAll": "Tout voir",
           "common.history": "Historique",
-          "common.note": "Note clinique",
+          "note.upload": "Importer une note",
           "note.run": "Lancer l'inférence",
           "note.dropHint": "Déposez les notes cliniques .txt/.pdf ici",
+          "note.type": "Saisir une note",
+          "note.placeholder": "Saisissez des notes cliniques pour ce cas",
+          "note.cancel": "Annuler",
+          "note.save": "Ajouter au cas",
           "tagline.line1": "Cause du décès",
           "tagline.line2": "Assistant de détermination",
           "onboard.eyebrow": "AVANT DE COMMENCER",
@@ -3643,9 +3704,13 @@
           "common.checkSettings": "مراجعة الإعدادات",
           "common.seeAll": "عرض الكل",
           "common.history": "السجل",
-          "common.note": "ملاحظة سريرية",
+          "note.upload": "رفع ملاحظة",
           "note.run": "تشغيل الاستدلال",
           "note.dropHint": "أفلت ملاحظات سريرية بصيغة .txt/.pdf هنا",
+          "note.type": "كتابة ملاحظة",
+          "note.placeholder": "اكتب ملاحظات سريرية لهذه الحالة",
+          "note.cancel": "إلغاء",
+          "note.save": "إضافة إلى الحالة",
           "tagline.line1": "سبب الوفاة",
           "tagline.line2": "مساعد التحديد",
           "onboard.eyebrow": "قبل البدء",
@@ -3735,9 +3800,13 @@
           "common.checkSettings": "সেটিংস দেখুন",
           "common.seeAll": "সব দেখুন",
           "common.history": "ইতিহাস",
-          "common.note": "ক্লিনিক্যাল নোট",
+          "note.upload": "নোট আপলোড করুন",
           "note.run": "অনুমান চালান",
           "note.dropHint": "এখানে .txt/.pdf ক্লিনিক্যাল নোট ছাড়ুন",
+          "note.type": "নোট লিখুন",
+          "note.placeholder": "এই কেসের জন্য ক্লিনিক্যাল নোট লিখুন",
+          "note.cancel": "বাতিল",
+          "note.save": "কেসে যোগ করুন",
           "tagline.line1": "মৃত্যুর কারণ",
           "tagline.line2": "নির্ধারণ সহকারী",
           "onboard.eyebrow": "শুরু করার আগে",
@@ -3829,9 +3898,13 @@
           "common.checkSettings": "Revisar ajustes",
           "common.seeAll": "Ver todas",
           "common.history": "Historial",
-          "common.note": "Nota clínica",
+          "note.upload": "Subir nota",
           "note.run": "Ejecutar inferencia",
           "note.dropHint": "Suelte aquí las notas clínicas .txt/.pdf",
+          "note.type": "Escribir nota",
+          "note.placeholder": "Escriba notas clínicas para este caso",
+          "note.cancel": "Cancelar",
+          "note.save": "Añadir al caso",
           "tagline.line1": "Causa de muerte",
           "tagline.line2": "Asistente de determinación",
           "onboard.eyebrow": "ANTES DE EMPEZAR",
@@ -3924,9 +3997,13 @@
           "common.checkSettings": "Kambela swiyimiso",
           "common.seeAll": "Vona hinkwaswo",
           "common.history": "Matimu",
-          "common.note": "Tsalwa ra kliniki",
+          "note.upload": "Rhumela tsalwa",
           "note.run": "Kumisisa xivangelo",
           "note.dropHint": "Wisela matsalwa ya kliniki (.txt/.pdf) laha",
+          "note.type": "Tsala tsalwa",
+          "note.placeholder": "Tsala matsalwa ya kliniki ya mhaka leyi",
+          "note.cancel": "Khansela",
+          "note.save": "Engetela eka mhaka",
           "tagline.line1": "Mupfuni wo kumisisa",
           "tagline.line2": "xivangelo xa rifu",
           "onboard.eyebrow": "U NGA SI SUNGULA",
@@ -4024,6 +4101,10 @@
           const key = el.getAttribute("data-i18n");
           const val = t(key);
           if (val) el.textContent = val;
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+          const val = t(el.getAttribute("data-i18n-placeholder"));
+          if (val) el.placeholder = val;
         });
       }
 
@@ -5830,6 +5911,8 @@
           clearProfileInputs();
           noteFiles = [];
           renderNoteCards();
+          typedNoteCount = 0;
+          closeNoteEditor();
           transcriptText = "";
           chunkCount = 0;
           transcript.innerHTML =
@@ -5925,6 +6008,32 @@
         noteInput.value = "";
       });
       noteRunBtn.addEventListener("click", runClinicalNotes);
+
+      // Typed notes join the uploaded ones as numbered .txt files
+      let typedNoteCount = 0;
+      const noteEditor = document.getElementById("noteEditor");
+      const noteText = document.getElementById("noteText");
+
+      function closeNoteEditor() {
+        noteText.value = "";
+        noteEditor.hidden = true;
+      }
+
+      document.getElementById("noteTypeBtn").addEventListener("click", () => {
+        noteEditor.hidden = false;
+        noteText.focus();
+      });
+      document
+        .getElementById("noteCancelBtn")
+        .addEventListener("click", closeNoteEditor);
+      document.getElementById("noteSaveBtn").addEventListener("click", () => {
+        const text = noteText.value.trim();
+        if (!text) return;
+        typedNoteCount += 1;
+        noteFiles.push({ filename: `typed-note-${typedNoteCount}.txt`, text });
+        renderNoteCards();
+        closeNoteEditor();
+      });
       noteCards.addEventListener("click", (e) => {
         const btn = e.target.closest(".note-card-remove");
         if (!btn) return;
