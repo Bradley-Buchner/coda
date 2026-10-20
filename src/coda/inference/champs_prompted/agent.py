@@ -12,6 +12,7 @@ import difflib
 import logging
 import os
 import time
+from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 from gilda import Annotation
@@ -24,6 +25,7 @@ from coda.config import settings
 logger = logging.getLogger(__name__)
 
 CHAMPS_RESOURCE_DIR = get_resource_path("champs")
+PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 
 def read_champs_resource(filename: str) -> str:
@@ -31,6 +33,11 @@ def read_champs_resource(filename: str) -> str:
     path = os.path.join(CHAMPS_RESOURCE_DIR, filename)
     with open(path) as fh:
         return fh.read().strip()
+
+
+def read_prompt(filename):
+    """Read a prompt text file of this agent."""
+    return (PROMPTS_DIR / filename).read_text().strip()
 
 
 def load_group_causes() -> List[str]:
@@ -52,10 +59,10 @@ def load_group_to_icd10() -> Dict[str, str]:
 
 CHAMPS_GROUP_CAUSES = load_group_causes()
 CHAMPS_GROUP_TO_ICD10 = load_group_to_icd10()
-SYSTEM_PROMPT = read_champs_resource("system_prompt.txt")
-SCHEMA_GUIDANCE = read_champs_resource("schema_guidance.txt")
-DIAGNOSIS_STANDARD = read_champs_resource("diagnosis_standard.txt")
-CLINICAL_NOTE_GUIDANCE = read_champs_resource("clinical_note_guidance.txt")
+SYSTEM_PROMPT = read_prompt("system_prompt.txt")
+SCHEMA_GUIDANCE = read_prompt("schema_guidance.txt")
+DIAGNOSIS_STANDARD = read_prompt("diagnosis_standard.txt")
+CLINICAL_NOTE_GUIDANCE = read_prompt("clinical_note_guidance.txt")
 
 DEFAULT_NUM_QUESTIONS = 3
 DEFAULT_QUESTION_STYLE = "default"
@@ -86,7 +93,7 @@ def _validate_question_style(question_style):
 def load_question_style_guidance(question_style=DEFAULT_QUESTION_STYLE):
     """Read the Step 5 prompt body for a question style."""
     _validate_question_style(question_style)
-    return read_champs_resource(f"question_style_{question_style}.txt")
+    return read_prompt(f"question_style_{question_style}.txt")
 
 
 def build_cod_output_schema(num_questions=DEFAULT_NUM_QUESTIONS,
