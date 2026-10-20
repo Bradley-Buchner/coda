@@ -2627,12 +2627,12 @@
           <button
             id="noteBtn"
             class="btn btn-ghost"
-            title="Add .txt clinical notes, or drop them on the page"
+            title="Add .txt or .pdf clinical notes, or drop them on the page"
           >
             <i class="bi bi-file-earmark-text"></i>
             <span data-i18n="common.note">Clinical note</span>
           </button>
-          <input type="file" id="noteInput" accept=".txt" multiple hidden />
+          <input type="file" id="noteInput" accept=".txt,.pdf" multiple hidden />
           <button id="resetBtn" class="btn btn-ghost" title="New session">
             <i class="bi bi-arrow-counterclockwise"></i>
             <span data-i18n="common.new">New</span>
@@ -2680,7 +2680,7 @@
       <div class="note-strip" id="noteStrip">
         <div class="note-cards" id="noteCards"></div>
         <span class="note-drop-hint" data-i18n="note.dropHint"
-          >Drop .txt clinical notes here</span
+          >Drop .txt/.pdf clinical notes here</span
         >
         <button id="noteRunBtn" class="btn btn-ghost">
           <i class="bi bi-play-fill"></i>
@@ -3206,7 +3206,7 @@
           "common.history": "History",
           "common.note": "Clinical note",
           "note.run": "Run inference",
-          "note.dropHint": "Drop .txt clinical notes here",
+          "note.dropHint": "Drop .txt/.pdf clinical notes here",
           "tagline.line1": "Cause of Death",
           "tagline.line2": "Determination Assistant",
           "onboard.eyebrow": "BEFORE YOU BEGIN",
@@ -3285,7 +3285,7 @@
           "common.history": "Historia",
           "common.note": "Maelezo ya kliniki",
           "note.run": "Endesha uchambuzi",
-          "note.dropHint": "Dondosha maelezo ya kliniki (.txt) hapa",
+          "note.dropHint": "Dondosha maelezo ya kliniki (.txt/.pdf) hapa",
           "tagline.line1": "Sababu ya Kifo",
           "tagline.line2": "Msaidizi wa Uamuzi",
           "onboard.eyebrow": "KABLA HUJAANZA",
@@ -3363,7 +3363,7 @@
           "common.history": "Historique",
           "common.note": "Note clinique",
           "note.run": "Lancer l'inférence",
-          "note.dropHint": "Déposez les notes cliniques .txt ici",
+          "note.dropHint": "Déposez les notes cliniques .txt/.pdf ici",
           "tagline.line1": "Cause du décès",
           "tagline.line2": "Assistant de détermination",
           "onboard.eyebrow": "AVANT DE COMMENCER",
@@ -3444,7 +3444,7 @@
           "common.history": "السجل",
           "common.note": "ملاحظة سريرية",
           "note.run": "تشغيل الاستدلال",
-          "note.dropHint": "أفلت ملاحظات سريرية بصيغة .txt هنا",
+          "note.dropHint": "أفلت ملاحظات سريرية بصيغة .txt/.pdf هنا",
           "tagline.line1": "سبب الوفاة",
           "tagline.line2": "مساعد التحديد",
           "onboard.eyebrow": "قبل البدء",
@@ -3521,7 +3521,7 @@
           "common.history": "ইতিহাস",
           "common.note": "ক্লিনিক্যাল নোট",
           "note.run": "অনুমান চালান",
-          "note.dropHint": "এখানে .txt ক্লিনিক্যাল নোট ছাড়ুন",
+          "note.dropHint": "এখানে .txt/.pdf ক্লিনিক্যাল নোট ছাড়ুন",
           "tagline.line1": "মৃত্যুর কারণ",
           "tagline.line2": "নির্ধারণ সহকারী",
           "onboard.eyebrow": "শুরু করার আগে",
@@ -3600,7 +3600,7 @@
           "common.history": "Historial",
           "common.note": "Nota clínica",
           "note.run": "Ejecutar inferencia",
-          "note.dropHint": "Suelte aquí las notas clínicas .txt",
+          "note.dropHint": "Suelte aquí las notas clínicas .txt/.pdf",
           "tagline.line1": "Causa de muerte",
           "tagline.line2": "Asistente de determinación",
           "onboard.eyebrow": "ANTES DE EMPEZAR",
@@ -3680,7 +3680,7 @@
           "common.history": "Matimu",
           "common.note": "Tsalwa ra kliniki",
           "note.run": "Kumisisa xivangelo",
-          "note.dropHint": "Wisela matsalwa ya kliniki (.txt) laha",
+          "note.dropHint": "Wisela matsalwa ya kliniki (.txt/.pdf) laha",
           "tagline.line1": "Mupfuni wo kumisisa",
           "tagline.line2": "xivangelo xa rifu",
           "onboard.eyebrow": "U NGA SI SUNGULA",
@@ -5612,16 +5612,39 @@
 
       async function addNoteFiles(files) {
         for (const file of files) {
-          if (!file.name.endsWith(".txt")) {
-            showStatus(`Skipped "${file.name}": not a .txt file`, "warning");
+          const name = file.name.toLowerCase();
+          let text;
+          if (name.endsWith(".txt")) {
+            text = await file.text();
+          } else if (name.endsWith(".pdf")) {
+            text = await pdfText(file);
+            if (text === null) continue;
+          } else {
+            showStatus(
+              `Skipped "${file.name}": not a .txt or .pdf file`,
+              "warning",
+            );
             continue;
           }
-          const text = await file.text();
           // A file with the same name replaces the earlier one
           noteFiles = noteFiles.filter((n) => n.filename !== file.name);
           noteFiles.push({ filename: file.name, text });
         }
         renderNoteCards();
+      }
+
+      // Text of a PDF via the server, or null with a status message on failure
+      async function pdfText(file) {
+        try {
+          const resp = await fetch("/pdf-text", { method: "POST", body: file });
+          const data = await resp.json();
+          if (resp.ok) return data.text;
+          showStatus(`"${file.name}": ${data.detail}`, "warning");
+        } catch (e) {
+          console.error("PDF text extraction failed:", e);
+          showStatus(`Failed to read "${file.name}"`, "danger");
+        }
+        return null;
       }
 
       function renderNoteCards() {

@@ -13,13 +13,17 @@ import logging
 import os
 import time
 import uuid
+from io import BytesIO
 from dataclasses import dataclass, field
 from typing import Optional
 
 import httpx
-from fastapi import Body, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, HTTPException, Request, WebSocket, \
+    WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 from coda.app.storage import CaseRecorder, storage_enabled
 from coda.app.onboarding_notice import (
@@ -875,6 +879,19 @@ async def _start_inference(inference_session: InferenceSessionCoordinator,
 
 # Max total clinical notes size in characters
 MAX_NOTE_SIZE = 100_000
+
+
+@app.post("/pdf-text")
+async def pdf_text(request: Request):
+    """Return the text of a PDF sent as the raw request body."""
+    try:
+        reader = PdfReader(BytesIO(await request.body()))
+        text = "\n\n".join(page.extract_text() for page in reader.pages)
+    except PdfReadError:
+        raise HTTPException(status_code=400, detail="Unreadable PDF")
+    if not text.strip():
+        raise HTTPException(status_code=422, detail="No text found in PDF")
+    return {"text": text}
 
 
 @app.post("/clinical-notes")
