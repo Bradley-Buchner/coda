@@ -1748,6 +1748,11 @@
       .mccd-table td:nth-child(4) {
         width: 24%;
       }
+      .mccd-sheet .mccd-cause {
+        display: block;
+        overflow: hidden;
+        resize: none;
+      }
       .mccd-signature {
         display: block;
         height: 30px;
@@ -3050,25 +3055,25 @@
           <tbody>
             <tr>
               <th>(a)</th>
-              <td><input name="cause_a" /></td>
+              <td><textarea name="cause_a" class="mccd-cause" rows="1"></textarea></td>
               <td><input name="code_a" /></td>
               <td><input name="interval_a" /></td>
             </tr>
             <tr>
               <th>(b) <small>due to</small></th>
-              <td><input name="cause_b" /></td>
+              <td><textarea name="cause_b" class="mccd-cause" rows="1"></textarea></td>
               <td><input name="code_b" /></td>
               <td><input name="interval_b" /></td>
             </tr>
             <tr>
               <th>(c) <small>due to</small></th>
-              <td><input name="cause_c" /></td>
+              <td><textarea name="cause_c" class="mccd-cause" rows="1"></textarea></td>
               <td><input name="code_c" /></td>
               <td><input name="interval_c" /></td>
             </tr>
             <tr>
               <th>(d) <small>due to</small></th>
-              <td><input name="cause_d" /></td>
+              <td><textarea name="cause_d" class="mccd-cause" rows="1"></textarea></td>
               <td><input name="code_d" /></td>
               <td><input name="interval_d" /></td>
             </tr>
@@ -7541,6 +7546,16 @@
       const mccdSheet = document.getElementById("mccdSheet");
       const mccd = mccdSheet.elements;
       let mccdFilled = false;
+      const mccdCauses = mccdSheet.querySelectorAll(".mccd-cause");
+
+      // Grow a cause field to show all of its wrapped text
+      function fitHeight(field) {
+        field.style.height = "auto";
+        field.style.height = field.scrollHeight + "px";
+      }
+      mccdCauses.forEach((field) =>
+        field.addEventListener("input", () => fitHeight(field)),
+      );
       mccdSheet.addEventListener("submit", (e) => e.preventDefault());
 
       function fillMccd() {
@@ -7575,6 +7590,7 @@
         }
         mccdOverlay.hidden = false;
         body.classList.add("mccd-open");
+        mccdCauses.forEach(fitHeight);
       });
       document.getElementById("mccdCloseBtn").addEventListener("click", () => {
         mccdOverlay.hidden = true;
