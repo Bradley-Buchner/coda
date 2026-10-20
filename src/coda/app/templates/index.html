@@ -479,7 +479,8 @@
       .profile-fields {
         display: none;
         align-items: center;
-        gap: 20px;
+        flex-wrap: wrap;
+        gap: 10px 20px;
         padding: 0 32px 10px;
       }
       .profile-bar[data-expanded="true"] #profileFields,
@@ -492,7 +493,8 @@
         align-items: center;
         gap: 8px;
       }
-      .profile-field label,
+      .profile-field > label,
+      .profile-label,
       .profile-still {
         color: var(--ink-soft);
         font-weight: 600;
@@ -507,7 +509,8 @@
         color: var(--ink);
         font-size: 13px;
       }
-      .profile-field input[type="text"] {
+      .profile-field input[type="text"],
+      .profile-field input[type="date"] {
         width: 180px;
         padding: 4px 8px;
         border: 1px solid var(--border-warm);
@@ -527,7 +530,35 @@
       .profile-still {
         cursor: pointer;
       }
-      .profile-bar[data-stillbirth="true"] #profileFields .profile-field {
+      .profile-segmented {
+        display: inline-flex;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .profile-segmented label {
+        padding: 4px 10px;
+        cursor: pointer;
+        color: var(--ink-soft);
+      }
+      .profile-segmented label + label {
+        border-left: 1px solid var(--border-warm);
+      }
+      .profile-segmented input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .profile-segmented label:has(input:checked) {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .profile-segmented label:has(input:focus-visible) {
+        outline: 2px solid var(--accent-sage);
+        outline-offset: -2px;
+      }
+      .profile-bar[data-stillbirth="true"] .profile-age {
         opacity: 0.4;
         pointer-events: none;
       }
@@ -2713,7 +2744,7 @@
           </div>
         </div>
         <div class="profile-fields" id="profileFields">
-          <div class="profile-field">
+          <div class="profile-field profile-age">
             <label for="ageValue" data-i18n="profile.age">Age</label>
             <input type="number" id="ageValue" min="0" step="1" placeholder="—" />
             <select id="ageUnit">
@@ -2726,6 +2757,64 @@
             <input type="checkbox" id="stillbirthToggle" />
             <span data-i18n="profile.stillbirth">Stillbirth</span>
           </label>
+          <div class="profile-field">
+            <span class="profile-label" data-i18n="profile.sex">Sex</span>
+            <div class="profile-segmented" role="radiogroup" id="sexGroup">
+              <label
+                ><input type="radio" name="sex" value="female" /><span
+                  data-i18n="profile.female"
+                  >Female</span
+                ></label
+              >
+              <label
+                ><input type="radio" name="sex" value="male" /><span
+                  data-i18n="profile.male"
+                  >Male</span
+                ></label
+              >
+              <label
+                ><input type="radio" name="sex" value="ambiguous" /><span
+                  data-i18n="profile.ambiguous"
+                  >Ambiguous</span
+                ></label
+              >
+            </div>
+          </div>
+          <div class="profile-field">
+            <label for="dateOfDeath" data-i18n="profile.dateOfDeath"
+              >Date of death</label
+            >
+            <input type="date" id="dateOfDeath" />
+          </div>
+          <div class="profile-field">
+            <label for="mannerOfDeath" data-i18n="profile.manner"
+              >Manner of death</label
+            >
+            <select id="mannerOfDeath">
+              <option value="">—</option>
+              <option value="disease" data-i18n="profile.mannerDisease">
+                Disease
+              </option>
+              <option value="accident" data-i18n="profile.mannerAccident">
+                Accident
+              </option>
+              <option value="self_harm" data-i18n="profile.mannerSelfHarm">
+                Self harm
+              </option>
+              <option value="assault" data-i18n="profile.mannerAssault">
+                Assault
+              </option>
+              <option
+                value="pending_investigation"
+                data-i18n="profile.mannerPending"
+              >
+                Pending investigation
+              </option>
+              <option value="unknown" data-i18n="profile.mannerUnknown">
+                Don't know
+              </option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -3246,6 +3335,18 @@
           "profile.title": "Case profile",
           "profile.age": "Age",
           "profile.stillbirth": "Stillbirth",
+          "profile.sex": "Sex",
+          "profile.female": "Female",
+          "profile.male": "Male",
+          "profile.ambiguous": "Ambiguous",
+          "profile.dateOfDeath": "Date of death",
+          "profile.manner": "Manner of death",
+          "profile.mannerDisease": "Disease",
+          "profile.mannerAccident": "Accident",
+          "profile.mannerSelfHarm": "Self harm",
+          "profile.mannerAssault": "Assault",
+          "profile.mannerPending": "Pending investigation",
+          "profile.mannerUnknown": "Don't know",
           "user.title": "User",
           "user.name": "Name",
           "user.id": "ID",
@@ -3328,6 +3429,18 @@
           "profile.title": "Wasifu wa kesi",
           "profile.age": "Umri",
           "profile.stillbirth": "Aliyezaliwa mfu",
+          "profile.sex": "Jinsia",
+          "profile.female": "Kike",
+          "profile.male": "Kiume",
+          "profile.ambiguous": "Isiyo bayana",
+          "profile.dateOfDeath": "Tarehe ya kifo",
+          "profile.manner": "Namna ya kifo",
+          "profile.mannerDisease": "Ugonjwa",
+          "profile.mannerAccident": "Ajali",
+          "profile.mannerSelfHarm": "Kujidhuru",
+          "profile.mannerAssault": "Shambulio",
+          "profile.mannerPending": "Uchunguzi unaendelea",
+          "profile.mannerUnknown": "Sijui",
           "user.title": "Mtumiaji",
           "user.name": "Jina",
           "user.id": "Kitambulisho",
@@ -3409,6 +3522,18 @@
           "profile.title": "Profil du cas",
           "profile.age": "Âge",
           "profile.stillbirth": "Mort-né",
+          "profile.sex": "Sexe",
+          "profile.female": "Féminin",
+          "profile.male": "Masculin",
+          "profile.ambiguous": "Ambigu",
+          "profile.dateOfDeath": "Date du décès",
+          "profile.manner": "Circonstances du décès",
+          "profile.mannerDisease": "Maladie",
+          "profile.mannerAccident": "Accident",
+          "profile.mannerSelfHarm": "Auto-agression",
+          "profile.mannerAssault": "Agression",
+          "profile.mannerPending": "Enquête en cours",
+          "profile.mannerUnknown": "Ne sait pas",
           "user.title": "Utilisateur",
           "user.name": "Nom",
           "user.id": "Identifiant",
@@ -3494,6 +3619,18 @@
           "profile.title": "ملف الحالة",
           "profile.age": "العمر",
           "profile.stillbirth": "مولود ميت",
+          "profile.sex": "الجنس",
+          "profile.female": "أنثى",
+          "profile.male": "ذكر",
+          "profile.ambiguous": "ملتبس",
+          "profile.dateOfDeath": "تاريخ الوفاة",
+          "profile.manner": "طريقة الوفاة",
+          "profile.mannerDisease": "مرض",
+          "profile.mannerAccident": "حادث",
+          "profile.mannerSelfHarm": "إيذاء النفس",
+          "profile.mannerAssault": "اعتداء",
+          "profile.mannerPending": "قيد التحقيق",
+          "profile.mannerUnknown": "لا أعرف",
           "user.title": "المستخدم",
           "user.name": "الاسم",
           "user.id": "المعرّف",
@@ -3574,6 +3711,18 @@
           "profile.title": "কেসের প্রোফাইল",
           "profile.age": "বয়স",
           "profile.stillbirth": "মৃত জন্ম",
+          "profile.sex": "লিঙ্গ",
+          "profile.female": "মেয়ে",
+          "profile.male": "ছেলে",
+          "profile.ambiguous": "অস্পষ্ট",
+          "profile.dateOfDeath": "মৃত্যুর তারিখ",
+          "profile.manner": "মৃত্যুর ধরন",
+          "profile.mannerDisease": "রোগ",
+          "profile.mannerAccident": "দুর্ঘটনা",
+          "profile.mannerSelfHarm": "আত্মক্ষতি",
+          "profile.mannerAssault": "আক্রমণ",
+          "profile.mannerPending": "তদন্ত চলছে",
+          "profile.mannerUnknown": "জানি না",
           "user.title": "ব্যবহারকারী",
           "user.name": "নাম",
           "user.id": "আইডি",
@@ -3656,6 +3805,18 @@
           "profile.title": "Perfil del caso",
           "profile.age": "Edad",
           "profile.stillbirth": "Mortinato",
+          "profile.sex": "Sexo",
+          "profile.female": "Femenino",
+          "profile.male": "Masculino",
+          "profile.ambiguous": "Ambiguo",
+          "profile.dateOfDeath": "Fecha de defunción",
+          "profile.manner": "Manera de muerte",
+          "profile.mannerDisease": "Enfermedad",
+          "profile.mannerAccident": "Accidente",
+          "profile.mannerSelfHarm": "Autolesión",
+          "profile.mannerAssault": "Agresión",
+          "profile.mannerPending": "Investigación pendiente",
+          "profile.mannerUnknown": "No se sabe",
           "user.title": "Usuario",
           "user.name": "Nombre",
           "user.id": "ID",
@@ -3739,6 +3900,18 @@
           "profile.title": "Vuxokoxoko bya mhaka",
           "profile.age": "Malembe",
           "profile.stillbirth": "Ku velekiwa ka n'wana a file",
+          "profile.sex": "Rimbewu",
+          "profile.female": "Wa xisati",
+          "profile.male": "Wa xinuna",
+          "profile.ambiguous": "A swi tiyi",
+          "profile.dateOfDeath": "Siku ra rifu",
+          "profile.manner": "Ndlela ya rifu",
+          "profile.mannerDisease": "Vuvabyi",
+          "profile.mannerAccident": "Khombo",
+          "profile.mannerSelfHarm": "Ku tivavisa",
+          "profile.mannerAssault": "Ku hlaseriwa",
+          "profile.mannerPending": "Ndzavisiso wa ha ya emahlweni",
+          "profile.mannerUnknown": "A ndzi tivi",
           "user.title": "Mutirhisi",
           "user.name": "Vito",
           "user.id": "ID",
@@ -5497,6 +5670,20 @@
       const ageValueInput = document.getElementById("ageValue");
       const ageUnitSelect = document.getElementById("ageUnit");
       const stillbirthToggle = document.getElementById("stillbirthToggle");
+      const dateOfDeathInput = document.getElementById("dateOfDeath");
+      const mannerSelect = document.getElementById("mannerOfDeath");
+      const sexRadios = document.querySelectorAll('input[name="sex"]');
+      // Today's local date as YYYY-MM-DD
+      const today = new Date();
+      dateOfDeathInput.max = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, "0"),
+        String(today.getDate()).padStart(2, "0"),
+      ].join("-");
+
+      function checkedSex() {
+        return document.querySelector('input[name="sex"]:checked');
+      }
 
       function applyStillbirthState() {
         profileBar.setAttribute(
@@ -5512,13 +5699,19 @@
 
       // One-line summary shown on the toggle while collapsed.
       function updateProfileSummary() {
-        let text = "";
+        const parts = [];
         if (stillbirthToggle.checked) {
-          text = t("profile.stillbirth");
+          parts.push(t("profile.stillbirth"));
         } else if (ageValueInput.value !== "") {
-          text = ageValueInput.value + " " + ageUnitSelect.value;
+          parts.push(ageValueInput.value + " " + ageUnitSelect.value);
         }
-        profileSummary.textContent = text;
+        const sex = checkedSex();
+        if (sex) parts.push(sex.nextElementSibling.textContent);
+        if (mannerSelect.value) {
+          parts.push(mannerSelect.selectedOptions[0].textContent.trim());
+        }
+        if (dateOfDeathInput.value) parts.push(dateOfDeathInput.value);
+        profileSummary.textContent = parts.join(" · ");
       }
 
       profileToggle.addEventListener("click", () => {
@@ -5538,6 +5731,9 @@
               ? null
               : { value: ageValue, unit: ageUnitSelect.value },
           stillbirth: stillbirthToggle.checked,
+          date_of_death: dateOfDeathInput.value || null,
+          sex: checkedSex()?.value || null,
+          manner_of_death: mannerSelect.value || null,
         };
         try {
           await fetch("/metadata", {
@@ -5552,6 +5748,9 @@
         ageValueInput.value = "";
         ageUnitSelect.value = "months";
         stillbirthToggle.checked = false;
+        dateOfDeathInput.value = "";
+        mannerSelect.value = "";
+        sexRadios.forEach((r) => (r.checked = false));
         applyStillbirthState();
         updateProfileSummary();
         setProfileExpanded(false);
@@ -5608,6 +5807,19 @@
       ageValueInput.addEventListener("change", pushMetadata);
       ageUnitSelect.addEventListener("change", pushMetadata);
       stillbirthToggle.addEventListener("change", pushMetadata);
+      dateOfDeathInput.addEventListener("change", pushMetadata);
+      mannerSelect.addEventListener("change", pushMetadata);
+      // Clicking the selected option again clears the choice
+      sexRadios.forEach((radio) => {
+        radio.closest("label").addEventListener("pointerdown", () => {
+          radio.dataset.wasChecked = String(radio.checked);
+        });
+        radio.addEventListener("click", () => {
+          if (radio.dataset.wasChecked === "true") radio.checked = false;
+          radio.dataset.wasChecked = "false";
+          pushMetadata();
+        });
+      });
 
       document
         .getElementById("resetBtn")

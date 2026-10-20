@@ -85,6 +85,21 @@ async def test_champs_llm_prompt_tags_clinical_notes():
 
 
 @pytest.mark.asyncio
+async def test_champs_llm_prompt_includes_profile():
+    client = FakeLLMClient()
+    agent = ChampsPromptedInferenceAgent(client)
+    metadata = {"profile": {"age": {"value": 18, "unit": "months"},
+                            "sex": "male", "date_of_death": "2026-03-14",
+                            "manner_of_death": "self_harm"}}
+
+    await agent.process_chunk("c1", "Child had fever.", [], metadata=metadata)
+
+    assert "## INPUT\n- age at death: 18 months\n- sex: male\n" \
+        "- date of death: 2026-03-14\n- manner of death: self harm\n" \
+        "- narrative:" in client.user_prompts[-1]
+
+
+@pytest.mark.asyncio
 async def test_champs_llm_exception_returns_safe_failure():
     client = FakeLLMClient(fail=True)
     agent = ChampsPromptedInferenceAgent(client)

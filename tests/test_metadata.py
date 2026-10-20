@@ -47,3 +47,17 @@ def test_stillbirth_only():
 def test_all_blank_is_empty():
     m = Metadata.from_dict({"profile": {"age": None, "stillbirth": False}})
     assert m.is_empty()
+
+
+def test_death_details_roundtrip():
+    d = {"date_of_death": "2026-03-14", "sex": "female",
+         "manner_of_death": "accident"}
+    m = Metadata.from_dict({"profile": d})
+    assert not m.is_empty()
+    assert m.to_dict()["profile"] == {"age": None, "stillbirth": False, **d}
+
+
+def test_invalid_choices_dropped():
+    m = Metadata.from_dict(
+        {"profile": {"sex": "other", "manner_of_death": "unclear"}})
+    assert m.is_empty()

@@ -61,21 +61,41 @@ class Age:
 class Profile:
     age: Optional[Age] = None
     stillbirth: bool = False
+    # ISO date, YYYY-MM-DD
+    date_of_death: Optional[str] = None
+    # One of SEXES
+    sex: Optional[str] = None
+    # One of MANNERS_OF_DEATH
+    manner_of_death: Optional[str] = None
+
+    SEXES = ("female", "male", "ambiguous")
+    MANNERS_OF_DEATH = ("disease", "accident", "self_harm", "assault",
+                        "pending_investigation", "unknown")
 
     @classmethod
     def from_dict(cls, d: Optional[dict]) -> Optional["Profile"]:
         if not d:
             return None
-        age = Age.from_dict(d.get("age"))
-        stillbirth = bool(d.get("stillbirth", False))
-        if age is None and not stillbirth:
+        sex = d.get("sex")
+        manner = d.get("manner_of_death")
+        profile = cls(
+            age=Age.from_dict(d.get("age")),
+            stillbirth=bool(d.get("stillbirth", False)),
+            date_of_death=d.get("date_of_death") or None,
+            sex=sex if sex in cls.SEXES else None,
+            manner_of_death=manner if manner in cls.MANNERS_OF_DEATH else None,
+        )
+        if profile == cls():
             return None
-        return cls(age=age, stillbirth=stillbirth)
+        return profile
 
     def to_dict(self) -> dict:
         return {
             "age": self.age.to_dict() if self.age else None,
             "stillbirth": self.stillbirth,
+            "date_of_death": self.date_of_death,
+            "sex": self.sex,
+            "manner_of_death": self.manner_of_death,
         }
 
 
