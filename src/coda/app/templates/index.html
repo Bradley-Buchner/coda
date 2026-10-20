@@ -580,7 +580,63 @@
         min-width: 0;
       }
 
-      body[data-show-clinical-note="false"] #noteBtn {
+      body[data-show-clinical-note="false"] #noteBtn,
+      body[data-show-clinical-note="false"] .note-strip {
+        display: none !important;
+      }
+
+      /* Clinical note cards */
+      .note-strip {
+        display: none;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 32px;
+        background: var(--paper-elevated);
+        border-bottom: 1px solid var(--border-warm);
+        font-size: 13px;
+      }
+      .note-strip.has-notes,
+      body.note-drag-over .note-strip {
+        display: flex;
+      }
+      body.note-drag-over .note-strip {
+        outline: 2px dashed var(--accent-sage);
+        outline-offset: -4px;
+        background: var(--accent-sage-soft);
+      }
+      body[data-state="history"] .note-strip {
+        display: none;
+      }
+      .note-cards {
+        display: contents;
+      }
+      .note-card {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 4px 4px 10px;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        background: var(--paper);
+        color: var(--ink-soft);
+      }
+      .note-card-remove {
+        border: none;
+        background: none;
+        color: var(--ink-muted);
+        padding: 2px 6px;
+        cursor: pointer;
+      }
+      .note-card-remove:hover {
+        color: var(--ink);
+      }
+      .note-drop-hint {
+        color: var(--ink-muted);
+        font-style: italic;
+      }
+      .note-strip.has-notes .note-drop-hint,
+      .note-strip:not(.has-notes) #noteRunBtn {
         display: none;
       }
 
@@ -644,15 +700,6 @@
         max-height: calc(100vh - 220px);
         overflow-y: auto;
         padding-right: 8px;
-      }
-      .note-marker {
-        color: var(--ink-muted);
-        font-style: italic;
-      }
-      .transcript-body.drag-over {
-        outline: 2px dashed var(--accent-sage);
-        outline-offset: 4px;
-        background: var(--accent-sage-soft);
       }
       .transcript-body::-webkit-scrollbar {
         width: 8px;
@@ -2580,12 +2627,12 @@
           <button
             id="noteBtn"
             class="btn btn-ghost"
-            title="Upload a .txt clinical note, or drop it on the transcript"
+            title="Add .txt clinical notes, or drop them on the page"
           >
             <i class="bi bi-file-earmark-text"></i>
             <span data-i18n="common.note">Clinical note</span>
           </button>
-          <input type="file" id="noteInput" accept=".txt" hidden />
+          <input type="file" id="noteInput" accept=".txt" multiple hidden />
           <button id="resetBtn" class="btn btn-ghost" title="New session">
             <i class="bi bi-arrow-counterclockwise"></i>
             <span data-i18n="common.new">New</span>
@@ -2628,6 +2675,17 @@
             <span data-i18n="profile.stillbirth">Stillbirth</span>
           </label>
         </div>
+      </div>
+
+      <div class="note-strip" id="noteStrip">
+        <div class="note-cards" id="noteCards"></div>
+        <span class="note-drop-hint" data-i18n="note.dropHint"
+          >Drop .txt clinical notes here</span
+        >
+        <button id="noteRunBtn" class="btn btn-ghost">
+          <i class="bi bi-play-fill"></i>
+          <span data-i18n="note.run">Run inference</span>
+        </button>
       </div>
 
       <div class="waveform" aria-hidden="true">
@@ -3147,6 +3205,8 @@
           "common.seeAll": "See all",
           "common.history": "History",
           "common.note": "Clinical note",
+          "note.run": "Run inference",
+          "note.dropHint": "Drop .txt clinical notes here",
           "tagline.line1": "Cause of Death",
           "tagline.line2": "Determination Assistant",
           "onboard.eyebrow": "BEFORE YOU BEGIN",
@@ -3224,6 +3284,8 @@
           "common.seeAll": "Ona zote",
           "common.history": "Historia",
           "common.note": "Maelezo ya kliniki",
+          "note.run": "Endesha uchambuzi",
+          "note.dropHint": "Dondosha maelezo ya kliniki (.txt) hapa",
           "tagline.line1": "Sababu ya Kifo",
           "tagline.line2": "Msaidizi wa Uamuzi",
           "onboard.eyebrow": "KABLA HUJAANZA",
@@ -3300,6 +3362,8 @@
           "common.seeAll": "Tout voir",
           "common.history": "Historique",
           "common.note": "Note clinique",
+          "note.run": "Lancer l'inférence",
+          "note.dropHint": "Déposez les notes cliniques .txt ici",
           "tagline.line1": "Cause du décès",
           "tagline.line2": "Assistant de détermination",
           "onboard.eyebrow": "AVANT DE COMMENCER",
@@ -3379,6 +3443,8 @@
           "common.seeAll": "عرض الكل",
           "common.history": "السجل",
           "common.note": "ملاحظة سريرية",
+          "note.run": "تشغيل الاستدلال",
+          "note.dropHint": "أفلت ملاحظات سريرية بصيغة .txt هنا",
           "tagline.line1": "سبب الوفاة",
           "tagline.line2": "مساعد التحديد",
           "onboard.eyebrow": "قبل البدء",
@@ -3454,6 +3520,8 @@
           "common.seeAll": "সব দেখুন",
           "common.history": "ইতিহাস",
           "common.note": "ক্লিনিক্যাল নোট",
+          "note.run": "অনুমান চালান",
+          "note.dropHint": "এখানে .txt ক্লিনিক্যাল নোট ছাড়ুন",
           "tagline.line1": "মৃত্যুর কারণ",
           "tagline.line2": "নির্ধারণ সহকারী",
           "onboard.eyebrow": "শুরু করার আগে",
@@ -3531,6 +3599,8 @@
           "common.seeAll": "Ver todas",
           "common.history": "Historial",
           "common.note": "Nota clínica",
+          "note.run": "Ejecutar inferencia",
+          "note.dropHint": "Suelte aquí las notas clínicas .txt",
           "tagline.line1": "Causa de muerte",
           "tagline.line2": "Asistente de determinación",
           "onboard.eyebrow": "ANTES DE EMPEZAR",
@@ -3609,6 +3679,8 @@
           "common.seeAll": "Vona hinkwaswo",
           "common.history": "Matimu",
           "common.note": "Tsalwa ra kliniki",
+          "note.run": "Kumisisa xivangelo",
+          "note.dropHint": "Wisela matsalwa ya kliniki (.txt) laha",
           "tagline.line1": "Mupfuni wo kumisisa",
           "tagline.line2": "xivangelo xa rifu",
           "onboard.eyebrow": "U NGA SI SUNGULA",
@@ -4956,6 +5028,7 @@
               currentInferenceSessionId = data.session_id || null;
               currentInferenceSessionGeneration =
                 data.session_generation ?? null;
+              if (noteFiles.length) runClinicalNotes();
             } else if (data.type === "transcript") {
               if (chunkCount === 0) {
                 transcript.innerHTML = "";
@@ -5012,29 +5085,7 @@
               prevLine.textContent = data.text + " ";
               transcript.scrollTop = transcript.scrollHeight;
             } else if (data.type === "inference") {
-              console.debug("[coda] inference", data);
-              exitInferenceOffline();
-              body.classList.remove("inference-offline");
-
-              const previous = latestCauses;
-              latestCauses = data.causes || {};
-              evolution.push({ t: Date.now(), causes: latestCauses });
-
-              const html = renderCauseList(
-                latestCauses,
-                previous,
-                data.reasoning,
-                data.questions,
-              );
-              inference.insertAdjacentHTML("afterbegin", html);
-              // Mirror into the main-column differentials container so the
-              // Session Result screen can show them in the primary area
-              // instead of the sidebar.
-              const diffEl = document.getElementById("differentialsList");
-              if (diffEl) diffEl.innerHTML = html;
-              updatingPill.style.display = "inline-flex";
-
-              updateCausesChart(data.causes || {});
+              showInference(data);
             } else if (data.type === "warning") {
               showStatus(data.message, "warning");
             } else if (data.type === "error") {
@@ -5441,6 +5492,8 @@
             stopRecording();
           }
           clearProfileInputs();
+          noteFiles = [];
+          renderNoteCards();
           transcriptText = "";
           chunkCount = 0;
           transcript.innerHTML =
@@ -5496,68 +5549,125 @@
         }
       });
 
-      // Clinical note upload
+      function showInference(data) {
+        console.debug("[coda] inference", data);
+        exitInferenceOffline();
+        body.classList.remove("inference-offline");
+
+        const previous = latestCauses;
+        latestCauses = data.causes || {};
+        evolution.push({ t: Date.now(), causes: latestCauses });
+
+        const html = renderCauseList(
+          latestCauses,
+          previous,
+          data.reasoning,
+          data.questions,
+        );
+        inference.insertAdjacentHTML("afterbegin", html);
+        // Mirror into the main-column differentials container so the
+        // Session Result screen can show them in the primary area
+        // instead of the sidebar.
+        const diffEl = document.getElementById("differentialsList");
+        if (diffEl) diffEl.innerHTML = html;
+        updatingPill.style.display = "inline-flex";
+
+        updateCausesChart(data.causes || {});
+      }
+
+      // Clinical notes, as {filename, text}, sent to inference on Run
+      let noteFiles = [];
       const noteBtn = document.getElementById("noteBtn");
       const noteInput = document.getElementById("noteInput");
+      const noteStrip = document.getElementById("noteStrip");
+      const noteCards = document.getElementById("noteCards");
+      const noteRunBtn = document.getElementById("noteRunBtn");
 
       noteBtn.addEventListener("click", () => noteInput.click());
-      noteInput.addEventListener("change", () => {
-        if (noteInput.files.length > 0) {
-          uploadClinicalNote(noteInput.files[0]);
-          noteInput.value = "";
-        }
+      noteInput.addEventListener("change", async () => {
+        await addNoteFiles(noteInput.files);
+        noteInput.value = "";
+      });
+      noteRunBtn.addEventListener("click", runClinicalNotes);
+      noteCards.addEventListener("click", (e) => {
+        const btn = e.target.closest(".note-card-remove");
+        if (!btn) return;
+        noteFiles.splice(Number(btn.dataset.index), 1);
+        renderNoteCards();
       });
       if (body.dataset.showClinicalNote !== "false") {
-        transcript.addEventListener("dragover", (e) => {
+        window.addEventListener("dragover", (e) => {
           e.preventDefault();
-          transcript.classList.add("drag-over");
+          body.classList.add("note-drag-over");
         });
-        transcript.addEventListener("dragleave", () =>
-          transcript.classList.remove("drag-over"),
-        );
-        transcript.addEventListener("drop", (e) => {
+        window.addEventListener("dragleave", (e) => {
+          if (!e.relatedTarget) body.classList.remove("note-drag-over");
+        });
+        window.addEventListener("drop", (e) => {
           e.preventDefault();
-          transcript.classList.remove("drag-over");
-          if (e.dataTransfer.files.length > 0) {
-            uploadClinicalNote(e.dataTransfer.files[0]);
-          }
+          body.classList.remove("note-drag-over");
+          addNoteFiles(e.dataTransfer.files);
         });
       }
 
-      async function uploadClinicalNote(file) {
-        if (!file.name.endsWith(".txt")) {
-          showStatus("Please upload a .txt file", "warning");
-          return;
+      async function addNoteFiles(files) {
+        for (const file of files) {
+          if (!file.name.endsWith(".txt")) {
+            showStatus(`Skipped "${file.name}": not a .txt file`, "warning");
+            continue;
+          }
+          const text = await file.text();
+          // A file with the same name replaces the earlier one
+          noteFiles = noteFiles.filter((n) => n.filename !== file.name);
+          noteFiles.push({ filename: file.name, text });
         }
-        if (!currentInferenceSessionId) {
-          showStatus("Start a session before uploading a note", "warning");
-          return;
-        }
-        showStatus(`Processing "${file.name}"…`, "info");
+        renderNoteCards();
+      }
+
+      function renderNoteCards() {
+        noteCards.innerHTML = noteFiles
+          .map(
+            (n, i) =>
+              `<span class="note-card"><i class="bi bi-file-earmark-text"></i>` +
+              `${escapeHtml(n.filename)}<button type="button" ` +
+              `class="note-card-remove" data-index="${i}" ` +
+              `aria-label="Remove" title="Remove">` +
+              `<i class="bi bi-trash"></i></button></span>`,
+          )
+          .join("");
+        noteStrip.classList.toggle("has-notes", noteFiles.length > 0);
+      }
+
+      // Send the notes to the live session, or without one, infer once from
+      // the notes and the transcript so far and show the result
+      async function runClinicalNotes() {
+        const live =
+          ws && ws.readyState === WebSocket.OPEN && currentInferenceSessionId;
+        showStatus("Running inference on clinical notes…", "info");
         try {
-          const resp = await fetch("/upload-note", {
+          const resp = await fetch("/clinical-notes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              text: await file.text(),
-              filename: file.name,
-              session_id: currentInferenceSessionId,
+              notes: noteFiles,
+              session_id: live ? currentInferenceSessionId : null,
+              transcript: transcriptText,
             }),
           });
           if (!resp.ok) {
             const err = await resp.json();
-            showStatus(err.detail || "Upload failed", "danger");
+            showStatus(err.detail || "Inference failed", "danger");
             return;
           }
-          transcript.insertAdjacentHTML(
-            "beforeend",
-            `<span class="note-marker">[Clinical note: ${escapeHtml(file.name)}]</span> `,
-          );
-          transcript.scrollTop = transcript.scrollHeight;
-          showStatus(`Clinical note "${file.name}" processed`, "success");
+          if (!live) {
+            showInference(await resp.json());
+            renderResultHero();
+            setSessionState("result");
+          }
+          showStatus("Clinical notes processed", "success");
         } catch (e) {
-          console.error("Upload failed:", e);
-          showStatus("Failed to upload clinical note", "danger");
+          console.error("Clinical notes inference failed:", e);
+          showStatus("Failed to process clinical notes", "danger");
         }
       }
 

@@ -18,9 +18,11 @@ class FakeLLMClient:
         self.fail = fail
         self.active_counter = active_counter
         self.thread_ids = []
+        self.user_prompts = []
 
     def call_with_schema(self, **kwargs):
         self.thread_ids.append(threading.get_ident())
+        self.user_prompts.append(kwargs["user_prompt"])
         counter = self.active_counter
         if counter is not None:
             with counter["lock"]:
@@ -65,6 +67,21 @@ async def test_champs_llm_runs_off_event_loop_thread():
     assert result["causes"]
     assert client.thread_ids
     assert client.thread_ids[0] != loop_thread
+
+
+@pytest.mark.asyncio
+async def test_champs_llm_prompt_tags_clinical_notes():
+    client = FakeLLMClient()
+    agent = ChampsPromptedInferenceAgent(client)
+    notes = [{"filename": "labs.txt", "text": "Hb 5"},
+             {"filename": "discharge.txt", "text": "Sepsis"}]
+
+    await agent.set_clinical_notes("note-1", notes, "Child had fever.", [])
+
+    prompt = client.user_prompts[-1]
+    assert "Child had fever." in prompt
+    assert '<clinical_note filename="labs.txt">\nHb 5\n</clinical_note>\n' \
+        '<clinical_note filename="discharge.txt">\nSepsis\n' in prompt
 
 
 @pytest.mark.asyncio

@@ -250,10 +250,15 @@ class ResetRequest(BaseModel):
     session_generation: Optional[int] = None
 
 
-class UploadNoteRequest(BaseModel):
+class ClinicalNote(BaseModel):
+    filename: str
     text: str
-    session_id: str
-    filename: Optional[str] = None
+
+
+class ClinicalNotesRequest(BaseModel):
+    notes: list[ClinicalNote]
+    session_id: Optional[str] = None
+    transcript: str = ""
 
 
 def get_language_name(code: str) -> str:
@@ -868,44 +873,55 @@ async def _start_inference(inference_session: InferenceSessionCoordinator,
     await inference_session.enqueue(chunk_id, timestamp, text, annotations)
 
 
-# Max clinical note size in characters
+# Max total clinical notes size in characters
 MAX_NOTE_SIZE = 100_000
 
 
-@app.post("/upload-note")
-async def upload_note(req: UploadNoteRequest):
-    """Attach a clinical note to an active session and rerun inference."""
-    text = req.text.strip()
-    if not text:
-        raise HTTPException(status_code=400, detail="Empty clinical note")
-    if len(text) > MAX_NOTE_SIZE:
-        raise HTTPException(status_code=413,
-                            detail="Clinical note too large (max 100KB)")
-    session = next((s for s in active_inference_sessions
-                    if s.session_id == req.session_id), None)
-    if session is None:
-        raise HTTPException(status_code=404, detail="No active session")
+@app.post("/clinical-notes")
+async def set_clinical_notes(req: ClinicalNotesRequest):
+    """Set a session's clinical notes and rerun inference.
 
-    annotations = await asyncio.to_thread(grounder.annotate, text)
-    generation = session.generation
+    Without a session, infer once from the notes and the given transcript
+    and return the result.
+    """
+    notes = [{"filename": n.filename, "text": n.text.strip()}
+             for n in req.notes]
+    if sum(len(n["text"]) for n in notes) > MAX_NOTE_SIZE:
+        raise HTTPException(status_code=413,
+                            detail="Clinical notes too large (max 100KB)")
+    session = None
+    if req.session_id is not None:
+        session = next((s for s in active_inference_sessions
+                        if s.session_id == req.session_id), None)
+        if session is None:
+            raise HTTPException(status_code=404, detail="No active session")
+
+    note_text = "\n\n".join(n["text"] for n in notes)
+    annotations = await asyncio.to_thread(grounder.annotate, note_text)
+    session_id = session.session_id if session else str(uuid.uuid4())
+    generation = session.generation if session else 0
     request = {
         "chunk_id": "note-" + str(uuid.uuid4()),
         "timestamp": time.time(),
-        "clinical_note": text,
+        "clinical_notes": notes,
+        "text": "" if session else req.transcript.strip(),
         "annotations": [a.to_json() for a in annotations],
         "metadata": current_metadata.to_dict(),
-        "session_id": session.session_id,
+        "session_id": session_id,
         "session_generation": generation,
     }
     response = await inference_client.post("/clinical_note", json=request)
     response.raise_for_status()
     result = response.json()
+    if session is None:
+        await _reset_inference_session(session_id, generation)
+        return result
     if await session.is_current_generation(generation):
         if session.recorder is not None:
             session.recorder.write_inference(request, result,
                                              shown_at=time.time())
         await _ws_send_safe(session.websocket, {"type": "inference", **result})
-    return {"filename": req.filename}
+    return {}
 
 
 @app.post("/reset")

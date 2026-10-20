@@ -184,9 +184,11 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             f"- narrative:\n"
             f"  {self.all_text.strip()}"
         )
-        if self.clinical_note:
-            user_prompt += (f"\n\n<clinical_note>\n{self.clinical_note.strip()}"
-                            f"\n</clinical_note>")
+        if self.clinical_notes:
+            user_prompt += "\n\n" + "\n".join(
+                f'<clinical_note filename="{note["filename"]}">\n'
+                f'{note["text"].strip()}\n</clinical_note>'
+                for note in self.clinical_notes)
 
         try:
             logger.info(f'Inferring causes up to chunk {chunk_id}...')
