@@ -434,12 +434,23 @@
       body[data-state="history"] .profile-bar {
         display: none;
       }
+      body[data-show-case-profile="false"] #profileToggle,
+      body[data-show-case-profile="false"] #profileFields,
+      body[data-show-user-profile="false"] #userToggle,
+      body[data-show-user-profile="false"] #userFields,
+      body[data-show-case-profile="false"][data-show-user-profile="false"]
+        .profile-bar {
+        display: none !important;
+      }
+      .profile-toggles {
+        display: flex;
+        padding: 0 16px;
+      }
       .profile-toggle {
         display: flex;
         align-items: center;
         gap: 8px;
-        width: 100%;
-        padding: 8px 32px;
+        padding: 8px 16px;
         background: none;
         border: none;
         cursor: pointer;
@@ -452,7 +463,8 @@
         font-size: 11px;
         transition: transform 0.15s ease;
       }
-      .profile-bar[data-expanded="true"] .profile-chevron {
+      .profile-bar[data-expanded="true"] #profileToggle .profile-chevron,
+      .profile-bar[data-user-expanded="true"] #userToggle .profile-chevron {
         transform: rotate(180deg);
       }
       .profile-summary {
@@ -460,16 +472,19 @@
         color: var(--ink);
         font-weight: 500;
       }
-      .profile-bar[data-expanded="true"] .profile-summary {
+      .profile-bar[data-expanded="true"] #profileSummary,
+      .profile-bar[data-user-expanded="true"] #userSummary {
         display: none;
       }
       .profile-fields {
         display: none;
         align-items: center;
-        gap: 20px;
+        flex-wrap: wrap;
+        gap: 10px 20px;
         padding: 0 32px 10px;
       }
-      .profile-bar[data-expanded="true"] .profile-fields {
+      .profile-bar[data-expanded="true"] #profileFields,
+      .profile-bar[data-user-expanded="true"] #userFields {
         display: flex;
       }
       .profile-field,
@@ -478,7 +493,8 @@
         align-items: center;
         gap: 8px;
       }
-      .profile-field label,
+      .profile-field > label,
+      .profile-label,
       .profile-still {
         color: var(--ink-soft);
         font-weight: 600;
@@ -493,6 +509,19 @@
         color: var(--ink);
         font-size: 13px;
       }
+      .profile-field input[type="text"],
+      .profile-field input[type="date"] {
+        width: 180px;
+        padding: 4px 8px;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        background: var(--paper);
+        color: var(--ink);
+        font-size: 13px;
+      }
+      #caseId {
+        width: 110px;
+      }
       .profile-field select {
         padding: 4px 8px;
         border: 1px solid var(--border-warm);
@@ -504,7 +533,35 @@
       .profile-still {
         cursor: pointer;
       }
-      .profile-bar[data-stillbirth="true"] .profile-field {
+      .profile-segmented {
+        display: inline-flex;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .profile-segmented label {
+        padding: 4px 10px;
+        cursor: pointer;
+        color: var(--ink-soft);
+      }
+      .profile-segmented label + label {
+        border-left: 1px solid var(--border-warm);
+      }
+      .profile-segmented input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .profile-segmented label:has(input:checked) {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .profile-segmented label:has(input:focus-visible) {
+        outline: 2px solid var(--accent-sage);
+        outline-offset: -2px;
+      }
+      .profile-bar[data-stillbirth="true"] .profile-age {
         opacity: 0.4;
         pointer-events: none;
       }
@@ -580,7 +637,90 @@
         min-width: 0;
       }
 
-      body[data-show-clinical-note="false"] #noteBtn {
+      body[data-show-clinical-note="false"] #noteBtn,
+      body[data-show-clinical-note="false"] #noteTypeBtn,
+      body[data-show-clinical-note="false"] .note-editor,
+      body[data-state="history"] .note-editor,
+      body[data-show-clinical-note="false"] .note-strip {
+        display: none !important;
+      }
+
+      /* Clinical note cards */
+      .note-strip {
+        display: none;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 32px;
+        background: var(--paper-elevated);
+        border-bottom: 1px solid var(--border-warm);
+        font-size: 13px;
+      }
+      .note-strip.has-notes,
+      body.note-drag-over .note-strip {
+        display: flex;
+      }
+      body.note-drag-over .note-strip {
+        outline: 2px dashed var(--accent-sage);
+        outline-offset: -4px;
+        background: var(--accent-sage-soft);
+      }
+      body[data-state="history"] .note-strip {
+        display: none;
+      }
+      .note-cards {
+        display: contents;
+      }
+      .note-card {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 4px 4px 10px;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        background: var(--paper);
+        color: var(--ink-soft);
+      }
+      .note-card-remove {
+        border: none;
+        background: none;
+        color: var(--ink-muted);
+        padding: 2px 6px;
+        cursor: pointer;
+      }
+      .note-card-remove:hover {
+        color: var(--ink);
+      }
+      .note-editor:not([hidden]) {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 32px;
+        background: var(--paper-elevated);
+        border-bottom: 1px solid var(--border-warm);
+      }
+      .note-editor textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        background: var(--paper);
+        color: var(--ink);
+        font: inherit;
+        font-size: 14px;
+        resize: vertical;
+      }
+      .note-editor-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .note-drop-hint {
+        color: var(--ink-muted);
+        font-style: italic;
+      }
+      .note-strip.has-notes .note-drop-hint,
+      .note-strip:not(.has-notes) #noteRunBtn {
         display: none;
       }
 
@@ -644,15 +784,6 @@
         max-height: calc(100vh - 220px);
         overflow-y: auto;
         padding-right: 8px;
-      }
-      .note-marker {
-        color: var(--ink-muted);
-        font-style: italic;
-      }
-      .transcript-body.drag-over {
-        outline: 2px dashed var(--accent-sage);
-        outline-offset: 4px;
-        background: var(--accent-sage-soft);
       }
       .transcript-body::-webkit-scrollbar {
         width: 8px;
@@ -1450,6 +1581,164 @@
           flex-direction: column;
           gap: 8px;
           align-items: flex-start;
+        }
+      }
+
+      /* Medical certificate of cause of death */
+      body[data-show-mccd="false"] #mccdBtn,
+      body:not([data-state="result"]) #mccdBtn {
+        display: none;
+      }
+      .mccd-overlay:not([hidden]) {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 16px;
+        background: var(--paper);
+        overflow-y: auto;
+      }
+      .mccd-actions,
+      .mccd-sheet {
+        width: 100%;
+        max-width: 820px;
+      }
+      .mccd-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .mccd-notice {
+        flex: 1;
+        margin: 0;
+        font-size: 13px;
+        color: var(--ink-muted);
+      }
+      .mccd-sheet {
+        padding: 32px 40px;
+        border: 1px solid var(--border-warm);
+        border-radius: 8px;
+        background: var(--paper-elevated);
+        color: var(--ink);
+      }
+      .mccd-sheet h1 {
+        margin: 0 0 20px;
+        font-size: 22px;
+      }
+      .mccd-sheet h2 {
+        margin: 28px 0 10px;
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .mccd-sheet h3 {
+        margin: 12px 0 8px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .mccd-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 12px 20px;
+      }
+      .mccd-grid label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink-soft);
+      }
+      .mccd-grid .mccd-check {
+        flex-direction: row;
+        align-items: center;
+        align-self: end;
+        gap: 8px;
+      }
+      .mccd-sheet input:not([type="checkbox"]),
+      .mccd-sheet select,
+      .mccd-sheet textarea {
+        width: 100%;
+        padding: 5px 8px;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        background: var(--paper);
+        color: var(--ink);
+        font: inherit;
+        font-size: 14px;
+      }
+      .mccd-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .mccd-table th,
+      .mccd-table td {
+        padding: 4px;
+        font-size: 12px;
+        text-align: left;
+        vertical-align: middle;
+      }
+      .mccd-table tbody th {
+        width: 1%;
+        white-space: nowrap;
+      }
+      .mccd-table td:nth-child(3) {
+        width: 14%;
+      }
+      .mccd-table td:nth-child(4) {
+        width: 24%;
+      }
+      .mccd-signature {
+        display: block;
+        height: 30px;
+        border-bottom: 1px solid var(--ink-soft);
+      }
+      @media print {
+        body.mccd-open > :not(.mccd-overlay) {
+          display: none !important;
+        }
+        body.mccd-open,
+        .mccd-overlay:not([hidden]) {
+          position: static;
+          padding: 0;
+          background: #fff;
+        }
+        .mccd-actions {
+          display: none !important;
+        }
+        .mccd-sheet {
+          max-width: none;
+          padding: 0;
+          border: none;
+          background: #fff;
+          color: #000;
+        }
+        .mccd-sheet h2,
+        .mccd-sheet .mccd-grid label {
+          color: #000;
+        }
+        .mccd-sheet input:not([type="checkbox"]),
+        .mccd-sheet select,
+        .mccd-sheet textarea {
+          appearance: none;
+          border: none;
+          border-bottom: 1px solid #000;
+          border-radius: 0;
+          background: #fff;
+          color: #000;
+          resize: none;
+          outline: none;
+          box-shadow: none;
+        }
+        .mccd-sheet input::-webkit-calendar-picker-indicator {
+          display: none;
+        }
+        .mccd-signature {
+          border-color: #000;
         }
       }
 
@@ -2431,6 +2720,138 @@
     </style>
   </head>
   <body>
+    <div class="mccd-overlay" id="mccdOverlay" hidden>
+      <div class="mccd-actions">
+        <p class="mccd-notice">
+          The underlying cause was pre-filled by CODA and is advisory only.
+          Review and complete the certificate before signing.
+        </p>
+        <button id="mccdPrintBtn" class="btn btn-ghost">
+          <i class="bi bi-download"></i>
+          <span>Download PDF</span>
+        </button>
+        <button id="mccdCloseBtn" class="btn btn-ghost">
+          <i class="bi bi-x-lg"></i>
+          <span>Close</span>
+        </button>
+      </div>
+      <form class="mccd-sheet" id="mccdSheet">
+        <h1>Medical Certificate of Cause of Death</h1>
+        <div class="mccd-grid">
+          <label
+            ><span>Case ID</span
+            ><input name="caseId"
+          /></label>
+          <label
+            ><span>Sex</span
+            ><select name="sex">
+              <option value="">—</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="ambiguous">
+                Ambiguous
+              </option>
+            </select></label
+          >
+          <label
+            ><span>Age</span><input name="age"
+          /></label>
+          <label
+            ><span>Date of death</span
+            ><input type="date" name="dateOfDeath"
+          /></label>
+        </div>
+
+        <h2>Frame A: Medical data</h2>
+        <h3>
+          Part 1: Disease or condition leading directly to death, then the
+          chain of events, with the underlying cause on the lowest used line
+        </h3>
+        <table class="mccd-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Cause of death</th>
+              <th>ICD code</th>
+              <th>Time from onset to death</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>(a)</th>
+              <td><input name="cause_a" /></td>
+              <td><input name="code_a" /></td>
+              <td><input name="interval_a" /></td>
+            </tr>
+            <tr>
+              <th>(b) <small>due to</small></th>
+              <td><input name="cause_b" /></td>
+              <td><input name="code_b" /></td>
+              <td><input name="interval_b" /></td>
+            </tr>
+            <tr>
+              <th>(c) <small>due to</small></th>
+              <td><input name="cause_c" /></td>
+              <td><input name="code_c" /></td>
+              <td><input name="interval_c" /></td>
+            </tr>
+            <tr>
+              <th>(d) <small>due to</small></th>
+              <td><input name="cause_d" /></td>
+              <td><input name="code_d" /></td>
+              <td><input name="interval_d" /></td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>
+          Part 2: Other significant conditions contributing to death
+        </h3>
+        <textarea name="part2" rows="3"></textarea>
+
+        <h2>Frame B: Other medical data</h2>
+        <div class="mccd-grid">
+          <label
+            ><span>Manner of death</span
+            ><select name="manner">
+              <option value="">—</option>
+              <option value="disease">Disease</option>
+              <option value="accident">Accident</option>
+              <option value="self_harm">Self harm</option>
+              <option value="assault">Assault</option>
+              <option value="pending_investigation">
+                Pending investigation
+              </option>
+              <option value="unknown">Don't know</option>
+            </select></label
+          >
+          <label class="mccd-check"
+            ><input type="checkbox" name="stillbirth" /><span
+             
+              >Stillbirth</span
+            ></label
+          >
+        </div>
+
+        <h2>Certifier</h2>
+        <div class="mccd-grid">
+          <label
+            ><span>Name</span
+            ><input name="certifierName"
+          /></label>
+          <label
+            ><span>ID</span><input name="certifierId"
+          /></label>
+          <label
+            ><span>Date</span
+            ><input type="date" name="certifiedOn"
+          /></label>
+          <label
+            ><span>Signature</span
+            ><span class="mccd-signature"></span
+          ></label>
+        </div>
+      </form>
+    </div>
     <div
       class="onboard-overlay"
       id="onboardOverlay"
@@ -2580,12 +3001,16 @@
           <button
             id="noteBtn"
             class="btn btn-ghost"
-            title="Upload a .txt clinical note, or drop it on the transcript"
+            title="Add .txt or .pdf clinical notes, or drop them on the page"
           >
-            <i class="bi bi-file-earmark-text"></i>
-            <span data-i18n="common.note">Clinical note</span>
+            <i class="bi bi-upload"></i>
+            <span data-i18n="note.upload">Upload note</span>
           </button>
-          <input type="file" id="noteInput" accept=".txt" hidden />
+          <button id="noteTypeBtn" class="btn btn-ghost" title="Type a clinical note">
+            <i class="bi bi-pencil-square"></i>
+            <span data-i18n="note.type">Type note</span>
+          </button>
+          <input type="file" id="noteInput" accept=".txt,.pdf" multiple hidden />
           <button id="resetBtn" class="btn btn-ghost" title="New session">
             <i class="bi bi-arrow-counterclockwise"></i>
             <span data-i18n="common.new">New</span>
@@ -2594,27 +3019,68 @@
             <i class="bi bi-clipboard"></i>
             <span data-i18n="common.copy">Copy transcript</span>
           </button>
+          <button
+            id="mccdBtn"
+            class="btn btn-ghost"
+            title="Medical certificate of cause of death"
+          >
+            <i class="bi bi-file-earmark-medical"></i>
+            <span>MCCD</span>
+          </button>
           <button id="settingsToggle" aria-label="Settings" title="Settings">
             <i class="bi bi-gear"></i>
           </button>
         </div>
       </header>
 
-      <div class="profile-bar" id="profileBar" data-expanded="false">
-        <button
-          type="button"
-          class="profile-toggle"
-          id="profileToggle"
-          aria-expanded="false"
-          aria-controls="profileFields"
-        >
-          <i class="bi bi-person-vcard"></i>
-          <span data-i18n="profile.title">Case profile</span>
-          <i class="bi bi-chevron-down profile-chevron"></i>
-          <span class="profile-summary" id="profileSummary"></span>
-        </button>
+      <div
+        class="profile-bar"
+        id="profileBar"
+        data-expanded="false"
+        data-user-expanded="false"
+      >
+        <div class="profile-toggles">
+          <button
+            type="button"
+            class="profile-toggle"
+            id="profileToggle"
+            aria-expanded="false"
+            aria-controls="profileFields"
+          >
+            <i class="bi bi-person-vcard"></i>
+            <span data-i18n="profile.title">Case profile</span>
+            <i class="bi bi-chevron-down profile-chevron"></i>
+            <span class="profile-summary" id="profileSummary"></span>
+          </button>
+          <button
+            type="button"
+            class="profile-toggle"
+            id="userToggle"
+            aria-expanded="false"
+            aria-controls="userFields"
+          >
+            <i class="bi bi-person-badge"></i>
+            <span data-i18n="user.title">User</span>
+            <i class="bi bi-chevron-down profile-chevron"></i>
+            <span class="profile-summary" id="userSummary"></span>
+          </button>
+        </div>
+        <div class="profile-fields" id="userFields">
+          <div class="profile-field">
+            <label for="userName" data-i18n="user.name">Name</label>
+            <input type="text" id="userName" autocomplete="name" />
+          </div>
+          <div class="profile-field">
+            <label for="userId" data-i18n="user.id">ID</label>
+            <input type="text" id="userId" autocomplete="off" />
+          </div>
+        </div>
         <div class="profile-fields" id="profileFields">
           <div class="profile-field">
+            <label for="caseId" data-i18n="profile.caseId">Case ID</label>
+            <input type="text" id="caseId" autocomplete="off" />
+          </div>
+          <div class="profile-field profile-age">
             <label for="ageValue" data-i18n="profile.age">Age</label>
             <input type="number" id="ageValue" min="0" step="1" placeholder="—" />
             <select id="ageUnit">
@@ -2627,6 +3093,93 @@
             <input type="checkbox" id="stillbirthToggle" />
             <span data-i18n="profile.stillbirth">Stillbirth</span>
           </label>
+          <div class="profile-field">
+            <span class="profile-label" data-i18n="profile.sex">Sex</span>
+            <div class="profile-segmented" role="radiogroup" id="sexGroup">
+              <label
+                ><input type="radio" name="sex" value="female" /><span
+                  data-i18n="profile.female"
+                  >Female</span
+                ></label
+              >
+              <label
+                ><input type="radio" name="sex" value="male" /><span
+                  data-i18n="profile.male"
+                  >Male</span
+                ></label
+              >
+              <label
+                ><input type="radio" name="sex" value="ambiguous" /><span
+                  data-i18n="profile.ambiguous"
+                  >Ambiguous</span
+                ></label
+              >
+            </div>
+          </div>
+          <div class="profile-field">
+            <label for="dateOfDeath" data-i18n="profile.dateOfDeath"
+              >Date of death</label
+            >
+            <input type="date" id="dateOfDeath" />
+          </div>
+          <div class="profile-field">
+            <label for="mannerOfDeath" data-i18n="profile.manner"
+              >Manner of death</label
+            >
+            <select id="mannerOfDeath">
+              <option value="">—</option>
+              <option value="disease" data-i18n="profile.mannerDisease">
+                Disease
+              </option>
+              <option value="accident" data-i18n="profile.mannerAccident">
+                Accident
+              </option>
+              <option value="self_harm" data-i18n="profile.mannerSelfHarm">
+                Self harm
+              </option>
+              <option value="assault" data-i18n="profile.mannerAssault">
+                Assault
+              </option>
+              <option
+                value="pending_investigation"
+                data-i18n="profile.mannerPending"
+              >
+                Pending investigation
+              </option>
+              <option value="unknown" data-i18n="profile.mannerUnknown">
+                Don't know
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="note-strip" id="noteStrip">
+        <div class="note-cards" id="noteCards"></div>
+        <span class="note-drop-hint" data-i18n="note.dropHint"
+          >Drop .txt/.pdf clinical notes here</span
+        >
+        <button id="noteRunBtn" class="btn btn-ghost">
+          <i class="bi bi-play-fill"></i>
+          <span data-i18n="note.run">Run inference</span>
+        </button>
+      </div>
+
+      <div class="note-editor" id="noteEditor" hidden>
+        <textarea
+          id="noteText"
+          rows="5"
+          data-i18n-placeholder="note.placeholder"
+          placeholder="Type clinical notes for this case"
+        ></textarea>
+        <div class="note-editor-actions">
+          <button id="noteCancelBtn" class="btn btn-ghost">
+            <span data-i18n="note.cancel">Cancel</span>
+          </button>
+          <button id="noteSaveBtn" class="btn btn-ghost">
+            <i class="bi bi-plus-lg"></i>
+            <span data-i18n="note.save">Add to case</span>
+          </button>
         </div>
       </div>
 
@@ -3136,6 +3689,22 @@
           "profile.title": "Case profile",
           "profile.age": "Age",
           "profile.stillbirth": "Stillbirth",
+          "profile.caseId": "Case ID",
+          "profile.sex": "Sex",
+          "profile.female": "Female",
+          "profile.male": "Male",
+          "profile.ambiguous": "Ambiguous",
+          "profile.dateOfDeath": "Date of death",
+          "profile.manner": "Manner of death",
+          "profile.mannerDisease": "Disease",
+          "profile.mannerAccident": "Accident",
+          "profile.mannerSelfHarm": "Self harm",
+          "profile.mannerAssault": "Assault",
+          "profile.mannerPending": "Pending investigation",
+          "profile.mannerUnknown": "Don't know",
+          "user.title": "User",
+          "user.name": "Name",
+          "user.id": "ID",
           "common.new": "New",
           "common.copy": "Copy transcript",
           "common.back": "Back",
@@ -3146,7 +3715,13 @@
           "common.checkSettings": "Check settings",
           "common.seeAll": "See all",
           "common.history": "History",
-          "common.note": "Clinical note",
+          "note.upload": "Upload note",
+          "note.run": "Run inference",
+          "note.dropHint": "Drop .txt/.pdf clinical notes here",
+          "note.type": "Type note",
+          "note.placeholder": "Type clinical notes for this case",
+          "note.cancel": "Cancel",
+          "note.save": "Add to case",
           "tagline.line1": "Cause of Death",
           "tagline.line2": "Determination Assistant",
           "onboard.eyebrow": "BEFORE YOU BEGIN",
@@ -3213,6 +3788,22 @@
           "profile.title": "Wasifu wa kesi",
           "profile.age": "Umri",
           "profile.stillbirth": "Aliyezaliwa mfu",
+          "profile.caseId": "Kitambulisho cha kesi",
+          "profile.sex": "Jinsia",
+          "profile.female": "Kike",
+          "profile.male": "Kiume",
+          "profile.ambiguous": "Isiyo bayana",
+          "profile.dateOfDeath": "Tarehe ya kifo",
+          "profile.manner": "Namna ya kifo",
+          "profile.mannerDisease": "Ugonjwa",
+          "profile.mannerAccident": "Ajali",
+          "profile.mannerSelfHarm": "Kujidhuru",
+          "profile.mannerAssault": "Shambulio",
+          "profile.mannerPending": "Uchunguzi unaendelea",
+          "profile.mannerUnknown": "Sijui",
+          "user.title": "Mtumiaji",
+          "user.name": "Jina",
+          "user.id": "Kitambulisho",
           "common.new": "Mpya",
           "common.copy": "Nakili maandishi",
           "common.back": "Rudi",
@@ -3223,7 +3814,13 @@
           "common.checkSettings": "Angalia mipangilio",
           "common.seeAll": "Ona zote",
           "common.history": "Historia",
-          "common.note": "Maelezo ya kliniki",
+          "note.upload": "Pakia maelezo",
+          "note.run": "Endesha uchambuzi",
+          "note.dropHint": "Dondosha maelezo ya kliniki (.txt/.pdf) hapa",
+          "note.type": "Andika maelezo",
+          "note.placeholder": "Andika maelezo ya kliniki ya kesi hii",
+          "note.cancel": "Ghairi",
+          "note.save": "Ongeza kwenye kesi",
           "tagline.line1": "Sababu ya Kifo",
           "tagline.line2": "Msaidizi wa Uamuzi",
           "onboard.eyebrow": "KABLA HUJAANZA",
@@ -3289,6 +3886,22 @@
           "profile.title": "Profil du cas",
           "profile.age": "Âge",
           "profile.stillbirth": "Mort-né",
+          "profile.caseId": "Identifiant du cas",
+          "profile.sex": "Sexe",
+          "profile.female": "Féminin",
+          "profile.male": "Masculin",
+          "profile.ambiguous": "Ambigu",
+          "profile.dateOfDeath": "Date du décès",
+          "profile.manner": "Circonstances du décès",
+          "profile.mannerDisease": "Maladie",
+          "profile.mannerAccident": "Accident",
+          "profile.mannerSelfHarm": "Auto-agression",
+          "profile.mannerAssault": "Agression",
+          "profile.mannerPending": "Enquête en cours",
+          "profile.mannerUnknown": "Ne sait pas",
+          "user.title": "Utilisateur",
+          "user.name": "Nom",
+          "user.id": "Identifiant",
           "common.new": "Nouveau",
           "common.copy": "Copier la transcription",
           "common.back": "Retour",
@@ -3299,7 +3912,13 @@
           "common.checkSettings": "Vérifier les paramètres",
           "common.seeAll": "Tout voir",
           "common.history": "Historique",
-          "common.note": "Note clinique",
+          "note.upload": "Importer une note",
+          "note.run": "Lancer l'inférence",
+          "note.dropHint": "Déposez les notes cliniques .txt/.pdf ici",
+          "note.type": "Saisir une note",
+          "note.placeholder": "Saisissez des notes cliniques pour ce cas",
+          "note.cancel": "Annuler",
+          "note.save": "Ajouter au cas",
           "tagline.line1": "Cause du décès",
           "tagline.line2": "Assistant de détermination",
           "onboard.eyebrow": "AVANT DE COMMENCER",
@@ -3369,6 +3988,22 @@
           "profile.title": "ملف الحالة",
           "profile.age": "العمر",
           "profile.stillbirth": "مولود ميت",
+          "profile.caseId": "رقم الحالة",
+          "profile.sex": "الجنس",
+          "profile.female": "أنثى",
+          "profile.male": "ذكر",
+          "profile.ambiguous": "ملتبس",
+          "profile.dateOfDeath": "تاريخ الوفاة",
+          "profile.manner": "طريقة الوفاة",
+          "profile.mannerDisease": "مرض",
+          "profile.mannerAccident": "حادث",
+          "profile.mannerSelfHarm": "إيذاء النفس",
+          "profile.mannerAssault": "اعتداء",
+          "profile.mannerPending": "قيد التحقيق",
+          "profile.mannerUnknown": "لا أعرف",
+          "user.title": "المستخدم",
+          "user.name": "الاسم",
+          "user.id": "المعرّف",
           "common.copy": "نسخ النص",
           "common.back": "رجوع",
           "common.clearAll": "مسح الكل",
@@ -3378,7 +4013,13 @@
           "common.checkSettings": "مراجعة الإعدادات",
           "common.seeAll": "عرض الكل",
           "common.history": "السجل",
-          "common.note": "ملاحظة سريرية",
+          "note.upload": "رفع ملاحظة",
+          "note.run": "تشغيل الاستدلال",
+          "note.dropHint": "أفلت ملاحظات سريرية بصيغة .txt/.pdf هنا",
+          "note.type": "كتابة ملاحظة",
+          "note.placeholder": "اكتب ملاحظات سريرية لهذه الحالة",
+          "note.cancel": "إلغاء",
+          "note.save": "إضافة إلى الحالة",
           "tagline.line1": "سبب الوفاة",
           "tagline.line2": "مساعد التحديد",
           "onboard.eyebrow": "قبل البدء",
@@ -3444,6 +4085,22 @@
           "profile.title": "কেসের প্রোফাইল",
           "profile.age": "বয়স",
           "profile.stillbirth": "মৃত জন্ম",
+          "profile.caseId": "কেস আইডি",
+          "profile.sex": "লিঙ্গ",
+          "profile.female": "মেয়ে",
+          "profile.male": "ছেলে",
+          "profile.ambiguous": "অস্পষ্ট",
+          "profile.dateOfDeath": "মৃত্যুর তারিখ",
+          "profile.manner": "মৃত্যুর ধরন",
+          "profile.mannerDisease": "রোগ",
+          "profile.mannerAccident": "দুর্ঘটনা",
+          "profile.mannerSelfHarm": "আত্মক্ষতি",
+          "profile.mannerAssault": "আক্রমণ",
+          "profile.mannerPending": "তদন্ত চলছে",
+          "profile.mannerUnknown": "জানি না",
+          "user.title": "ব্যবহারকারী",
+          "user.name": "নাম",
+          "user.id": "আইডি",
           "common.copy": "প্রতিলিপি কপি করুন",
           "common.back": "ফিরে যান",
           "common.clearAll": "সব মুছুন",
@@ -3453,7 +4110,13 @@
           "common.checkSettings": "সেটিংস দেখুন",
           "common.seeAll": "সব দেখুন",
           "common.history": "ইতিহাস",
-          "common.note": "ক্লিনিক্যাল নোট",
+          "note.upload": "নোট আপলোড করুন",
+          "note.run": "অনুমান চালান",
+          "note.dropHint": "এখানে .txt/.pdf ক্লিনিক্যাল নোট ছাড়ুন",
+          "note.type": "নোট লিখুন",
+          "note.placeholder": "এই কেসের জন্য ক্লিনিক্যাল নোট লিখুন",
+          "note.cancel": "বাতিল",
+          "note.save": "কেসে যোগ করুন",
           "tagline.line1": "মৃত্যুর কারণ",
           "tagline.line2": "নির্ধারণ সহকারী",
           "onboard.eyebrow": "শুরু করার আগে",
@@ -3521,6 +4184,22 @@
           "profile.title": "Perfil del caso",
           "profile.age": "Edad",
           "profile.stillbirth": "Mortinato",
+          "profile.caseId": "ID del caso",
+          "profile.sex": "Sexo",
+          "profile.female": "Femenino",
+          "profile.male": "Masculino",
+          "profile.ambiguous": "Ambiguo",
+          "profile.dateOfDeath": "Fecha de defunción",
+          "profile.manner": "Manera de muerte",
+          "profile.mannerDisease": "Enfermedad",
+          "profile.mannerAccident": "Accidente",
+          "profile.mannerSelfHarm": "Autolesión",
+          "profile.mannerAssault": "Agresión",
+          "profile.mannerPending": "Investigación pendiente",
+          "profile.mannerUnknown": "No se sabe",
+          "user.title": "Usuario",
+          "user.name": "Nombre",
+          "user.id": "ID",
           "common.copy": "Copiar transcripción",
           "common.back": "Atrás",
           "common.clearAll": "Borrar todo",
@@ -3530,7 +4209,13 @@
           "common.checkSettings": "Revisar ajustes",
           "common.seeAll": "Ver todas",
           "common.history": "Historial",
-          "common.note": "Nota clínica",
+          "note.upload": "Subir nota",
+          "note.run": "Ejecutar inferencia",
+          "note.dropHint": "Suelte aquí las notas clínicas .txt/.pdf",
+          "note.type": "Escribir nota",
+          "note.placeholder": "Escriba notas clínicas para este caso",
+          "note.cancel": "Cancelar",
+          "note.save": "Añadir al caso",
           "tagline.line1": "Causa de muerte",
           "tagline.line2": "Asistente de determinación",
           "onboard.eyebrow": "ANTES DE EMPEZAR",
@@ -3599,6 +4284,22 @@
           "profile.title": "Vuxokoxoko bya mhaka",
           "profile.age": "Malembe",
           "profile.stillbirth": "Ku velekiwa ka n'wana a file",
+          "profile.caseId": "Nomboro ya mhaka",
+          "profile.sex": "Rimbewu",
+          "profile.female": "Wa xisati",
+          "profile.male": "Wa xinuna",
+          "profile.ambiguous": "A swi tiyi",
+          "profile.dateOfDeath": "Siku ra rifu",
+          "profile.manner": "Ndlela ya rifu",
+          "profile.mannerDisease": "Vuvabyi",
+          "profile.mannerAccident": "Khombo",
+          "profile.mannerSelfHarm": "Ku tivavisa",
+          "profile.mannerAssault": "Ku hlaseriwa",
+          "profile.mannerPending": "Ndzavisiso wa ha ya emahlweni",
+          "profile.mannerUnknown": "A ndzi tivi",
+          "user.title": "Mutirhisi",
+          "user.name": "Vito",
+          "user.id": "ID",
           "common.copy": "Kopa tsalwa",
           "common.back": "Tlhelela endzhaku",
           "common.clearAll": "Sula hinkwaswo",
@@ -3608,7 +4309,13 @@
           "common.checkSettings": "Kambela swiyimiso",
           "common.seeAll": "Vona hinkwaswo",
           "common.history": "Matimu",
-          "common.note": "Tsalwa ra kliniki",
+          "note.upload": "Rhumela tsalwa",
+          "note.run": "Kumisisa xivangelo",
+          "note.dropHint": "Wisela matsalwa ya kliniki (.txt/.pdf) laha",
+          "note.type": "Tsala tsalwa",
+          "note.placeholder": "Tsala matsalwa ya kliniki ya mhaka leyi",
+          "note.cancel": "Khansela",
+          "note.save": "Engetela eka mhaka",
           "tagline.line1": "Mupfuni wo kumisisa",
           "tagline.line2": "xivangelo xa rifu",
           "onboard.eyebrow": "U NGA SI SUNGULA",
@@ -3706,6 +4413,10 @@
           const key = el.getAttribute("data-i18n");
           const val = t(key);
           if (val) el.textContent = val;
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+          const val = t(el.getAttribute("data-i18n-placeholder"));
+          if (val) el.placeholder = val;
         });
       }
 
@@ -3915,7 +4626,11 @@
           },
           causes: latestCauses,
           evolution: evolution.slice(),
+          caseId: caseIdInput.value.trim() || null,
         };
+        if (body.dataset.showUserProfile !== "false") {
+          session.user = currentUser();
+        }
         const history = loadHistory();
         history.unshift(session);
         saveHistoryArr(history);
@@ -4924,6 +5639,8 @@
 
       async function startRecording() {
         try {
+          if (caseIdUsed) await assignCaseId();
+          caseIdUsed = true;
           micSelect.disabled = true;
           languageSelect.disabled = true;
           transcriberBackendSelect.disabled = true;
@@ -4956,6 +5673,7 @@
               currentInferenceSessionId = data.session_id || null;
               currentInferenceSessionGeneration =
                 data.session_generation ?? null;
+              if (noteFiles.length) runClinicalNotes();
             } else if (data.type === "transcript") {
               if (chunkCount === 0) {
                 transcript.innerHTML = "";
@@ -5012,29 +5730,7 @@
               prevLine.textContent = data.text + " ";
               transcript.scrollTop = transcript.scrollHeight;
             } else if (data.type === "inference") {
-              console.debug("[coda] inference", data);
-              exitInferenceOffline();
-              body.classList.remove("inference-offline");
-
-              const previous = latestCauses;
-              latestCauses = data.causes || {};
-              evolution.push({ t: Date.now(), causes: latestCauses });
-
-              const html = renderCauseList(
-                latestCauses,
-                previous,
-                data.reasoning,
-                data.questions,
-              );
-              inference.insertAdjacentHTML("afterbegin", html);
-              // Mirror into the main-column differentials container so the
-              // Session Result screen can show them in the primary area
-              // instead of the sidebar.
-              const diffEl = document.getElementById("differentialsList");
-              if (diffEl) diffEl.innerHTML = html;
-              updatingPill.style.display = "inline-flex";
-
-              updateCausesChart(data.causes || {});
+              showInference(data);
             } else if (data.type === "warning") {
               showStatus(data.message, "warning");
             } else if (data.type === "error") {
@@ -5370,6 +6066,24 @@
       const ageValueInput = document.getElementById("ageValue");
       const ageUnitSelect = document.getElementById("ageUnit");
       const stillbirthToggle = document.getElementById("stillbirthToggle");
+      const caseIdInput = document.getElementById("caseId");
+      const dateOfDeathInput = document.getElementById("dateOfDeath");
+      const mannerSelect = document.getElementById("mannerOfDeath");
+      const sexRadios = document.querySelectorAll('input[name="sex"]');
+      // Today's local date as YYYY-MM-DD
+      function localDate() {
+        const today = new Date();
+        return [
+          today.getFullYear(),
+          String(today.getMonth() + 1).padStart(2, "0"),
+          String(today.getDate()).padStart(2, "0"),
+        ].join("-");
+      }
+      dateOfDeathInput.max = localDate();
+
+      function checkedSex() {
+        return document.querySelector('input[name="sex"]:checked');
+      }
 
       function applyStillbirthState() {
         profileBar.setAttribute(
@@ -5385,13 +6099,20 @@
 
       // One-line summary shown on the toggle while collapsed.
       function updateProfileSummary() {
-        let text = "";
+        const parts = [];
+        if (caseIdInput.value.trim()) parts.push(caseIdInput.value.trim());
         if (stillbirthToggle.checked) {
-          text = t("profile.stillbirth");
+          parts.push(t("profile.stillbirth"));
         } else if (ageValueInput.value !== "") {
-          text = ageValueInput.value + " " + ageUnitSelect.value;
+          parts.push(ageValueInput.value + " " + ageUnitSelect.value);
         }
-        profileSummary.textContent = text;
+        const sex = checkedSex();
+        if (sex) parts.push(sex.nextElementSibling.textContent);
+        if (mannerSelect.value) {
+          parts.push(mannerSelect.selectedOptions[0].textContent.trim());
+        }
+        if (dateOfDeathInput.value) parts.push(dateOfDeathInput.value);
+        profileSummary.textContent = parts.join(" · ");
       }
 
       profileToggle.addEventListener("click", () => {
@@ -5405,34 +6126,169 @@
         updateProfileSummary();
         const ageValue =
           ageValueInput.value === "" ? null : Number(ageValueInput.value);
+        const caseId = caseIdInput.value.trim() || null;
         const profile = {
           age:
             ageValue === null
               ? null
               : { value: ageValue, unit: ageUnitSelect.value },
           stillbirth: stillbirthToggle.checked,
+          date_of_death: dateOfDeathInput.value || null,
+          sex: checkedSex()?.value || null,
+          manner_of_death: mannerSelect.value || null,
         };
         try {
           await fetch("/metadata", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ profile }),
+            body: JSON.stringify({ case_id: caseId, profile }),
           });
         } catch (e) {}
       }
 
+      // Whether a recording has been saved as a case under the current ID
+      let caseIdUsed = false;
+
+      // Fill in the next default case ID and send the profile with it
+      async function assignCaseId() {
+        caseIdUsed = false;
+        try {
+          const resp = await fetch("/next-case-id");
+          caseIdInput.value = (await resp.json()).case_id;
+        } catch (e) {}
+        await pushMetadata();
+      }
+
       function clearProfileInputs() {
+        caseIdInput.value = "";
         ageValueInput.value = "";
         ageUnitSelect.value = "months";
         stillbirthToggle.checked = false;
+        dateOfDeathInput.value = "";
+        mannerSelect.value = "";
+        sexRadios.forEach((r) => (r.checked = false));
         applyStillbirthState();
         updateProfileSummary();
         setProfileExpanded(false);
       }
 
+      // Person using the app, saved with each case but not used for inference
+      const USER_KEY = "codaUser";
+      const userToggle = document.getElementById("userToggle");
+      const userSummary = document.getElementById("userSummary");
+      const userNameInput = document.getElementById("userName");
+      const userIdInput = document.getElementById("userId");
+
+      function currentUser() {
+        return {
+          name: userNameInput.value.trim(),
+          id: userIdInput.value.trim(),
+        };
+      }
+
+      async function pushUser() {
+        const user = currentUser();
+        userSummary.textContent = [user.name, user.id && `(${user.id})`]
+          .filter(Boolean)
+          .join(" ");
+        try {
+          localStorage.setItem(USER_KEY, JSON.stringify(user));
+        } catch (e) {}
+        try {
+          await fetch("/user", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(user),
+          });
+        } catch (e) {}
+      }
+
+      userToggle.addEventListener("click", () => {
+        const expanded =
+          profileBar.getAttribute("data-user-expanded") !== "true";
+        profileBar.setAttribute("data-user-expanded", String(expanded));
+        userToggle.setAttribute("aria-expanded", String(expanded));
+      });
+      userNameInput.addEventListener("change", pushUser);
+      userIdInput.addEventListener("change", pushUser);
+      if (body.dataset.showUserProfile !== "false") {
+        try {
+          const stored = JSON.parse(localStorage.getItem(USER_KEY) || "{}");
+          userNameInput.value = stored.name || "";
+          userIdInput.value = stored.id || "";
+        } catch (e) {}
+        pushUser();
+      }
+
+      // Editable certificate draft, filled from the case on first open
+      const mccdOverlay = document.getElementById("mccdOverlay");
+      const mccdSheet = document.getElementById("mccdSheet");
+      const mccd = mccdSheet.elements;
+      let mccdFilled = false;
+      mccdSheet.addEventListener("submit", (e) => e.preventDefault());
+
+      function fillMccd() {
+        mccd.caseId.value = caseIdInput.value.trim();
+        mccd.sex.value = checkedSex()?.value || "";
+        mccd.age.value =
+          stillbirthToggle.checked || ageValueInput.value === ""
+            ? ""
+            : `${ageValueInput.value} ${ageUnitSelect.value}`;
+        mccd.dateOfDeath.value = dateOfDeathInput.value;
+        mccd.manner.value = mannerSelect.value;
+        mccd.stillbirth.checked = stillbirthToggle.checked;
+        mccd.certifierName.value = userNameInput.value.trim();
+        mccd.certifierId.value = userIdInput.value.trim();
+        mccd.certifiedOn.value = localDate();
+        const [top] = Object.values(latestCauses || {}).sort(
+          (a, b) => b.score - a.score,
+        );
+        mccd.cause_a.value = top ? top.name : "";
+        mccd.code_a.value = top ? causeCode(top.identifiers) : "";
+      }
+
+      function resetMccd() {
+        mccdSheet.reset();
+        mccdFilled = false;
+      }
+
+      document.getElementById("mccdBtn").addEventListener("click", () => {
+        if (!mccdFilled) {
+          fillMccd();
+          mccdFilled = true;
+        }
+        mccdOverlay.hidden = false;
+        body.classList.add("mccd-open");
+      });
+      document.getElementById("mccdCloseBtn").addEventListener("click", () => {
+        mccdOverlay.hidden = true;
+        body.classList.remove("mccd-open");
+      });
+      // The page title becomes the default PDF file name
+      document.getElementById("mccdPrintBtn").addEventListener("click", () => {
+        const title = document.title;
+        document.title = `MCCD ${mccd.caseId.value.trim()}`.trim();
+        window.print();
+        document.title = title;
+      });
+
       ageValueInput.addEventListener("change", pushMetadata);
       ageUnitSelect.addEventListener("change", pushMetadata);
       stillbirthToggle.addEventListener("change", pushMetadata);
+      caseIdInput.addEventListener("change", pushMetadata);
+      dateOfDeathInput.addEventListener("change", pushMetadata);
+      mannerSelect.addEventListener("change", pushMetadata);
+      // Clicking the selected option again clears the choice
+      sexRadios.forEach((radio) => {
+        radio.closest("label").addEventListener("pointerdown", () => {
+          radio.dataset.wasChecked = String(radio.checked);
+        });
+        radio.addEventListener("click", () => {
+          if (radio.dataset.wasChecked === "true") radio.checked = false;
+          radio.dataset.wasChecked = "false";
+          pushMetadata();
+        });
+      });
 
       document
         .getElementById("resetBtn")
@@ -5441,6 +6297,11 @@
             stopRecording();
           }
           clearProfileInputs();
+          noteFiles = [];
+          renderNoteCards();
+          typedNoteCount = 0;
+          closeNoteEditor();
+          resetMccd();
           transcriptText = "";
           chunkCount = 0;
           transcript.innerHTML =
@@ -5473,6 +6334,7 @@
           } catch (e) {
             showStatus("UI cleared but server reset failed", "warning");
           }
+          assignCaseId();
         });
 
       function escapeHtml(text) {
@@ -5496,72 +6358,179 @@
         }
       });
 
-      // Clinical note upload
+      function showInference(data) {
+        console.debug("[coda] inference", data);
+        exitInferenceOffline();
+        body.classList.remove("inference-offline");
+
+        const previous = latestCauses;
+        latestCauses = data.causes || {};
+        evolution.push({ t: Date.now(), causes: latestCauses });
+
+        const html = renderCauseList(
+          latestCauses,
+          previous,
+          data.reasoning,
+          data.questions,
+        );
+        inference.insertAdjacentHTML("afterbegin", html);
+        // Mirror into the main-column differentials container so the
+        // Session Result screen can show them in the primary area
+        // instead of the sidebar.
+        const diffEl = document.getElementById("differentialsList");
+        if (diffEl) diffEl.innerHTML = html;
+        updatingPill.style.display = "inline-flex";
+
+        updateCausesChart(data.causes || {});
+      }
+
+      // Clinical notes, as {filename, text}, sent to inference on Run
+      let noteFiles = [];
       const noteBtn = document.getElementById("noteBtn");
       const noteInput = document.getElementById("noteInput");
+      const noteStrip = document.getElementById("noteStrip");
+      const noteCards = document.getElementById("noteCards");
+      const noteRunBtn = document.getElementById("noteRunBtn");
 
       noteBtn.addEventListener("click", () => noteInput.click());
-      noteInput.addEventListener("change", () => {
-        if (noteInput.files.length > 0) {
-          uploadClinicalNote(noteInput.files[0]);
-          noteInput.value = "";
-        }
+      noteInput.addEventListener("change", async () => {
+        await addNoteFiles(noteInput.files);
+        noteInput.value = "";
+      });
+      noteRunBtn.addEventListener("click", runClinicalNotes);
+
+      // Typed notes join the uploaded ones as numbered .txt files
+      let typedNoteCount = 0;
+      const noteEditor = document.getElementById("noteEditor");
+      const noteText = document.getElementById("noteText");
+
+      function closeNoteEditor() {
+        noteText.value = "";
+        noteEditor.hidden = true;
+      }
+
+      document.getElementById("noteTypeBtn").addEventListener("click", () => {
+        noteEditor.hidden = false;
+        noteText.focus();
+      });
+      document
+        .getElementById("noteCancelBtn")
+        .addEventListener("click", closeNoteEditor);
+      document.getElementById("noteSaveBtn").addEventListener("click", () => {
+        const text = noteText.value.trim();
+        if (!text) return;
+        typedNoteCount += 1;
+        noteFiles.push({ filename: `typed-note-${typedNoteCount}.txt`, text });
+        renderNoteCards();
+        closeNoteEditor();
+      });
+      noteCards.addEventListener("click", (e) => {
+        const btn = e.target.closest(".note-card-remove");
+        if (!btn) return;
+        noteFiles.splice(Number(btn.dataset.index), 1);
+        renderNoteCards();
       });
       if (body.dataset.showClinicalNote !== "false") {
-        transcript.addEventListener("dragover", (e) => {
+        window.addEventListener("dragover", (e) => {
           e.preventDefault();
-          transcript.classList.add("drag-over");
+          body.classList.add("note-drag-over");
         });
-        transcript.addEventListener("dragleave", () =>
-          transcript.classList.remove("drag-over"),
-        );
-        transcript.addEventListener("drop", (e) => {
+        window.addEventListener("dragleave", (e) => {
+          if (!e.relatedTarget) body.classList.remove("note-drag-over");
+        });
+        window.addEventListener("drop", (e) => {
           e.preventDefault();
-          transcript.classList.remove("drag-over");
-          if (e.dataTransfer.files.length > 0) {
-            uploadClinicalNote(e.dataTransfer.files[0]);
-          }
+          body.classList.remove("note-drag-over");
+          addNoteFiles(e.dataTransfer.files);
         });
       }
 
-      async function uploadClinicalNote(file) {
-        if (!file.name.endsWith(".txt")) {
-          showStatus("Please upload a .txt file", "warning");
-          return;
+      async function addNoteFiles(files) {
+        for (const file of files) {
+          const name = file.name.toLowerCase();
+          let text;
+          if (name.endsWith(".txt")) {
+            text = await file.text();
+          } else if (name.endsWith(".pdf")) {
+            text = await pdfText(file);
+            if (text === null) continue;
+          } else {
+            showStatus(
+              `Skipped "${file.name}": not a .txt or .pdf file`,
+              "warning",
+            );
+            continue;
+          }
+          // A file with the same name replaces the earlier one
+          noteFiles = noteFiles.filter((n) => n.filename !== file.name);
+          noteFiles.push({ filename: file.name, text });
         }
-        if (!currentInferenceSessionId) {
-          showStatus("Start a session before uploading a note", "warning");
-          return;
-        }
-        showStatus(`Processing "${file.name}"…`, "info");
+        renderNoteCards();
+      }
+
+      // Text of a PDF via the server, or null with a status message on failure
+      async function pdfText(file) {
         try {
-          const resp = await fetch("/upload-note", {
+          const resp = await fetch("/pdf-text", { method: "POST", body: file });
+          const data = await resp.json();
+          if (resp.ok) return data.text;
+          showStatus(`"${file.name}": ${data.detail}`, "warning");
+        } catch (e) {
+          console.error("PDF text extraction failed:", e);
+          showStatus(`Failed to read "${file.name}"`, "danger");
+        }
+        return null;
+      }
+
+      function renderNoteCards() {
+        noteCards.innerHTML = noteFiles
+          .map(
+            (n, i) =>
+              `<span class="note-card"><i class="bi bi-file-earmark-text"></i>` +
+              `${escapeHtml(n.filename)}<button type="button" ` +
+              `class="note-card-remove" data-index="${i}" ` +
+              `aria-label="Remove" title="Remove">` +
+              `<i class="bi bi-trash"></i></button></span>`,
+          )
+          .join("");
+        noteStrip.classList.toggle("has-notes", noteFiles.length > 0);
+      }
+
+      // Send the notes to the live session, or without one, infer once from
+      // the notes and the transcript so far and show the result
+      async function runClinicalNotes() {
+        const live =
+          ws && ws.readyState === WebSocket.OPEN && currentInferenceSessionId;
+        showStatus("Running inference on clinical notes…", "info");
+        try {
+          const resp = await fetch("/clinical-notes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              text: await file.text(),
-              filename: file.name,
-              session_id: currentInferenceSessionId,
+              notes: noteFiles,
+              session_id: live ? currentInferenceSessionId : null,
+              transcript: transcriptText,
             }),
           });
           if (!resp.ok) {
             const err = await resp.json();
-            showStatus(err.detail || "Upload failed", "danger");
+            showStatus(err.detail || "Inference failed", "danger");
             return;
           }
-          transcript.insertAdjacentHTML(
-            "beforeend",
-            `<span class="note-marker">[Clinical note: ${escapeHtml(file.name)}]</span> `,
-          );
-          transcript.scrollTop = transcript.scrollHeight;
-          showStatus(`Clinical note "${file.name}" processed`, "success");
+          if (!live) {
+            showInference(await resp.json());
+            renderResultHero();
+            setSessionState("result");
+          }
+          showStatus("Clinical notes processed", "success");
         } catch (e) {
-          console.error("Upload failed:", e);
-          showStatus("Failed to upload clinical note", "danger");
+          console.error("Clinical notes inference failed:", e);
+          showStatus("Failed to process clinical notes", "danger");
         }
       }
 
       loadSettings();
+      assignCaseId();
       renderIdleRecent();
       setSessionState("idle");
 

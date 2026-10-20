@@ -99,7 +99,7 @@ def test_recorder_writes_case_files(storage_dir):
          "timings": {"request_s": 1.0}},
         shown_at=100.0,
     )
-    recorder.close({"age": 3})
+    recorder.close({"age": 3}, {"name": "Amina", "id": "CHW-7"})
 
     case_dir = recorder.case_dir
     assert case_dir.parent == storage_dir
@@ -123,6 +123,7 @@ def test_recorder_writes_case_files(storage_dir):
     assert manifest["run_info"] == {"language": "sw"}
     assert manifest["ended_at"] is not None
     assert manifest["metadata"] == {"age": 3}
+    assert manifest["user"] == {"name": "Amina", "id": "CHW-7"}
     assert not (case_dir / "audio.wav").exists()
 
 
@@ -133,6 +134,14 @@ def test_store_flags_disable_files(storage_dir, monkeypatch):
     recorder.write_inference({}, {"questions": ["q"]}, shown_at=1.0)
     recorder.close()
     assert not (recorder.case_dir / "inference.jsonl").exists()
+
+
+@pytest.mark.asyncio
+async def test_next_case_id_follows_saved_cases(storage_dir):
+    assert await server.next_case_id() == {"case_id": "CODA-001"}
+    for session_id, case_id in [("a", "CODA-007"), ("b", "custom")]:
+        CaseRecorder(session_id, 0, {}).close({"case_id": case_id})
+    assert await server.next_case_id() == {"case_id": "CODA-008"}
 
 
 def test_pauses_recorded_in_manifest(storage_dir):

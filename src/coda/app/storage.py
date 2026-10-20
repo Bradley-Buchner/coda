@@ -148,7 +148,8 @@ class CaseRecorder:
             "at": shown_at, **(result.get("timings") or {}),
         })
 
-    def close(self, metadata: Optional[dict] = None):
+    def close(self, metadata: Optional[dict] = None,
+              user: Optional[dict] = None):
         for f in [*self._transcripts.values(), self._chunks, self._inference,
                   self._timing]:
             if f is not None:
@@ -160,4 +161,6 @@ class CaseRecorder:
         self.manifest["ended_at"] = datetime.now().isoformat()
         if self.store.get("metadata"):
             self.manifest["metadata"] = metadata
+        if self.store.get("user"):
+            self.manifest["user"] = user
         self._write_manifest()

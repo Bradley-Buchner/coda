@@ -11,17 +11,21 @@ import asyncio
 import json
 import logging
 import os
+import re
 import time
 import uuid
+from io import BytesIO
 from dataclasses import dataclass, field
 from typing import Optional
 
 import httpx
-from fastapi import Body, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, HTTPException, Request, WebSocket, \
+    WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+from pypdf import PdfReader
 
-from coda.app.storage import CaseRecorder, storage_enabled
+from coda.app.storage import CaseRecorder, cases_root, storage_enabled
 from coda.app.onboarding_notice import (
     load_onboarding_notice_html,
     render_onboarding_notice,
@@ -93,6 +97,9 @@ translation_mode = settings.dialogue.translation_mode
 # Per-interview metadata, set via /metadata and forwarded to the inference
 # agent with every inference request.
 current_metadata = Metadata()
+# Person using the app, set via /user and saved with each case but never
+# sent to the inference agent. Kept across case resets.
+current_user = {}
 transcriber: Transcriber
 active_inference_sessions: set["InferenceSessionCoordinator"] = set()
 
@@ -157,7 +164,7 @@ class InferenceSessionCoordinator:
 
     def end_case(self):
         if self.recorder is not None:
-            self.recorder.close(current_metadata.to_dict())
+            self.recorder.close(current_metadata.to_dict(), current_user)
             logger.info("Closed case %s", self.recorder.case_id)
             self.recorder = None
 
@@ -250,10 +257,15 @@ class ResetRequest(BaseModel):
     session_generation: Optional[int] = None
 
 
-class UploadNoteRequest(BaseModel):
+class ClinicalNote(BaseModel):
+    filename: str
     text: str
-    session_id: str
-    filename: Optional[str] = None
+
+
+class ClinicalNotesRequest(BaseModel):
+    notes: list[ClinicalNote]
+    session_id: Optional[str] = None
+    transcript: str = ""
 
 
 def get_language_name(code: str) -> str:
@@ -482,6 +494,27 @@ async def set_metadata(payload: dict = Body(...)):
     current_metadata = Metadata.from_dict(payload)
     logger.info(f"Metadata set: {current_metadata.to_dict()}")
     return current_metadata.to_dict()
+
+
+@app.get("/next-case-id")
+async def next_case_id():
+    """Return CODA-NNN, one past the highest such case ID saved so far."""
+    numbers = [0]
+    for path in cases_root().glob("*/manifest.json"):
+        metadata = json.loads(path.read_text()).get("metadata") or {}
+        match = re.fullmatch(r"CODA-(\d+)", metadata.get("case_id") or "")
+        if match:
+            numbers.append(int(match[1]))
+    return {"case_id": f"CODA-{max(numbers) + 1:03d}"}
+
+
+@app.post("/user")
+async def set_user(payload: dict = Body(...)):
+    """Set the name and ID of the person using the app."""
+    global current_user
+    current_user = {"name": payload.get("name", ""),
+                    "id": payload.get("id", "")}
+    return current_user
 
 
 @app.get("/transcriber_backends")
@@ -868,44 +901,76 @@ async def _start_inference(inference_session: InferenceSessionCoordinator,
     await inference_session.enqueue(chunk_id, timestamp, text, annotations)
 
 
-# Max clinical note size in characters
+# Max total clinical notes size in characters
 MAX_NOTE_SIZE = 100_000
 
 
-@app.post("/upload-note")
-async def upload_note(req: UploadNoteRequest):
-    """Attach a clinical note to an active session and rerun inference."""
-    text = req.text.strip()
-    if not text:
-        raise HTTPException(status_code=400, detail="Empty clinical note")
-    if len(text) > MAX_NOTE_SIZE:
-        raise HTTPException(status_code=413,
-                            detail="Clinical note too large (max 100KB)")
-    session = next((s for s in active_inference_sessions
-                    if s.session_id == req.session_id), None)
-    if session is None:
-        raise HTTPException(status_code=404, detail="No active session")
+def extract_pdf_text(data):
+    """Return the text of all pages of a PDF."""
+    reader = PdfReader(BytesIO(data))
+    return "\n\n".join(page.extract_text() for page in reader.pages)
 
-    annotations = await asyncio.to_thread(grounder.annotate, text)
-    generation = session.generation
+
+@app.post("/pdf-text")
+async def pdf_text(request: Request):
+    """Return the text of a PDF sent as the raw request body."""
+    try:
+        text = await asyncio.to_thread(extract_pdf_text, await request.body())
+    except Exception:
+        raise HTTPException(status_code=400, detail="Unreadable PDF")
+    if not text.strip():
+        raise HTTPException(status_code=422, detail="No text found in PDF")
+    return {"text": text}
+
+
+@app.post("/clinical-notes")
+async def set_clinical_notes(req: ClinicalNotesRequest):
+    """Set a session's clinical notes and rerun inference.
+
+    Without a session, infer once from the notes and the given transcript
+    and return the result.
+    """
+    notes = [{"filename": n.filename, "text": n.text.strip()}
+             for n in req.notes]
+    if sum(len(n["text"]) for n in notes) > MAX_NOTE_SIZE:
+        raise HTTPException(status_code=413,
+                            detail="Clinical notes too large (max 100KB)")
+    session = None
+    if req.session_id is not None:
+        session = next((s for s in active_inference_sessions
+                        if s.session_id == req.session_id), None)
+        if session is None:
+            raise HTTPException(status_code=404, detail="No active session")
+
+    note_text = "\n\n".join(n["text"] for n in notes)
+    annotations = await asyncio.to_thread(grounder.annotate, note_text)
+    session_id = session.session_id if session else str(uuid.uuid4())
+    generation = session.generation if session else 0
     request = {
         "chunk_id": "note-" + str(uuid.uuid4()),
         "timestamp": time.time(),
-        "clinical_note": text,
+        "clinical_notes": notes,
+        "text": "" if session else req.transcript.strip(),
         "annotations": [a.to_json() for a in annotations],
         "metadata": current_metadata.to_dict(),
-        "session_id": session.session_id,
+        "session_id": session_id,
         "session_generation": generation,
     }
-    response = await inference_client.post("/clinical_note", json=request)
-    response.raise_for_status()
-    result = response.json()
+    try:
+        response = await inference_client.post("/clinical_note", json=request)
+        response.raise_for_status()
+        result = response.json()
+    finally:
+        if session is None:
+            await _reset_inference_session(session_id, generation)
+    if session is None:
+        return result
     if await session.is_current_generation(generation):
         if session.recorder is not None:
             session.recorder.write_inference(request, result,
                                              shown_at=time.time())
         await _ws_send_safe(session.websocket, {"type": "inference", **result})
-    return {"filename": req.filename}
+    return {}
 
 
 @app.post("/reset")
@@ -953,8 +1018,15 @@ async def get_index():
     )
     if not settings.app.get("show_case_profile", True):
         html_content = html_content.replace(
-            '<div class="profile-bar" id="profileBar" data-expanded="false">',
-            '<div class="profile-bar" id="profileBar" data-expanded="false" hidden>',
+            "<body",
+            '<body data-show-case-profile="false"',
+            1,
+        )
+    if not settings.app.get("show_user_profile", True):
+        html_content = html_content.replace(
+            "<body",
+            '<body data-show-user-profile="false"',
+            1,
         )
     if not settings.app.get("show_cod_result", True):
         html_content = html_content.replace(
@@ -966,6 +1038,12 @@ async def get_index():
         html_content = html_content.replace(
             "<body",
             '<body data-show-clinical-note="false"',
+            1,
+        )
+    if not settings.app.get("show_mccd", False):
+        html_content = html_content.replace(
+            "<body",
+            '<body data-show-mccd="false"',
             1,
         )
     return HTMLResponse(content=html_content)

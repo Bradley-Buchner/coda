@@ -133,12 +133,32 @@ def build_cod_output_schema(num_questions=DEFAULT_NUM_QUESTIONS,
     }
 
 
+def render_profile(profile):
+    """Return INPUT list lines describing the decedent profile."""
+    if profile is None:
+        return ""
+    lines = []
+    if profile.stillbirth:
+        lines.append("stillbirth: yes")
+    elif profile.age:
+        lines.append(f"age at death: {profile.age.value:g} {profile.age.unit}")
+    if profile.sex:
+        lines.append(f"sex: {profile.sex}")
+    if profile.date_of_death:
+        lines.append(f"date of death: {profile.date_of_death}")
+    if profile.manner_of_death:
+        manner = profile.manner_of_death.replace("_", " ")
+        lines.append(f"manner of death: {manner}")
+    return "".join(f"- {line}\n" for line in lines)
+
+
 class ChampsPromptedInferenceAgent(InferenceAgent):
     """CHAMPS LLM-based cause-of-death inference agent.
 
     Uses a CODA LLMClient to call an LLM with the CHAMPS COD classification
-    prompt and structured output schema. Works with dialogue text only -
-    no demographics, MITS, structured VA, or clinical abstraction sections.
+    prompt and structured output schema. Works with dialogue text, the case
+    profile and clinical notes - no MITS, structured VA, or clinical
+    abstraction sections.
     """
 
     def __init__(self, llm_client: LLMClient,
@@ -181,12 +201,15 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             user_prompt = ''
         user_prompt += (
             f"## INPUT\n"
+            f"{render_profile(self.metadata.profile)}"
             f"- narrative:\n"
             f"  {self.all_text.strip()}"
         )
-        if self.clinical_note:
-            user_prompt += (f"\n\n<clinical_note>\n{self.clinical_note.strip()}"
-                            f"\n</clinical_note>")
+        if self.clinical_notes:
+            user_prompt += "\n\n" + "\n".join(
+                f'<clinical_note filename="{note["filename"]}">\n'
+                f'{note["text"].strip()}\n</clinical_note>'
+                for note in self.clinical_notes)
 
         try:
             logger.info(f'Inferring causes up to chunk {chunk_id}...')

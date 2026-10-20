@@ -26,25 +26,26 @@ class InferenceAgent:
         self.dialogue_history = []  # List of (chunk_id, timestamp, text, annotations) tuples
         self.all_text = ""  # Accumulated text from all chunks
         self.metadata = Metadata()
-        # Uploaded clinical note, used in all subsequent inferences
-        self.clinical_note = None
+        # Uploaded clinical notes as {"filename", "text"} dicts, used in all
+        # subsequent inferences
+        self.clinical_notes = []
 
     def reset(self):
         """Reset dialogue history for a new interview."""
         self.dialogue_history = []
         self.all_text = ""
         self.metadata = Metadata()
-        self.clinical_note = None
+        self.clinical_notes = []
         logger.info("Agent state reset for new interview")
 
-    async def set_clinical_note(self, chunk_id: str, clinical_note: str,
-                                annotations: List[Annotation],
-                                timestamp: float = None,
-                                metadata: dict = None) -> dict:
-        """Store a clinical note and rerun inference with it."""
-        self.clinical_note = clinical_note
-        logger.info("Clinical note set (%d chars)", len(clinical_note))
-        return await self.process_chunk(chunk_id, "", annotations, timestamp,
+    async def set_clinical_notes(self, chunk_id: str, clinical_notes: list,
+                                 text: str, annotations: List[Annotation],
+                                 timestamp: float = None,
+                                 metadata: dict = None) -> dict:
+        """Replace the clinical notes and rerun inference with them."""
+        self.clinical_notes = clinical_notes
+        logger.info("Clinical notes set (%d files)", len(clinical_notes))
+        return await self.process_chunk(chunk_id, text, annotations, timestamp,
                                         metadata)
 
     def create_session_agent(self) -> "InferenceAgent":
@@ -223,7 +224,9 @@ class InferenceRequest(BaseModel):
 class ClinicalNoteRequest(BaseModel):
     """Request model for clinical note endpoint."""
     chunk_id: str
-    clinical_note: str
+    clinical_notes: list
+    # Transcript to infer from, for a session without prior chunks
+    text: str = ""
     annotations: list
     timestamp: float = None
     metadata: dict = None
@@ -309,15 +312,16 @@ class InferenceServer:
 
         @self.app.post("/clinical_note")
         async def clinical_note(request: ClinicalNoteRequest):
-            """Store a clinical note for the session and rerun inference."""
+            """Set the session's clinical notes and rerun inference."""
             runtime = await get_session_runtime(
                 request.session_id,
                 request.session_generation,
             )
             async with runtime.lock:
-                return await runtime.agent.set_clinical_note(
+                return await runtime.agent.set_clinical_notes(
                     request.chunk_id,
-                    request.clinical_note,
+                    request.clinical_notes,
+                    request.text,
                     request.annotations,
                     request.timestamp,
                     request.metadata,
@@ -402,6 +406,9 @@ if __name__ == "__main__":
     else:
         from coda.inference.champs_prompted_agent import create_champs_prompted_agent
         agent = create_champs_prompted_agent(provider=args.provider, model=args.model)
+        logger.info("Prompted agent backend: provider=%s model=%s endpoint=%s",
+                    args.provider, agent.llm_client.model,
+                    agent.llm_client.base_url or "provider default")
         info.update(provider=args.provider, model=agent.llm_client.model,
                     num_questions=agent.num_questions,
                     question_style=agent.question_style)
