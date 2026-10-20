@@ -136,6 +136,14 @@ def test_store_flags_disable_files(storage_dir, monkeypatch):
     assert not (recorder.case_dir / "inference.jsonl").exists()
 
 
+@pytest.mark.asyncio
+async def test_next_case_id_follows_saved_cases(storage_dir):
+    assert await server.next_case_id() == {"case_id": "CODA-001"}
+    for session_id, case_id in [("a", "CODA-007"), ("b", "custom")]:
+        CaseRecorder(session_id, 0, {}).close({"case_id": case_id})
+    assert await server.next_case_id() == {"case_id": "CODA-008"}
+
+
 def test_pauses_recorded_in_manifest(storage_dir):
     recorder = CaseRecorder("session-a", 0, {})
     recorder.write_pause()

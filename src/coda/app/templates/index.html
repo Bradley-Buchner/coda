@@ -519,6 +519,9 @@
         color: var(--ink);
         font-size: 13px;
       }
+      #caseId {
+        width: 110px;
+      }
       .profile-field select {
         padding: 4px 8px;
         border: 1px solid var(--border-warm);
@@ -2775,6 +2778,10 @@
           </div>
         </div>
         <div class="profile-fields" id="profileFields">
+          <div class="profile-field">
+            <label for="caseId" data-i18n="profile.caseId">Case ID</label>
+            <input type="text" id="caseId" autocomplete="off" />
+          </div>
           <div class="profile-field profile-age">
             <label for="ageValue" data-i18n="profile.age">Age</label>
             <input type="number" id="ageValue" min="0" step="1" placeholder="—" />
@@ -3384,6 +3391,7 @@
           "profile.title": "Case profile",
           "profile.age": "Age",
           "profile.stillbirth": "Stillbirth",
+          "profile.caseId": "Case ID",
           "profile.sex": "Sex",
           "profile.female": "Female",
           "profile.male": "Male",
@@ -3482,6 +3490,7 @@
           "profile.title": "Wasifu wa kesi",
           "profile.age": "Umri",
           "profile.stillbirth": "Aliyezaliwa mfu",
+          "profile.caseId": "Kitambulisho cha kesi",
           "profile.sex": "Jinsia",
           "profile.female": "Kike",
           "profile.male": "Kiume",
@@ -3579,6 +3588,7 @@
           "profile.title": "Profil du cas",
           "profile.age": "Âge",
           "profile.stillbirth": "Mort-né",
+          "profile.caseId": "Identifiant du cas",
           "profile.sex": "Sexe",
           "profile.female": "Féminin",
           "profile.male": "Masculin",
@@ -3680,6 +3690,7 @@
           "profile.title": "ملف الحالة",
           "profile.age": "العمر",
           "profile.stillbirth": "مولود ميت",
+          "profile.caseId": "رقم الحالة",
           "profile.sex": "الجنس",
           "profile.female": "أنثى",
           "profile.male": "ذكر",
@@ -3776,6 +3787,7 @@
           "profile.title": "কেসের প্রোফাইল",
           "profile.age": "বয়স",
           "profile.stillbirth": "মৃত জন্ম",
+          "profile.caseId": "কেস আইডি",
           "profile.sex": "লিঙ্গ",
           "profile.female": "মেয়ে",
           "profile.male": "ছেলে",
@@ -3874,6 +3886,7 @@
           "profile.title": "Perfil del caso",
           "profile.age": "Edad",
           "profile.stillbirth": "Mortinato",
+          "profile.caseId": "ID del caso",
           "profile.sex": "Sexo",
           "profile.female": "Femenino",
           "profile.male": "Masculino",
@@ -3973,6 +3986,7 @@
           "profile.title": "Vuxokoxoko bya mhaka",
           "profile.age": "Malembe",
           "profile.stillbirth": "Ku velekiwa ka n'wana a file",
+          "profile.caseId": "Nomboro ya mhaka",
           "profile.sex": "Rimbewu",
           "profile.female": "Wa xisati",
           "profile.male": "Wa xinuna",
@@ -4314,6 +4328,7 @@
           },
           causes: latestCauses,
           evolution: evolution.slice(),
+          caseId: caseIdInput.value.trim() || null,
         };
         if (body.dataset.showUserProfile !== "false") {
           session.user = currentUser();
@@ -5751,6 +5766,7 @@
       const ageValueInput = document.getElementById("ageValue");
       const ageUnitSelect = document.getElementById("ageUnit");
       const stillbirthToggle = document.getElementById("stillbirthToggle");
+      const caseIdInput = document.getElementById("caseId");
       const dateOfDeathInput = document.getElementById("dateOfDeath");
       const mannerSelect = document.getElementById("mannerOfDeath");
       const sexRadios = document.querySelectorAll('input[name="sex"]');
@@ -5781,6 +5797,7 @@
       // One-line summary shown on the toggle while collapsed.
       function updateProfileSummary() {
         const parts = [];
+        if (caseIdInput.value.trim()) parts.push(caseIdInput.value.trim());
         if (stillbirthToggle.checked) {
           parts.push(t("profile.stillbirth"));
         } else if (ageValueInput.value !== "") {
@@ -5806,6 +5823,7 @@
         updateProfileSummary();
         const ageValue =
           ageValueInput.value === "" ? null : Number(ageValueInput.value);
+        const caseId = caseIdInput.value.trim() || null;
         const profile = {
           age:
             ageValue === null
@@ -5820,12 +5838,22 @@
           await fetch("/metadata", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ profile }),
+            body: JSON.stringify({ case_id: caseId, profile }),
           });
         } catch (e) {}
       }
 
+      // Fill in the next default case ID and send the profile with it
+      async function assignCaseId() {
+        try {
+          const resp = await fetch("/next-case-id");
+          caseIdInput.value = (await resp.json()).case_id;
+        } catch (e) {}
+        pushMetadata();
+      }
+
       function clearProfileInputs() {
+        caseIdInput.value = "";
         ageValueInput.value = "";
         ageUnitSelect.value = "months";
         stillbirthToggle.checked = false;
@@ -5888,6 +5916,7 @@
       ageValueInput.addEventListener("change", pushMetadata);
       ageUnitSelect.addEventListener("change", pushMetadata);
       stillbirthToggle.addEventListener("change", pushMetadata);
+      caseIdInput.addEventListener("change", pushMetadata);
       dateOfDeathInput.addEventListener("change", pushMetadata);
       mannerSelect.addEventListener("change", pushMetadata);
       // Clicking the selected option again clears the choice
@@ -5945,6 +5974,7 @@
           } catch (e) {
             showStatus("UI cleared but server reset failed", "warning");
           }
+          assignCaseId();
         });
 
       function escapeHtml(text) {
@@ -6140,6 +6170,7 @@
       }
 
       loadSettings();
+      assignCaseId();
       renderIdleRecent();
       setSessionState("idle");
 

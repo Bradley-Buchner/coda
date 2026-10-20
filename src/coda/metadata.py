@@ -1,6 +1,7 @@
 """Structured per-interview metadata.
 
-Shape: metadata -> profile -> age. Profile holds decedent attributes.
+Shape: metadata -> case_id, profile -> age. Profile holds decedent
+attributes.
 """
 from __future__ import annotations
 
@@ -101,16 +102,19 @@ class Profile:
 
 @dataclass
 class Metadata:
+    case_id: Optional[str] = None
     profile: Optional[Profile] = None
 
     @classmethod
     def from_dict(cls, d: Optional[dict]) -> "Metadata":
         if not d:
             return cls()
-        return cls(profile=Profile.from_dict(d.get("profile")))
+        return cls(case_id=d.get("case_id") or None,
+                   profile=Profile.from_dict(d.get("profile")))
 
     def to_dict(self) -> dict:
-        return {"profile": self.profile.to_dict() if self.profile else None}
+        return {"case_id": self.case_id,
+                "profile": self.profile.to_dict() if self.profile else None}
 
     def is_empty(self) -> bool:
-        return self.profile is None
+        return self.case_id is None and self.profile is None

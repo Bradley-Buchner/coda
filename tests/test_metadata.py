@@ -24,7 +24,7 @@ def test_age_unknown_unit():
 def test_empty():
     m = Metadata.from_dict(None)
     assert m.is_empty()
-    assert m.to_dict() == {"profile": None}
+    assert m.to_dict() == {"case_id": None, "profile": None}
 
 
 def test_age_roundtrip():

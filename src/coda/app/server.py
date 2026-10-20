@@ -11,6 +11,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 import time
 import uuid
 from io import BytesIO
@@ -25,7 +26,7 @@ from pydantic import BaseModel
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
-from coda.app.storage import CaseRecorder, storage_enabled
+from coda.app.storage import CaseRecorder, cases_root, storage_enabled
 from coda.app.onboarding_notice import (
     load_onboarding_notice_html,
     render_onboarding_notice,
@@ -494,6 +495,18 @@ async def set_metadata(payload: dict = Body(...)):
     current_metadata = Metadata.from_dict(payload)
     logger.info(f"Metadata set: {current_metadata.to_dict()}")
     return current_metadata.to_dict()
+
+
+@app.get("/next-case-id")
+async def next_case_id():
+    """Return CODA-NNN, one past the highest such case ID saved so far."""
+    numbers = [0]
+    for path in cases_root().glob("*/manifest.json"):
+        metadata = json.loads(path.read_text()).get("metadata") or {}
+        match = re.fullmatch(r"CODA-(\d+)", metadata.get("case_id") or "")
+        if match:
+            numbers.append(int(match[1]))
+    return {"case_id": f"CODA-{max(numbers) + 1:03d}"}
 
 
 @app.post("/user")
