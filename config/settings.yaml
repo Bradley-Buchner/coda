@@ -34,6 +34,9 @@ app:
   # When false, the user (name and ID of the person using the app) selector
   # is hidden.
   show_user_profile: false
+  # When false, the button that drafts a medical certificate of cause of
+  # death (MCCD) from the case is hidden.
+  show_mccd: false
   # Interface language the page starts in, used when the browser has no stored
   # choice. Must be one of the locales the UI ships translations for.
   ui_language: en

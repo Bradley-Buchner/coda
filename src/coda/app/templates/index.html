@@ -1584,6 +1584,164 @@
         }
       }
 
+      /* Medical certificate of cause of death */
+      body[data-show-mccd="false"] #mccdBtn,
+      body:not([data-state="result"]) #mccdBtn {
+        display: none;
+      }
+      .mccd-overlay:not([hidden]) {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 24px 16px;
+        background: var(--paper);
+        overflow-y: auto;
+      }
+      .mccd-actions,
+      .mccd-sheet {
+        width: 100%;
+        max-width: 820px;
+      }
+      .mccd-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .mccd-notice {
+        flex: 1;
+        margin: 0;
+        font-size: 13px;
+        color: var(--ink-muted);
+      }
+      .mccd-sheet {
+        padding: 32px 40px;
+        border: 1px solid var(--border-warm);
+        border-radius: 8px;
+        background: var(--paper-elevated);
+        color: var(--ink);
+      }
+      .mccd-sheet h1 {
+        margin: 0 0 20px;
+        font-size: 22px;
+      }
+      .mccd-sheet h2 {
+        margin: 28px 0 10px;
+        font-size: 13px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .mccd-sheet h3 {
+        margin: 12px 0 8px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .mccd-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 12px 20px;
+      }
+      .mccd-grid label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--ink-soft);
+      }
+      .mccd-grid .mccd-check {
+        flex-direction: row;
+        align-items: center;
+        align-self: end;
+        gap: 8px;
+      }
+      .mccd-sheet input:not([type="checkbox"]),
+      .mccd-sheet select,
+      .mccd-sheet textarea {
+        width: 100%;
+        padding: 5px 8px;
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        background: var(--paper);
+        color: var(--ink);
+        font: inherit;
+        font-size: 14px;
+      }
+      .mccd-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .mccd-table th,
+      .mccd-table td {
+        padding: 4px;
+        font-size: 12px;
+        text-align: left;
+        vertical-align: middle;
+      }
+      .mccd-table tbody th {
+        width: 1%;
+        white-space: nowrap;
+      }
+      .mccd-table td:nth-child(3) {
+        width: 14%;
+      }
+      .mccd-table td:nth-child(4) {
+        width: 24%;
+      }
+      .mccd-signature {
+        display: block;
+        height: 30px;
+        border-bottom: 1px solid var(--ink-soft);
+      }
+      @media print {
+        body.mccd-open > :not(.mccd-overlay) {
+          display: none !important;
+        }
+        body.mccd-open,
+        .mccd-overlay:not([hidden]) {
+          position: static;
+          padding: 0;
+          background: #fff;
+        }
+        .mccd-actions {
+          display: none !important;
+        }
+        .mccd-sheet {
+          max-width: none;
+          padding: 0;
+          border: none;
+          background: #fff;
+          color: #000;
+        }
+        .mccd-sheet h2,
+        .mccd-sheet .mccd-grid label {
+          color: #000;
+        }
+        .mccd-sheet input:not([type="checkbox"]),
+        .mccd-sheet select,
+        .mccd-sheet textarea {
+          appearance: none;
+          border: none;
+          border-bottom: 1px solid #000;
+          border-radius: 0;
+          background: #fff;
+          color: #000;
+          resize: none;
+          outline: none;
+          box-shadow: none;
+        }
+        .mccd-sheet input::-webkit-calendar-picker-indicator {
+          display: none;
+        }
+        .mccd-signature {
+          border-color: #000;
+        }
+      }
+
       /* ---- View states: idle / recording / result -------------------- */
       .idle-view,
       .result-hero {
@@ -2562,6 +2720,138 @@
     </style>
   </head>
   <body>
+    <div class="mccd-overlay" id="mccdOverlay" hidden>
+      <div class="mccd-actions">
+        <p class="mccd-notice">
+          The underlying cause was pre-filled by CODA and is advisory only.
+          Review and complete the certificate before signing.
+        </p>
+        <button id="mccdPrintBtn" class="btn btn-ghost">
+          <i class="bi bi-download"></i>
+          <span>Download PDF</span>
+        </button>
+        <button id="mccdCloseBtn" class="btn btn-ghost">
+          <i class="bi bi-x-lg"></i>
+          <span>Close</span>
+        </button>
+      </div>
+      <form class="mccd-sheet" id="mccdSheet">
+        <h1>Medical Certificate of Cause of Death</h1>
+        <div class="mccd-grid">
+          <label
+            ><span>Case ID</span
+            ><input name="caseId"
+          /></label>
+          <label
+            ><span>Sex</span
+            ><select name="sex">
+              <option value="">—</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="ambiguous">
+                Ambiguous
+              </option>
+            </select></label
+          >
+          <label
+            ><span>Age</span><input name="age"
+          /></label>
+          <label
+            ><span>Date of death</span
+            ><input type="date" name="dateOfDeath"
+          /></label>
+        </div>
+
+        <h2>Frame A: Medical data</h2>
+        <h3>
+          Part 1: Disease or condition leading directly to death, then the
+          chain of events, with the underlying cause on the lowest used line
+        </h3>
+        <table class="mccd-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Cause of death</th>
+              <th>ICD code</th>
+              <th>Time from onset to death</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>(a)</th>
+              <td><input name="cause_a" /></td>
+              <td><input name="code_a" /></td>
+              <td><input name="interval_a" /></td>
+            </tr>
+            <tr>
+              <th>(b) <small>due to</small></th>
+              <td><input name="cause_b" /></td>
+              <td><input name="code_b" /></td>
+              <td><input name="interval_b" /></td>
+            </tr>
+            <tr>
+              <th>(c) <small>due to</small></th>
+              <td><input name="cause_c" /></td>
+              <td><input name="code_c" /></td>
+              <td><input name="interval_c" /></td>
+            </tr>
+            <tr>
+              <th>(d) <small>due to</small></th>
+              <td><input name="cause_d" /></td>
+              <td><input name="code_d" /></td>
+              <td><input name="interval_d" /></td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>
+          Part 2: Other significant conditions contributing to death
+        </h3>
+        <textarea name="part2" rows="3"></textarea>
+
+        <h2>Frame B: Other medical data</h2>
+        <div class="mccd-grid">
+          <label
+            ><span>Manner of death</span
+            ><select name="manner">
+              <option value="">—</option>
+              <option value="disease">Disease</option>
+              <option value="accident">Accident</option>
+              <option value="self_harm">Self harm</option>
+              <option value="assault">Assault</option>
+              <option value="pending_investigation">
+                Pending investigation
+              </option>
+              <option value="unknown">Don't know</option>
+            </select></label
+          >
+          <label class="mccd-check"
+            ><input type="checkbox" name="stillbirth" /><span
+             
+              >Stillbirth</span
+            ></label
+          >
+        </div>
+
+        <h2>Certifier</h2>
+        <div class="mccd-grid">
+          <label
+            ><span>Name</span
+            ><input name="certifierName"
+          /></label>
+          <label
+            ><span>ID</span><input name="certifierId"
+          /></label>
+          <label
+            ><span>Date</span
+            ><input type="date" name="certifiedOn"
+          /></label>
+          <label
+            ><span>Signature</span
+            ><span class="mccd-signature"></span
+          ></label>
+        </div>
+      </form>
+    </div>
     <div
       class="onboard-overlay"
       id="onboardOverlay"
@@ -2728,6 +3018,14 @@
           <button id="copyBtn" class="btn btn-ghost" title="Copy transcript">
             <i class="bi bi-clipboard"></i>
             <span data-i18n="common.copy">Copy transcript</span>
+          </button>
+          <button
+            id="mccdBtn"
+            class="btn btn-ghost"
+            title="Medical certificate of cause of death"
+          >
+            <i class="bi bi-file-earmark-medical"></i>
+            <span>MCCD</span>
           </button>
           <button id="settingsToggle" aria-label="Settings" title="Settings">
             <i class="bi bi-gear"></i>
@@ -5771,12 +6069,15 @@
       const mannerSelect = document.getElementById("mannerOfDeath");
       const sexRadios = document.querySelectorAll('input[name="sex"]');
       // Today's local date as YYYY-MM-DD
-      const today = new Date();
-      dateOfDeathInput.max = [
-        today.getFullYear(),
-        String(today.getMonth() + 1).padStart(2, "0"),
-        String(today.getDate()).padStart(2, "0"),
-      ].join("-");
+      function localDate() {
+        const today = new Date();
+        return [
+          today.getFullYear(),
+          String(today.getMonth() + 1).padStart(2, "0"),
+          String(today.getDate()).padStart(2, "0"),
+        ].join("-");
+      }
+      dateOfDeathInput.max = localDate();
 
       function checkedSex() {
         return document.querySelector('input[name="sex"]:checked');
@@ -5913,6 +6214,58 @@
         pushUser();
       }
 
+      // Editable certificate draft, filled from the case on first open
+      const mccdOverlay = document.getElementById("mccdOverlay");
+      const mccdSheet = document.getElementById("mccdSheet");
+      const mccd = mccdSheet.elements;
+      let mccdFilled = false;
+      mccdSheet.addEventListener("submit", (e) => e.preventDefault());
+
+      function fillMccd() {
+        mccd.caseId.value = caseIdInput.value.trim();
+        mccd.sex.value = checkedSex()?.value || "";
+        mccd.age.value =
+          stillbirthToggle.checked || ageValueInput.value === ""
+            ? ""
+            : `${ageValueInput.value} ${ageUnitSelect.value}`;
+        mccd.dateOfDeath.value = dateOfDeathInput.value;
+        mccd.manner.value = mannerSelect.value;
+        mccd.stillbirth.checked = stillbirthToggle.checked;
+        mccd.certifierName.value = userNameInput.value.trim();
+        mccd.certifierId.value = userIdInput.value.trim();
+        mccd.certifiedOn.value = localDate();
+        const [top] = Object.values(latestCauses || {}).sort(
+          (a, b) => b.score - a.score,
+        );
+        mccd.cause_a.value = top ? top.name : "";
+        mccd.code_a.value = top ? causeCode(top.identifiers) : "";
+      }
+
+      function resetMccd() {
+        mccdSheet.reset();
+        mccdFilled = false;
+      }
+
+      document.getElementById("mccdBtn").addEventListener("click", () => {
+        if (!mccdFilled) {
+          fillMccd();
+          mccdFilled = true;
+        }
+        mccdOverlay.hidden = false;
+        body.classList.add("mccd-open");
+      });
+      document.getElementById("mccdCloseBtn").addEventListener("click", () => {
+        mccdOverlay.hidden = true;
+        body.classList.remove("mccd-open");
+      });
+      // The page title becomes the default PDF file name
+      document.getElementById("mccdPrintBtn").addEventListener("click", () => {
+        const title = document.title;
+        document.title = `MCCD ${mccd.caseId.value.trim()}`.trim();
+        window.print();
+        document.title = title;
+      });
+
       ageValueInput.addEventListener("change", pushMetadata);
       ageUnitSelect.addEventListener("change", pushMetadata);
       stillbirthToggle.addEventListener("change", pushMetadata);
@@ -5942,6 +6295,7 @@
           renderNoteCards();
           typedNoteCount = 0;
           closeNoteEditor();
+          resetMccd();
           transcriptText = "";
           chunkCount = 0;
           transcript.innerHTML =
