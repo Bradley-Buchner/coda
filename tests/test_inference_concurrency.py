@@ -7,7 +7,7 @@ import pytest
 
 from coda.inference.agent import InferenceServer
 from coda.inference.champs_finetuned.agent import ChampsFinetunedInferenceAgent
-from coda.inference.champs_prompted_agent import ChampsPromptedInferenceAgent
+from coda.inference.champs_prompted.agent import ChampsPromptedInferenceAgent
 
 
 class FakeLLMClient:

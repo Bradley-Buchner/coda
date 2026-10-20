@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 
-from coda.inference.champs_prompted_agent import (
+from coda.inference.champs_prompted.agent import (
     ChampsPromptedInferenceAgent,
     build_cod_output_schema,
 )
