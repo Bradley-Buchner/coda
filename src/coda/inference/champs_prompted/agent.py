@@ -96,11 +96,23 @@ def load_question_style_guidance(question_style=DEFAULT_QUESTION_STYLE):
     return read_prompt(f"question_style_{question_style}.txt")
 
 
+def question_schema(num_questions=DEFAULT_NUM_QUESTIONS,
+                    question_style=DEFAULT_QUESTION_STYLE):
+    """Return the JSON schema of the follow-up questions output field."""
+    _validate_question_style(question_style)
+    return {
+        "type": "array",
+        "description": QUESTION_SCHEMA_DESCRIPTIONS[question_style].format(
+            num_questions=num_questions),
+        "items": {"type": "string"},
+        "minItems": num_questions,
+        "maxItems": num_questions,
+    }
+
+
 def build_cod_output_schema(num_questions=DEFAULT_NUM_QUESTIONS,
                             question_style=DEFAULT_QUESTION_STYLE):
     """Build the JSON schema for structured output."""
-    _validate_question_style(question_style)
-    questions_description = QUESTION_SCHEMA_DESCRIPTIONS[question_style]
     return {
         "type": "object",
         "properties": {
@@ -126,18 +138,29 @@ def build_cod_output_schema(num_questions=DEFAULT_NUM_QUESTIONS,
                 "minItems": 1,
                 "maxItems": 3,
             },
-            "questions": {
-                "type": "array",
-                "description": questions_description.format(
-                    num_questions=num_questions),
-                "items": {"type": "string"},
-                "minItems": num_questions,
-                "maxItems": num_questions,
-            },
+            "questions": question_schema(num_questions, question_style),
         },
         "required": ["reasoning", "top_causes", "questions"],
         "additionalProperties": False,
     }
+
+
+class LLMCallFailed(Exception):
+    """Raised when an LLM call raises or the client gives up after retries."""
+
+
+def failed_result(reason):
+    """Return the inference result reported when the LLM call failed."""
+    return {"causes": {}, "reasoning": reason, "questions": []}
+
+
+def normalize_scores(causes):
+    """Rescale cause scores in place to sum to 1 and return the causes."""
+    total = sum(c["score"] for c in causes.values())
+    if total > 0:
+        for c in causes.values():
+            c["score"] = round(c["score"] / total, 4)
+    return causes
 
 
 def render_profile(profile):
@@ -162,15 +185,12 @@ def render_profile(profile):
 class ChampsPromptedInferenceAgent(InferenceAgent):
     """Base class for CHAMPS LLM-based cause-of-death inference agents.
 
-    Uses a CODA LLMClient to call an LLM with a COD classification prompt and
-    structured output schema. Works with dialogue text, the case profile and
-    clinical notes - no MITS, structured VA, or clinical abstraction sections.
+    Uses a CODA LLMClient to call an LLM with a COD classification prompt.
+    Works with dialogue text, the case profile and clinical notes - no MITS,
+    structured VA, or clinical abstraction sections.
 
-    Subclasses set the cause list and its coding as class attributes:
-    allowed_causes (cause names), cause_codes (cause name to code),
-    coding_system (the identifier namespace of the codes), and the prompt
-    texts system_prompt, schema_guidance, clinical_note_guidance and
-    diagnosis_standard.
+    Subclasses implement infer and set diagnosis_standard, the text put
+    before the input when use_diagnosis_standard is on.
     """
 
     def __init__(self, llm_client: LLMClient,
@@ -185,26 +205,9 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
         self.use_diagnosis_standard = use_diagnosis_standard
         self.num_questions = num_questions
         self.question_style = question_style
-        self.output_schema = build_cod_output_schema(num_questions,
-                                                     question_style)
 
-        # Case-insensitive lookup for recovering labels that differ only in case.
-        self._causes_by_lower = {c.lower(): c for c in self.allowed_causes}
-
-        allowed_str = ", ".join(self.allowed_causes)
-        # Spliced in before the format pass so its own {num_questions} renders
-        question_guidance = load_question_style_guidance(question_style)
-        self.rendered_system_prompt = \
-            self.system_prompt \
-                .replace("{question_guidance}", question_guidance) \
-                .format(allowed_causes=allowed_str,
-                        num_questions=num_questions) + "\n\n" \
-            + self.schema_guidance + "\n\n" \
-            + self.clinical_note_guidance
-
-    async def infer(self, chunk_id: str, text: str,
-                    annotations: List[Annotation]):
-        """Perform COD inference using accumulated dialogue via LLM."""
+    def build_user_prompt(self):
+        """Return the user prompt with the case input accumulated so far."""
         if self.use_diagnosis_standard:
             user_prompt = f"## DIAGNOSIS STANDARD\n" \
                           f"{self.diagnosis_standard}\n\n"
@@ -221,37 +224,83 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
                 f'<clinical_note filename="{note["filename"]}">\n'
                 f'{note["text"].strip()}\n</clinical_note>'
                 for note in self.clinical_notes)
+        return user_prompt
 
+    async def call_llm(self, chunk_id, method, **kwargs):
+        """Run an LLM client method off the event loop and return its result.
+
+        Raise LLMCallFailed if the call raises or the client gives up.
+        """
         try:
             logger.info(f'Inferring causes up to chunk {chunk_id}...')
             started = time.perf_counter()
             async with self.llm_semaphore:
-                response = await asyncio.to_thread(
-                    self.llm_client.call_with_schema,
-                    system_prompt=self.rendered_system_prompt,
-                    user_prompt=user_prompt,
-                    schema=self.output_schema,
-                    schema_name="champs_cod_classification",
-                    temperature=0,
-                )
+                response = await asyncio.to_thread(method, **kwargs)
             logger.info("LLM call for chunk %s completed in %.2fs",
                         chunk_id, time.perf_counter() - started)
         except Exception:
             logger.exception("LLM call failed for chunk %s", chunk_id)
-            return {
-                "causes": {},
-                "reasoning": "LLM API call raised an exception.",
-                "questions": [],
-            }
-
-        if response.get("api_failed"):
+            raise LLMCallFailed("LLM API call raised an exception.")
+        if isinstance(response, dict) and response.get("api_failed"):
             logger.warning("LLM API failed for chunk %s", chunk_id)
-            return {
-                "causes": {},
-                "reasoning": "LLM API call failed after retries.",
-                "questions": [],
-            }
+            raise LLMCallFailed("LLM API call failed after retries.")
+        return response
 
+    def create_session_agent(self) -> "ChampsPromptedInferenceAgent":
+        return self.__class__(
+            llm_client=self.llm_client,
+            use_diagnosis_standard=self.use_diagnosis_standard,
+            llm_semaphore=self.llm_semaphore,
+            num_questions=self.num_questions,
+            question_style=self.question_style,
+        )
+
+
+class ChampsPromptedIcd10Agent(ChampsPromptedInferenceAgent):
+    """Prompted agent choosing among CHAMPS group causes coded in ICD-10."""
+
+    allowed_causes = CHAMPS_GROUP_CAUSES
+    cause_codes = CHAMPS_GROUP_TO_ICD10
+    coding_system = "icd10"
+    system_prompt = SYSTEM_PROMPT
+    schema_guidance = SCHEMA_GUIDANCE
+    clinical_note_guidance = CLINICAL_NOTE_GUIDANCE
+    diagnosis_standard = DIAGNOSIS_STANDARD
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.output_schema = build_cod_output_schema(self.num_questions,
+                                                     self.question_style)
+
+        # Case-insensitive lookup for recovering labels that differ only in case.
+        self._causes_by_lower = {c.lower(): c for c in self.allowed_causes}
+
+        allowed_str = ", ".join(self.allowed_causes)
+        # Spliced in before the format pass so its own {num_questions} renders
+        question_guidance = load_question_style_guidance(self.question_style)
+        self.rendered_system_prompt = \
+            self.system_prompt \
+                .replace("{question_guidance}", question_guidance) \
+                .format(allowed_causes=allowed_str,
+                        num_questions=self.num_questions) + "\n\n" \
+            + self.schema_guidance + "\n\n" \
+            + self.clinical_note_guidance
+
+    async def infer(self, chunk_id: str, text: str,
+                    annotations: List[Annotation]):
+        """Perform COD inference using accumulated dialogue via LLM."""
+        try:
+            response = await self.call_llm(
+                chunk_id,
+                self.llm_client.call_with_schema,
+                system_prompt=self.rendered_system_prompt,
+                user_prompt=self.build_user_prompt(),
+                schema=self.output_schema,
+                schema_name="champs_cod_classification",
+                temperature=0,
+            )
+        except LLMCallFailed as e:
+            return failed_result(str(e))
         return self._parse_response(response)
 
     # Similarity floor for fuzzy-matching a near-miss label to an allowed cause.
@@ -279,15 +328,6 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             name, self.allowed_causes, n=1, cutoff=self.FUZZY_MATCH_CUTOFF)
         return close[0] if close else None
 
-    def create_session_agent(self) -> "ChampsPromptedInferenceAgent":
-        return self.__class__(
-            llm_client=self.llm_client,
-            use_diagnosis_standard=self.use_diagnosis_standard,
-            llm_semaphore=self.llm_semaphore,
-            num_questions=self.num_questions,
-            question_style=self.question_style,
-        )
-
     def _parse_response(self, response: Dict[str, Any]) -> dict:
         """Convert LLM structured response to CODA cause format."""
         causes = {}
@@ -313,28 +353,11 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
                 "score": probability,
             }
 
-        total = sum(c["score"] for c in causes.values())
-        if total > 0:
-            for c in causes.values():
-                c["score"] = round(c["score"] / total, 4)
-
         reasoning = response.get("reasoning", "")
         questions = response.get("questions", [])
 
-        return {"causes": causes, "reasoning": reasoning,
+        return {"causes": normalize_scores(causes), "reasoning": reasoning,
                 "questions": questions}
-
-
-class ChampsPromptedIcd10Agent(ChampsPromptedInferenceAgent):
-    """Prompted agent choosing among CHAMPS group causes coded in ICD-10."""
-
-    allowed_causes = CHAMPS_GROUP_CAUSES
-    cause_codes = CHAMPS_GROUP_TO_ICD10
-    coding_system = "icd10"
-    system_prompt = SYSTEM_PROMPT
-    schema_guidance = SCHEMA_GUIDANCE
-    clinical_note_guidance = CLINICAL_NOTE_GUIDANCE
-    diagnosis_standard = DIAGNOSIS_STANDARD
 
 
 def create_champs_prompted_agent(
