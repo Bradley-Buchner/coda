@@ -409,7 +409,8 @@ if __name__ == "__main__":
         logger.info("Prompted agent backend: provider=%s model=%s endpoint=%s",
                     args.provider, agent.llm_client.model,
                     agent.llm_client.base_url or "provider default")
-        info.update(provider=args.provider, model=agent.llm_client.model,
+        info.update(agent_class=type(agent).__name__,
+                    provider=args.provider, model=agent.llm_client.model,
                     num_questions=agent.num_questions,
                     question_style=agent.question_style)
 

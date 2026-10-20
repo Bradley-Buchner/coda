@@ -365,11 +365,30 @@ def create_champs_prompted_agent(
     model: Optional[str] = None,
     **kwargs,
 ) -> ChampsPromptedInferenceAgent:
-    """Create a ChampsPromptedIcd10Agent with a new LLM client.
+    """Create the configured CHAMPS prompted agent with a new LLM client.
 
-    Defaults to the configured inference provider/model.
+    The agent class follows inference.champs_prompted (coding and passes),
+    and the LLM defaults to the configured inference provider/model.
     """
+    from coda.inference.champs_prompted.icd11 import (
+        ChampsPromptedIcd11SinglePassAgent,
+        ChampsPromptedIcd11TwoPassAgent,
+    )
     from coda.llm_api import create_llm_client
+
+    agent_settings = settings.inference.get("champs_prompted") or {}
+    coding = agent_settings.get("coding", "icd10")
+    passes = int(agent_settings.get("passes", 1))
+    agent_classes = {
+        ("icd10", 1): ChampsPromptedIcd10Agent,
+        ("icd11", 1): ChampsPromptedIcd11SinglePassAgent,
+        ("icd11", 2): ChampsPromptedIcd11TwoPassAgent,
+    }
+    if coding == "icd10":
+        passes = 1
+    if (coding, passes) not in agent_classes:
+        raise ValueError(f"Unsupported champs_prompted coding {coding!r} "
+                         f"with passes {passes}")
 
     provider = provider or settings.inference.llm.provider
     model = model or settings.inference.llm.model
@@ -379,7 +398,7 @@ def create_champs_prompted_agent(
                                                DEFAULT_NUM_QUESTIONS))
     question_style = str(settings.inference.get("question_style",
                                                 DEFAULT_QUESTION_STYLE))
-    return ChampsPromptedIcd10Agent(
+    return agent_classes[(coding, passes)](
         llm_client=client,
         llm_semaphore=asyncio.Semaphore(max_concurrency),
         num_questions=num_questions,
