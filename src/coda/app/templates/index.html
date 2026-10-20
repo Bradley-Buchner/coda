@@ -5639,6 +5639,8 @@
 
       async function startRecording() {
         try {
+          if (caseIdUsed) await assignCaseId();
+          caseIdUsed = true;
           micSelect.disabled = true;
           languageSelect.disabled = true;
           transcriberBackendSelect.disabled = true;
@@ -6144,13 +6146,17 @@
         } catch (e) {}
       }
 
+      // Whether a recording has been saved as a case under the current ID
+      let caseIdUsed = false;
+
       // Fill in the next default case ID and send the profile with it
       async function assignCaseId() {
+        caseIdUsed = false;
         try {
           const resp = await fetch("/next-case-id");
           caseIdInput.value = (await resp.json()).case_id;
         } catch (e) {}
-        pushMetadata();
+        await pushMetadata();
       }
 
       function clearProfileInputs() {
