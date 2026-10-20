@@ -406,6 +406,9 @@ if __name__ == "__main__":
     else:
         from coda.inference.champs_prompted_agent import create_champs_prompted_agent
         agent = create_champs_prompted_agent(provider=args.provider, model=args.model)
+        logger.info("Prompted agent backend: provider=%s model=%s endpoint=%s",
+                    args.provider, agent.llm_client.model,
+                    agent.llm_client.base_url or "provider default")
         info.update(provider=args.provider, model=agent.llm_client.model,
                     num_questions=agent.num_questions,
                     question_style=agent.question_style)
