@@ -8,6 +8,8 @@ import pytest
 from coda.inference.agent import InferenceServer
 from coda.inference.champs_finetuned.agent import ChampsFinetunedInferenceAgent
 from coda.inference.champs_prompted.icd10_agent import ChampsPromptedIcd10Agent
+from coda.inference.champs_prompted.base_agent import render_profile
+from coda.metadata import Metadata
 
 
 class FakeLLMClient:
@@ -315,3 +317,15 @@ async def test_finetuned_concurrency_bound_shared_across_sessions():
     )
 
     assert counter["max_active"] == 1
+
+
+def test_render_profile_clinical_fields():
+    profile = Metadata.from_dict({"profile": {
+        "birth_weight_g": 2900, "hiv_status": "exposed",
+        "weight_kg_admission": 6.9, "weight_kg_death": 6.5,
+        "muac_cm_death": 11.2}}).profile
+
+    assert render_profile(profile) == (
+        "- birth weight: 2900 g\n- HIV status: exposed\n"
+        "- weight: 6.9 kg at admission, 6.5 kg at death\n"
+        "- MUAC: 11.2 cm at death\n")

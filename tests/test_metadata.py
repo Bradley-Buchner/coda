@@ -54,10 +54,27 @@ def test_death_details_roundtrip():
          "manner_of_death": "accident"}
     m = Metadata.from_dict({"profile": d})
     assert not m.is_empty()
-    assert m.to_dict()["profile"] == {"age": None, "stillbirth": False, **d}
+    profile = m.to_dict()["profile"]
+    assert {k: profile[k] for k in d} == d
 
 
 def test_invalid_choices_dropped():
     m = Metadata.from_dict(
         {"profile": {"sex": "other", "manner_of_death": "unclear"}})
+    assert m.is_empty()
+
+
+def test_clinical_fields_roundtrip():
+    d = {"birth_weight_g": 2900.0, "hiv_status": "exposed",
+         "weight_kg_admission": 6.9, "weight_kg_death": None,
+         "muac_cm_admission": 11.9, "muac_cm_death": None}
+    m = Metadata.from_dict({"profile": d})
+    profile = m.to_dict()["profile"]
+    assert {k: profile[k] for k in d} == d
+
+
+def test_invalid_clinical_values_dropped():
+    m = Metadata.from_dict({"profile": {"hiv_status": "maybe",
+                                        "weight_kg_death": -1,
+                                        "muac_cm_admission": "x"}})
     assert m.is_empty()

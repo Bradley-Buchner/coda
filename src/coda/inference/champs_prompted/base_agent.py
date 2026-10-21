@@ -100,6 +100,19 @@ def render_profile(profile):
     if profile.manner_of_death:
         manner = profile.manner_of_death.replace("_", " ")
         lines.append(f"manner of death: {manner}")
+    if profile.birth_weight_g:
+        lines.append(f"birth weight: {profile.birth_weight_g:g} g")
+    if profile.hiv_status:
+        lines.append(f"HIV status: {profile.hiv_status}")
+    for name, unit, admission, death in [
+            ("weight", "kg", profile.weight_kg_admission,
+             profile.weight_kg_death),
+            ("MUAC", "cm", profile.muac_cm_admission,
+             profile.muac_cm_death)]:
+        values = [f"{value:g} {unit} at {when}" for value, when in
+                  [(admission, "admission"), (death, "death")] if value]
+        if values:
+            lines.append(f"{name}: {', '.join(values)}")
     return "".join(f"- {line}\n" for line in lines)
 
 

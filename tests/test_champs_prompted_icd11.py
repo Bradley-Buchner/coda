@@ -34,6 +34,8 @@ class FakeLLMClient:
 @pytest.mark.parametrize("profile, group", [
     ({"stillbirth": True}, "stillbirth"),
     ({"age": {"value": 5, "unit": "hours"}}, "less24hours"),
+    ({"age": {"value": 23, "unit": "hours"}}, "less24hours"),
+    ({"age": {"value": 24, "unit": "hours"}}, "earlyneonate"),
     ({"age": {"value": 3, "unit": "days"}}, "earlyneonate"),
     ({"age": {"value": 2, "unit": "weeks"}}, "lateneonate"),
     ({"age": {"value": 11, "unit": "months"}}, "infant"),

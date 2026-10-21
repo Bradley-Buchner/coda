@@ -487,6 +487,35 @@
       .profile-bar[data-user-expanded="true"] #userFields {
         display: flex;
       }
+      #profileFields {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .profile-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 20px;
+      }
+      .profile-clinical {
+        padding-top: 10px;
+        border-top: 1px dashed var(--border-warm);
+      }
+      .profile-row-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+      }
+      .profile-unit {
+        color: var(--ink-muted);
+      }
+      .profile-field > label.profile-sublabel {
+        font-weight: 400;
+        letter-spacing: 0;
+        color: var(--ink-muted);
+      }
       .profile-field,
       .profile-still {
         display: flex;
@@ -1709,6 +1738,9 @@
         font-weight: 600;
         color: var(--ink-soft);
       }
+      .mccd-grid label[hidden] {
+        display: none;
+      }
       .mccd-grid .mccd-check {
         flex-direction: row;
         align-items: center;
@@ -1748,6 +1780,16 @@
       .mccd-table td:nth-child(4) {
         width: 24%;
       }
+      .mccd-add-line {
+        margin-top: 6px;
+        padding: 4px 10px;
+        border: 1px dashed var(--border-warm);
+        border-radius: 6px;
+        background: none;
+        color: var(--ink-soft);
+        font-size: 12px;
+        cursor: pointer;
+      }
       .mccd-sheet .mccd-cause {
         display: block;
         overflow: hidden;
@@ -1768,7 +1810,8 @@
           padding: 0;
           background: #fff;
         }
-        .mccd-actions {
+        .mccd-actions,
+        .mccd-add-line {
           display: none !important;
         }
         .mccd-sheet {
@@ -3079,6 +3122,9 @@
             </tr>
           </tbody>
         </table>
+        <button type="button" id="mccdAddLine" class="mccd-add-line">
+          + Add line
+        </button>
         <h3>
           Part 2: Other significant conditions contributing to death
         </h3>
@@ -3106,6 +3152,10 @@
               >Stillbirth</span
             ></label
           >
+          <label
+            ><span>Birth weight (g)</span
+            ><input type="number" name="birthWeight" min="0" step="1"
+          /></label>
         </div>
 
         <h2>Certifier</h2>
@@ -3359,80 +3409,139 @@
           </div>
         </div>
         <div class="profile-fields" id="profileFields">
-          <div class="profile-field">
-            <label for="caseId" data-i18n="profile.caseId">Case ID</label>
-            <input type="text" id="caseId" autocomplete="off" />
-          </div>
-          <div class="profile-field profile-age">
-            <label for="ageValue" data-i18n="profile.age">Age</label>
-            <input type="number" id="ageValue" min="0" step="1" placeholder="—" />
-            <select id="ageUnit">
-              <option value="days">days</option>
-              <option value="months" selected>months</option>
-              <option value="years">years</option>
-            </select>
-          </div>
-          <label class="profile-still">
-            <input type="checkbox" id="stillbirthToggle" />
-            <span data-i18n="profile.stillbirth">Stillbirth</span>
-          </label>
-          <div class="profile-field">
-            <span class="profile-label" data-i18n="profile.sex">Sex</span>
-            <div class="profile-segmented" role="radiogroup" id="sexGroup">
-              <label
-                ><input type="radio" name="sex" value="female" /><span
-                  data-i18n="profile.female"
-                  >Female</span
-                ></label
+          <div class="profile-row">
+            <div class="profile-field">
+              <label for="caseId" data-i18n="profile.caseId">Case ID</label>
+              <input type="text" id="caseId" autocomplete="off" />
+            </div>
+            <div class="profile-field profile-age">
+              <label for="ageValue" data-i18n="profile.age">Age</label>
+              <input type="number" id="ageValue" min="0" step="1" placeholder="—" />
+              <select id="ageUnit">
+                <option value="hours">hours</option>
+                <option value="days">days</option>
+                <option value="months" selected>months</option>
+                <option value="years">years</option>
+              </select>
+            </div>
+            <label class="profile-still">
+              <input type="checkbox" id="stillbirthToggle" />
+              <span data-i18n="profile.stillbirth">Stillbirth</span>
+            </label>
+            <div class="profile-field">
+              <span class="profile-label" data-i18n="profile.sex">Sex</span>
+              <div class="profile-segmented" role="radiogroup" id="sexGroup">
+                <label
+                  ><input type="radio" name="sex" value="female" /><span
+                    data-i18n="profile.female"
+                    >Female</span
+                  ></label
+                >
+                <label
+                  ><input type="radio" name="sex" value="male" /><span
+                    data-i18n="profile.male"
+                    >Male</span
+                  ></label
+                >
+                <label
+                  ><input type="radio" name="sex" value="ambiguous" /><span
+                    data-i18n="profile.ambiguous"
+                    >Ambiguous</span
+                  ></label
+                >
+              </div>
+            </div>
+            <div class="profile-field">
+              <label for="dateOfDeath" data-i18n="profile.dateOfDeath"
+                >Date of death</label
               >
-              <label
-                ><input type="radio" name="sex" value="male" /><span
-                  data-i18n="profile.male"
-                  >Male</span
-                ></label
+              <input type="date" id="dateOfDeath" />
+            </div>
+            <div class="profile-field">
+              <label for="mannerOfDeath" data-i18n="profile.manner"
+                >Manner of death</label
               >
-              <label
-                ><input type="radio" name="sex" value="ambiguous" /><span
-                  data-i18n="profile.ambiguous"
-                  >Ambiguous</span
-                ></label
-              >
+              <select id="mannerOfDeath">
+                <option value="">—</option>
+                <option value="disease" data-i18n="profile.mannerDisease">
+                  Disease
+                </option>
+                <option value="accident" data-i18n="profile.mannerAccident">
+                  Accident
+                </option>
+                <option value="self_harm" data-i18n="profile.mannerSelfHarm">
+                  Self harm
+                </option>
+                <option value="assault" data-i18n="profile.mannerAssault">
+                  Assault
+                </option>
+                <option
+                  value="pending_investigation"
+                  data-i18n="profile.mannerPending"
+                >
+                  Pending investigation
+                </option>
+                <option value="unknown" data-i18n="profile.mannerUnknown">
+                  Don't know
+                </option>
+              </select>
             </div>
           </div>
-          <div class="profile-field">
-            <label for="dateOfDeath" data-i18n="profile.dateOfDeath"
-              >Date of death</label
+          <div class="profile-row profile-clinical">
+            <span class="profile-row-label" data-i18n="profile.clinical"
+              >Clinical</span
             >
-            <input type="date" id="dateOfDeath" />
-          </div>
-          <div class="profile-field">
-            <label for="mannerOfDeath" data-i18n="profile.manner"
-              >Manner of death</label
-            >
-            <select id="mannerOfDeath">
-              <option value="">—</option>
-              <option value="disease" data-i18n="profile.mannerDisease">
-                Disease
-              </option>
-              <option value="accident" data-i18n="profile.mannerAccident">
-                Accident
-              </option>
-              <option value="self_harm" data-i18n="profile.mannerSelfHarm">
-                Self harm
-              </option>
-              <option value="assault" data-i18n="profile.mannerAssault">
-                Assault
-              </option>
-              <option
-                value="pending_investigation"
-                data-i18n="profile.mannerPending"
+            <div class="profile-field">
+              <label for="birthWeight" data-i18n="profile.birthWeight"
+                >Birth weight</label
               >
-                Pending investigation
-              </option>
-              <option value="unknown" data-i18n="profile.mannerUnknown">
-                Don't know
-              </option>
-            </select>
+              <input type="number" id="birthWeight" min="0" step="1" />
+              <span class="profile-unit">g</span>
+            </div>
+            <div class="profile-field">
+              <label for="hivStatus" data-i18n="profile.hiv">HIV status</label>
+              <select id="hivStatus">
+                <option value="">—</option>
+                <option value="negative" data-i18n="profile.hivNegative">
+                  Negative
+                </option>
+                <option value="positive" data-i18n="profile.hivPositive">
+                  Positive
+                </option>
+                <option value="exposed" data-i18n="profile.hivExposed">
+                  Exposed
+                </option>
+                <option value="unknown" data-i18n="profile.hivUnknown">
+                  Unknown
+                </option>
+              </select>
+            </div>
+            <div class="profile-field">
+              <label for="weightAdmission" data-i18n="profile.weight"
+                >Weight</label
+              >
+              <label for="weightAdmission" class="profile-sublabel"
+                data-i18n="profile.atAdmission">at admission</label
+              >
+              <input type="number" id="weightAdmission" min="0" step="0.1" />
+              <label for="weightDeath" class="profile-sublabel"
+                data-i18n="profile.atDeath">at death</label
+              >
+              <input type="number" id="weightDeath" min="0" step="0.1" />
+              <span class="profile-unit">kg</span>
+            </div>
+            <div class="profile-field">
+              <label for="muacAdmission" data-i18n="profile.muac">MUAC</label>
+              <label for="muacAdmission" class="profile-sublabel"
+                data-i18n="profile.atAdmission">at admission</label
+              >
+              <input type="number" id="muacAdmission" min="0" step="0.1" />
+              <label for="muacDeath" class="profile-sublabel"
+                data-i18n="profile.atDeath">at death</label
+              >
+              <input type="number" id="muacDeath" min="0" step="0.1" />
+              <span class="profile-unit">cm</span>
+            </div>
           </div>
         </div>
       </div>
@@ -4048,6 +4157,17 @@
           "profile.age": "Age",
           "profile.stillbirth": "Stillbirth",
           "profile.caseId": "Case ID",
+          "profile.clinical": "Clinical",
+          "profile.birthWeight": "Birth weight",
+          "profile.hiv": "HIV status",
+          "profile.hivNegative": "Negative",
+          "profile.hivPositive": "Positive",
+          "profile.hivExposed": "Exposed",
+          "profile.hivUnknown": "Unknown",
+          "profile.weight": "Weight",
+          "profile.muac": "MUAC",
+          "profile.atAdmission": "at admission",
+          "profile.atDeath": "at death",
           "profile.sex": "Sex",
           "profile.female": "Female",
           "profile.male": "Male",
@@ -4197,6 +4317,17 @@
           "profile.age": "Umri",
           "profile.stillbirth": "Aliyezaliwa mfu",
           "profile.caseId": "Kitambulisho cha kesi",
+          "profile.clinical": "Kliniki",
+          "profile.birthWeight": "Uzito wa kuzaliwa",
+          "profile.hiv": "Hali ya VVU",
+          "profile.hivNegative": "Hasi",
+          "profile.hivPositive": "Chanya",
+          "profile.hivExposed": "Aliyewekwa wazi",
+          "profile.hivUnknown": "Haijulikani",
+          "profile.weight": "Uzito",
+          "profile.muac": "MUAC",
+          "profile.atAdmission": "wakati wa kulazwa",
+          "profile.atDeath": "wakati wa kifo",
           "profile.sex": "Jinsia",
           "profile.female": "Kike",
           "profile.male": "Kiume",
@@ -4346,6 +4477,17 @@
           "profile.age": "Âge",
           "profile.stillbirth": "Mort-né",
           "profile.caseId": "Identifiant du cas",
+          "profile.clinical": "Clinique",
+          "profile.birthWeight": "Poids de naissance",
+          "profile.hiv": "Statut VIH",
+          "profile.hivNegative": "Négatif",
+          "profile.hivPositive": "Positif",
+          "profile.hivExposed": "Exposé",
+          "profile.hivUnknown": "Inconnu",
+          "profile.weight": "Poids",
+          "profile.muac": "PB",
+          "profile.atAdmission": "à l'admission",
+          "profile.atDeath": "au décès",
           "profile.sex": "Sexe",
           "profile.female": "Féminin",
           "profile.male": "Masculin",
@@ -4499,6 +4641,17 @@
           "profile.age": "العمر",
           "profile.stillbirth": "مولود ميت",
           "profile.caseId": "رقم الحالة",
+          "profile.clinical": "سريري",
+          "profile.birthWeight": "الوزن عند الولادة",
+          "profile.hiv": "حالة فيروس نقص المناعة",
+          "profile.hivNegative": "سلبي",
+          "profile.hivPositive": "إيجابي",
+          "profile.hivExposed": "معرَّض",
+          "profile.hivUnknown": "غير معروف",
+          "profile.weight": "الوزن",
+          "profile.muac": "محيط منتصف العضد",
+          "profile.atAdmission": "عند الدخول",
+          "profile.atDeath": "عند الوفاة",
           "profile.sex": "الجنس",
           "profile.female": "أنثى",
           "profile.male": "ذكر",
@@ -4645,6 +4798,17 @@
           "profile.age": "বয়স",
           "profile.stillbirth": "মৃত জন্ম",
           "profile.caseId": "কেস আইডি",
+          "profile.clinical": "ক্লিনিক্যাল",
+          "profile.birthWeight": "জন্ম ওজন",
+          "profile.hiv": "এইচআইভি অবস্থা",
+          "profile.hivNegative": "নেগেটিভ",
+          "profile.hivPositive": "পজিটিভ",
+          "profile.hivExposed": "সংস্পর্শে",
+          "profile.hivUnknown": "অজানা",
+          "profile.weight": "ওজন",
+          "profile.muac": "MUAC",
+          "profile.atAdmission": "ভর্তির সময়",
+          "profile.atDeath": "মৃত্যুর সময়",
           "profile.sex": "লিঙ্গ",
           "profile.female": "মেয়ে",
           "profile.male": "ছেলে",
@@ -4795,6 +4959,17 @@
           "profile.age": "Edad",
           "profile.stillbirth": "Mortinato",
           "profile.caseId": "ID del caso",
+          "profile.clinical": "Clínico",
+          "profile.birthWeight": "Peso al nacer",
+          "profile.hiv": "Estado de VIH",
+          "profile.hivNegative": "Negativo",
+          "profile.hivPositive": "Positivo",
+          "profile.hivExposed": "Expuesto",
+          "profile.hivUnknown": "Desconocido",
+          "profile.weight": "Peso",
+          "profile.muac": "PB",
+          "profile.atAdmission": "al ingreso",
+          "profile.atDeath": "a la defunción",
           "profile.sex": "Sexo",
           "profile.female": "Femenino",
           "profile.male": "Masculino",
@@ -4946,6 +5121,17 @@
           "profile.age": "Malembe",
           "profile.stillbirth": "Ku velekiwa ka n'wana a file",
           "profile.caseId": "Nomboro ya mhaka",
+          "profile.clinical": "Vutshunguri",
+          "profile.birthWeight": "Ntiko wa ku velekiwa",
+          "profile.hiv": "Xiyimo xa HIV",
+          "profile.hivNegative": "A yi kona",
+          "profile.hivPositive": "Yi kona",
+          "profile.hivExposed": "U hlanganile na yona",
+          "profile.hivUnknown": "A swi tiveki",
+          "profile.weight": "Ntiko",
+          "profile.muac": "MUAC",
+          "profile.atAdmission": "loko a amukeriwa",
+          "profile.atDeath": "loko a fa",
           "profile.sex": "Rimbewu",
           "profile.female": "Wa xisati",
           "profile.male": "Wa xinuna",
@@ -7378,6 +7564,15 @@
       const dateOfDeathInput = document.getElementById("dateOfDeath");
       const mannerSelect = document.getElementById("mannerOfDeath");
       const sexRadios = document.querySelectorAll('input[name="sex"]');
+      const hivSelect = document.getElementById("hivStatus");
+      // Measurement inputs by profile field name
+      const measurementInputs = {
+        birth_weight_g: document.getElementById("birthWeight"),
+        weight_kg_admission: document.getElementById("weightAdmission"),
+        weight_kg_death: document.getElementById("weightDeath"),
+        muac_cm_admission: document.getElementById("muacAdmission"),
+        muac_cm_death: document.getElementById("muacDeath"),
+      };
       // Today's local date as YYYY-MM-DD
       function localDate() {
         const today = new Date();
@@ -7432,7 +7627,7 @@
       function readProfileInputs() {
         const ageValue =
           ageValueInput.value === "" ? null : Number(ageValueInput.value);
-        return {
+        const profile = {
           age:
             ageValue === null
               ? null
@@ -7441,7 +7636,12 @@
           date_of_death: dateOfDeathInput.value || null,
           sex: checkedSex()?.value || null,
           manner_of_death: mannerSelect.value || null,
+          hiv_status: hivSelect.value || null,
         };
+        for (const [name, input] of Object.entries(measurementInputs)) {
+          profile[name] = input.value === "" ? null : Number(input.value);
+        }
+        return profile;
       }
 
       async function pushMetadata() {
@@ -7478,6 +7678,10 @@
         dateOfDeathInput.value = profile.date_of_death || "";
         mannerSelect.value = profile.manner_of_death || "";
         sexRadios.forEach((r) => (r.checked = r.value === profile.sex));
+        hivSelect.value = profile.hiv_status || "";
+        for (const [name, input] of Object.entries(measurementInputs)) {
+          input.value = profile[name] ?? "";
+        }
       }
 
       function clearProfileInputs() {
@@ -7488,6 +7692,8 @@
         dateOfDeathInput.value = "";
         mannerSelect.value = "";
         sexRadios.forEach((r) => (r.checked = false));
+        hivSelect.value = "";
+        Object.values(measurementInputs).forEach((input) => (input.value = ""));
         applyStillbirthState();
         updateProfileSummary();
         setProfileExpanded(false);
@@ -7556,18 +7762,48 @@
       mccdCauses.forEach((field) =>
         field.addEventListener("input", () => fitHeight(field)),
       );
+
+      // Add a Part 1 line labeled with the next letter, copied from the last
+      const mccdPart1 = mccdSheet.querySelector(".mccd-table tbody");
+      document.getElementById("mccdAddLine").addEventListener("click", () => {
+        const rows = mccdPart1.rows;
+        const letter = String.fromCharCode(97 + rows.length);
+        const row = rows[rows.length - 1].cloneNode(true);
+        row.dataset.added = "true";
+        row.querySelector("th").innerHTML = `(${letter}) <small>due to</small>`;
+        row.querySelectorAll("textarea, input").forEach((field) => {
+          field.name = field.name.replace(/_[a-z]$/, `_${letter}`);
+          field.value = "";
+          field.style.height = "";
+        });
+        mccdPart1.appendChild(row);
+        const cause = row.querySelector(".mccd-cause");
+        cause.addEventListener("input", () => fitHeight(cause));
+        cause.focus();
+      });
       mccdSheet.addEventListener("submit", (e) => e.preventDefault());
 
-      function fillMccd() {
-        mccd.caseId.value = caseIdInput.value.trim();
-        mccd.sex.value = checkedSex()?.value || "";
+      // Whether an age at death is under one year
+      function under1Year(age) {
+        if (!age) return false;
+        const under = { hours: true, days: true, months: age.value < 12 };
+        return under[age.unit] ?? age.value < 1;
+      }
+
+      function fillMccd(caseId, profile) {
+        mccd.caseId.value = caseId || "";
+        mccd.sex.value = profile.sex || "";
         mccd.age.value =
-          stillbirthToggle.checked || ageValueInput.value === ""
+          profile.stillbirth || !profile.age
             ? ""
-            : `${ageValueInput.value} ${ageUnitSelect.value}`;
-        mccd.dateOfDeath.value = dateOfDeathInput.value;
-        mccd.manner.value = mannerSelect.value;
-        mccd.stillbirth.checked = stillbirthToggle.checked;
+            : `${profile.age.value} ${profile.age.unit}`;
+        mccd.dateOfDeath.value = profile.date_of_death || "";
+        mccd.manner.value = profile.manner_of_death || "";
+        mccd.stillbirth.checked = !!profile.stillbirth;
+        // Birth weight belongs to the fetal or infant death section
+        const infant = profile.stillbirth || under1Year(profile.age);
+        mccd.birthWeight.closest("label").hidden = !infant;
+        mccd.birthWeight.value = infant ? (profile.birth_weight_g ?? "") : "";
         mccd.certifierName.value = userNameInput.value.trim();
         mccd.certifierId.value = userIdInput.value.trim();
         mccd.certifiedOn.value = localDate();
@@ -7579,18 +7815,24 @@
       }
 
       function resetMccd() {
+        mccdPart1.querySelectorAll("tr[data-added]").forEach((r) => r.remove());
         mccdSheet.reset();
         mccdFilled = false;
       }
 
       document.getElementById("mccdBtn").addEventListener("click", () => {
         if (!mccdFilled) {
-          fillMccd();
+          // A stored case on screen has its own case ID and profile
+          if (body.classList.contains("viewing-case")) {
+            fillMccd(caseMetadataId, caseProfile || {});
+          } else {
+            fillMccd(caseIdInput.value.trim(), readProfileInputs());
+          }
           mccdFilled = true;
         }
         mccdOverlay.hidden = false;
         body.classList.add("mccd-open");
-        mccdCauses.forEach(fitHeight);
+        mccdSheet.querySelectorAll(".mccd-cause").forEach(fitHeight);
       });
       document.getElementById("mccdCloseBtn").addEventListener("click", () => {
         mccdOverlay.hidden = true;
@@ -7608,6 +7850,10 @@
       ageUnitSelect.addEventListener("change", pushMetadata);
       stillbirthToggle.addEventListener("change", pushMetadata);
       caseIdInput.addEventListener("change", pushMetadata);
+      hivSelect.addEventListener("change", pushMetadata);
+      Object.values(measurementInputs).forEach((input) =>
+        input.addEventListener("change", pushMetadata),
+      );
       dateOfDeathInput.addEventListener("change", pushMetadata);
       mannerSelect.addEventListener("change", pushMetadata);
       // Clicking the selected option again clears the choice
@@ -7626,6 +7872,12 @@
       // session or stored case
       function clearSessionView() {
         body.classList.remove("viewing-case");
+        resetMccd();
+        // The case ID and profile of a case already saved stay with it
+        if (caseIdUsed) {
+          clearProfileInputs();
+          assignCaseId();
+        }
         noteFiles = [];
         renderNoteCards();
         typedNoteCount = 0;
@@ -7676,8 +7928,6 @@
         };
       }
 
-      // Record more of the session on screen, warning first when the settings
-      // it was recorded with have changed
       // Put the stored case's own case ID and profile back before adding to it
       async function restoreCaseMetadata() {
         if (caseMetadataId) caseIdInput.value = caseMetadataId;
@@ -7688,6 +7938,8 @@
       // Set while a continue awaits, so that a second click is ignored
       let continueStarting = false;
 
+      // Record more of the session on screen, warning first when the settings
+      // it was recorded with have changed
       async function continueSession() {
         if (
           continueStarting ||
@@ -7742,7 +7994,6 @@
             stopRecording();
           }
           clearProfileInputs();
-          resetMccd();
           clearSessionView();
           renderIdleRecent();
           setSessionState("idle");
