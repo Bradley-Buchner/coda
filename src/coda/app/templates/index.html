@@ -7783,30 +7783,27 @@
       });
       mccdSheet.addEventListener("submit", (e) => e.preventDefault());
 
-      // Whether the entered age at death is under one year
-      function under1Year() {
-        if (ageValueInput.value === "") return false;
-        const value = Number(ageValueInput.value);
-        const under = { hours: true, days: true, months: value < 12 };
-        return under[ageUnitSelect.value] ?? value < 1;
+      // Whether an age at death is under one year
+      function under1Year(age) {
+        if (!age) return false;
+        const under = { hours: true, days: true, months: age.value < 12 };
+        return under[age.unit] ?? age.value < 1;
       }
 
-      function fillMccd() {
-        mccd.caseId.value = caseIdInput.value.trim();
-        mccd.sex.value = checkedSex()?.value || "";
+      function fillMccd(caseId, profile) {
+        mccd.caseId.value = caseId || "";
+        mccd.sex.value = profile.sex || "";
         mccd.age.value =
-          stillbirthToggle.checked || ageValueInput.value === ""
+          profile.stillbirth || !profile.age
             ? ""
-            : `${ageValueInput.value} ${ageUnitSelect.value}`;
-        mccd.dateOfDeath.value = dateOfDeathInput.value;
-        mccd.manner.value = mannerSelect.value;
-        mccd.stillbirth.checked = stillbirthToggle.checked;
+            : `${profile.age.value} ${profile.age.unit}`;
+        mccd.dateOfDeath.value = profile.date_of_death || "";
+        mccd.manner.value = profile.manner_of_death || "";
+        mccd.stillbirth.checked = !!profile.stillbirth;
         // Birth weight belongs to the fetal or infant death section
-        const infant = stillbirthToggle.checked || under1Year();
+        const infant = profile.stillbirth || under1Year(profile.age);
         mccd.birthWeight.closest("label").hidden = !infant;
-        mccd.birthWeight.value = infant
-          ? measurementInputs.birth_weight_g.value
-          : "";
+        mccd.birthWeight.value = infant ? (profile.birth_weight_g ?? "") : "";
         mccd.certifierName.value = userNameInput.value.trim();
         mccd.certifierId.value = userIdInput.value.trim();
         mccd.certifiedOn.value = localDate();
@@ -7825,7 +7822,12 @@
 
       document.getElementById("mccdBtn").addEventListener("click", () => {
         if (!mccdFilled) {
-          fillMccd();
+          // A stored case on screen has its own case ID and profile
+          if (body.classList.contains("viewing-case")) {
+            fillMccd(caseMetadataId, caseProfile || {});
+          } else {
+            fillMccd(caseIdInput.value.trim(), readProfileInputs());
+          }
           mccdFilled = true;
         }
         mccdOverlay.hidden = false;
@@ -7870,6 +7872,12 @@
       // session or stored case
       function clearSessionView() {
         body.classList.remove("viewing-case");
+        resetMccd();
+        // The case ID and profile of a case already saved stay with it
+        if (caseIdUsed) {
+          clearProfileInputs();
+          assignCaseId();
+        }
         noteFiles = [];
         renderNoteCards();
         typedNoteCount = 0;
@@ -7986,7 +7994,6 @@
             stopRecording();
           }
           clearProfileInputs();
-          resetMccd();
           clearSessionView();
           renderIdleRecent();
           setSessionState("idle");
