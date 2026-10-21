@@ -639,6 +639,7 @@
 
       body[data-show-clinical-note="false"] #noteBtn,
       body[data-show-clinical-note="false"] #noteTypeBtn,
+      body[data-show-clinical-note="false"] #storageServerNotesRow,
       body[data-show-clinical-note="false"] .note-editor,
       body[data-state="history"] .note-editor,
       body[data-show-clinical-note="false"] .note-strip {
@@ -1902,6 +1903,14 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
+      /* A case is either recorded or inferred from clinical notes */
+      body[data-case-source="recording"] #noteBtn,
+      body[data-case-source="recording"] #noteTypeBtn,
+      body[data-case-source="clinical_note"] #continueBtn,
+      body[data-case-source="clinical_note"] .idle-mic-btn {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
       body[data-state="result"] .updating-pill {
         display: none !important;
       }
@@ -2495,6 +2504,12 @@
         background: var(--border-warm);
         color: var(--ink-soft);
       }
+      /* What its inferences were made from */
+      .history-flag--source {
+        background: transparent;
+        border: 1px solid var(--border-warm);
+        color: var(--ink-soft);
+      }
       .history-item-recording {
         white-space: nowrap;
       }
@@ -2538,6 +2553,31 @@
       }
       .case-banner-note:empty {
         display: none;
+      }
+      .case-banner-notes {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 13px;
+        color: var(--ink-soft);
+      }
+      .case-banner-notes:empty {
+        display: none;
+      }
+      .case-note summary {
+        cursor: pointer;
+      }
+      .case-note-text {
+        margin-top: 4px;
+        padding: 8px 10px;
+        max-height: 12rem;
+        overflow: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        background: var(--paper);
+        border: 1px solid var(--border-warm);
+        border-radius: 6px;
+        color: var(--ink);
       }
       body.viewing-case .profile-bar,
       body.viewing-case .lang-chip,
@@ -3432,6 +3472,7 @@
           >
           <div class="case-banner-meta" id="caseMeta"></div>
           <div class="case-banner-id" id="caseIdLabel"></div>
+          <div class="case-banner-notes" id="caseNotes"></div>
           <div class="case-banner-note" id="caseNote"></div>
         </div>
       </section>
@@ -3954,6 +3995,17 @@
               >Off</span
             >
           </div>
+          <div class="storage-status-row" id="storageServerNotesRow">
+            <span data-i18n="settings.storageServerNotes"
+              >Keeps clinical note text</span
+            >
+            <span
+              class="storage-status"
+              id="storageServerNotes"
+              data-i18n="settings.off"
+              >Off</span
+            >
+          </div>
         </div>
         <div class="switch-row">
           <div class="switch-body">
@@ -3962,7 +4014,7 @@
             >
             <small data-i18n="settings.storageDeviceNote"
               >Keeps each session's transcript and results in this browser.
-              Recordings are not kept.</small
+              Recordings and clinical note text are not kept.</small
             >
           </div>
           <label class="switch">
@@ -4084,9 +4136,10 @@
           "settings.storageServerSaves": "Saves each case",
           "settings.storageServerBrowse": "Lists its cases in History",
           "settings.storageServerAudio": "Keeps the recording",
+          "settings.storageServerNotes": "Keeps clinical note text",
           "settings.storageDevice": "Save sessions on this device",
           "settings.storageDeviceNote":
-            "Keeps each session's transcript and results in this browser. Recordings are not kept.",
+            "Keeps each session's transcript and results in this browser. Recordings and clinical note text are not kept.",
           "history.title": "Past sessions",
           "history.where":
             "Sessions saved on this device and cases stored on this server. Each one shows where it is kept.",
@@ -4097,6 +4150,8 @@
           "history.storedBoth": "Server + device",
           "history.recording": "Recording",
           "history.noRecording": "No recording",
+          "history.sourceRecording": "Voice recording",
+          "history.sourceNote": "Clinical note",
           "history.deleteDevice": "Delete the copy on this device",
           "history.clearConfirm":
             "Delete every session saved on this device? Cases on the server are not affected. This cannot be undone.",
@@ -4114,6 +4169,11 @@
           "continue.inference": "Inference",
           "continue.inUse": "This session is being recorded elsewhere",
           "case.noRecording": "Recording not available",
+          "case.noteTextNotStored": "Note text not stored",
+          "case.voiceOnly":
+            "This case is a voice recording, so clinical notes can't be added to it. Start a new case to use notes.",
+          "case.notesOnly":
+            "This case uses clinical notes, so it can't also be recorded. Start a new case to record.",
           "case.timeline": "Inference timeline",
           "case.noInference": "No inference",
           "case.untitled": "Interview",
@@ -4224,9 +4284,10 @@
           "settings.storageServerSaves": "Huhifadhi kila kesi",
           "settings.storageServerBrowse": "Huonyesha kesi zake kwenye Historia",
           "settings.storageServerAudio": "Huhifadhi rekodi ya sauti",
+          "settings.storageServerNotes": "Huhifadhi maandishi ya maelezo ya kliniki",
           "settings.storageDevice": "Hifadhi vikao kwenye kifaa hiki",
           "settings.storageDeviceNote":
-            "Huhifadhi maandishi na matokeo ya kila kikao kwenye kivinjari hiki. Rekodi za sauti hazihifadhiwi.",
+            "Huhifadhi maandishi na matokeo ya kila kikao kwenye kivinjari hiki. Rekodi za sauti na maandishi ya maelezo ya kliniki hazihifadhiwi.",
           "history.title": "Vikao vilivyopita",
           "history.where":
             "Vikao vilivyohifadhiwa kwenye kifaa hiki na kesi zilizohifadhiwa kwenye seva hii. Kila kimoja kinaonyesha mahali kinapohifadhiwa.",
@@ -4237,6 +4298,8 @@
           "history.storedBoth": "Seva + kifaa",
           "history.recording": "Rekodi",
           "history.noRecording": "Hakuna rekodi",
+          "history.sourceRecording": "Rekodi ya sauti",
+          "history.sourceNote": "Maelezo ya kliniki",
           "history.deleteDevice": "Futa nakala iliyo kwenye kifaa hiki",
           "history.clearConfirm":
             "Futa kila kikao kilichohifadhiwa kwenye kifaa hiki? Kesi zilizo kwenye seva haziathiriwi. Hatua hii haiwezi kutenduliwa.",
@@ -4254,6 +4317,11 @@
           "continue.inference": "Ubashiri",
           "continue.inUse": "Kikao hiki kinarekodiwa mahali pengine",
           "case.noRecording": "Rekodi haipatikani",
+          "case.noteTextNotStored": "Maandishi ya maelezo hayakuhifadhiwa",
+          "case.voiceOnly":
+            "Kesi hii ni rekodi ya sauti, kwa hivyo maelezo ya kliniki hayawezi kuongezwa. Anzisha kesi mpya ili kutumia maelezo.",
+          "case.notesOnly":
+            "Kesi hii inatumia maelezo ya kliniki, kwa hivyo haiwezi kurekodiwa pia. Anzisha kesi mpya ili kurekodi.",
           "case.timeline": "Mfuatano wa ubashiri",
           "case.noInference": "Hakuna ubashiri",
           "case.untitled": "Mahojiano",
@@ -4368,9 +4436,10 @@
           "settings.storageServerSaves": "Sauvegarde chaque cas",
           "settings.storageServerBrowse": "Affiche ses cas dans l'Historique",
           "settings.storageServerAudio": "Conserve l'enregistrement audio",
+          "settings.storageServerNotes": "Conserve le texte des notes cliniques",
           "settings.storageDevice": "Sauvegarder les sessions sur cet appareil",
           "settings.storageDeviceNote":
-            "Conserve la transcription et les résultats de chaque session dans ce navigateur. Les enregistrements audio ne sont pas conservés.",
+            "Conserve la transcription et les résultats de chaque session dans ce navigateur. Les enregistrements audio et le texte des notes cliniques ne sont pas conservés.",
           "history.title": "Sessions précédentes",
           "history.where":
             "Sessions sauvegardées sur cet appareil et cas stockés sur ce serveur. Chacun indique où il est conservé.",
@@ -4381,6 +4450,8 @@
           "history.storedBoth": "Serveur + appareil",
           "history.recording": "Enregistrement",
           "history.noRecording": "Sans enregistrement",
+          "history.sourceRecording": "Enregistrement vocal",
+          "history.sourceNote": "Note clinique",
           "history.deleteDevice": "Supprimer la copie sur cet appareil",
           "history.clearConfirm":
             "Supprimer toutes les sessions sauvegardées sur cet appareil ? Les cas sur le serveur ne sont pas concernés. Cette action est irréversible.",
@@ -4398,6 +4469,11 @@
           "continue.inference": "Inférence",
           "continue.inUse": "Cette session est en cours d'enregistrement ailleurs",
           "case.noRecording": "Enregistrement indisponible",
+          "case.noteTextNotStored": "Texte de la note non conservé",
+          "case.voiceOnly":
+            "Ce cas est un enregistrement vocal : on ne peut pas y ajouter de notes cliniques. Démarrez un nouveau cas pour utiliser des notes.",
+          "case.notesOnly":
+            "Ce cas utilise des notes cliniques : il ne peut pas aussi être enregistré. Démarrez un nouveau cas pour enregistrer.",
           "case.timeline": "Chronologie des inférences",
           "case.noInference": "Aucune inférence",
           "case.untitled": "Entretien",
@@ -4508,9 +4584,10 @@
           "settings.storageServerSaves": "يحفظ كل حالة",
           "settings.storageServerBrowse": "يعرض حالاته في السجل",
           "settings.storageServerAudio": "يحتفظ بالتسجيل",
+          "settings.storageServerNotes": "يحتفظ بنص الملاحظات السريرية",
           "settings.storageDevice": "حفظ الجلسات على هذا الجهاز",
           "settings.storageDeviceNote":
-            "يحتفظ بنص كل جلسة ونتائجها في هذا المتصفح. لا يتم الاحتفاظ بالتسجيلات.",
+            "يحتفظ بنص كل جلسة ونتائجها في هذا المتصفح. لا يتم الاحتفاظ بالتسجيلات ولا بنص الملاحظات السريرية.",
           "history.title": "الجلسات السابقة",
           "history.where":
             "الجلسات المحفوظة على هذا الجهاز والحالات المخزنة على هذا الخادم. يوضح كل منها مكان حفظه.",
@@ -4521,6 +4598,8 @@
           "history.storedBoth": "الخادم + الجهاز",
           "history.recording": "تسجيل",
           "history.noRecording": "لا يوجد تسجيل",
+          "history.sourceRecording": "تسجيل صوتي",
+          "history.sourceNote": "ملاحظة سريرية",
           "history.deleteDevice": "حذف النسخة الموجودة على هذا الجهاز",
           "history.clearConfirm":
             "حذف جميع الجلسات المحفوظة على هذا الجهاز؟ لن تتأثر الحالات الموجودة على الخادم. لا يمكن التراجع عن هذا الإجراء.",
@@ -4537,6 +4616,11 @@
           "continue.inference": "الاستدلال",
           "continue.inUse": "يتم تسجيل هذه الجلسة في مكان آخر",
           "case.noRecording": "التسجيل غير متاح",
+          "case.noteTextNotStored": "لم يُحفظ نص الملاحظة",
+          "case.voiceOnly":
+            "هذه الحالة تسجيل صوتي، لذا لا يمكن إضافة ملاحظات سريرية إليها. ابدأ حالة جديدة لاستخدام الملاحظات.",
+          "case.notesOnly":
+            "تستخدم هذه الحالة ملاحظات سريرية، لذا لا يمكن تسجيلها صوتيًا أيضًا. ابدأ حالة جديدة للتسجيل.",
           "case.timeline": "التسلسل الزمني للاستدلال",
           "case.noInference": "لا يوجد استدلال",
           "case.untitled": "مقابلة",
@@ -4648,9 +4732,10 @@
           "settings.storageServerSaves": "প্রতিটি কেস সংরক্ষণ করে",
           "settings.storageServerBrowse": "এর কেসগুলো ইতিহাসে দেখায়",
           "settings.storageServerAudio": "রেকর্ডিং রাখে",
+          "settings.storageServerNotes": "ক্লিনিক্যাল নোটের লেখা রাখে",
           "settings.storageDevice": "এই ডিভাইসে সেশন সংরক্ষণ করুন",
           "settings.storageDeviceNote":
-            "প্রতিটি সেশনের প্রতিলিপি ও ফলাফল এই ব্রাউজারে রাখে। রেকর্ডিং রাখা হয় না।",
+            "প্রতিটি সেশনের প্রতিলিপি ও ফলাফল এই ব্রাউজারে রাখে। রেকর্ডিং ও ক্লিনিক্যাল নোটের লেখা রাখা হয় না।",
           "history.title": "পূর্ববর্তী সেশন",
           "history.where":
             "এই ডিভাইসে সংরক্ষিত সেশন এবং এই সার্ভারে সংরক্ষিত কেস। প্রতিটিতে দেখানো হয় সেটি কোথায় রাখা আছে।",
@@ -4661,6 +4746,8 @@
           "history.storedBoth": "সার্ভার + ডিভাইস",
           "history.recording": "রেকর্ডিং",
           "history.noRecording": "রেকর্ডিং নেই",
+          "history.sourceRecording": "ভয়েস রেকর্ডিং",
+          "history.sourceNote": "ক্লিনিক্যাল নোট",
           "history.deleteDevice": "এই ডিভাইসের কপি মুছুন",
           "history.clearConfirm":
             "এই ডিভাইসে সংরক্ষিত সব সেশন মুছবেন? সার্ভারের কেসগুলোতে কোনো প্রভাব পড়বে না। এটি আর ফেরানো যাবে না।",
@@ -4678,6 +4765,11 @@
           "continue.inference": "অনুমান",
           "continue.inUse": "এই সেশনটি অন্য কোথাও রেকর্ড হচ্ছে",
           "case.noRecording": "রেকর্ডিং পাওয়া যাচ্ছে না",
+          "case.noteTextNotStored": "নোটের লেখা সংরক্ষিত হয়নি",
+          "case.voiceOnly":
+            "এই কেসটি একটি ভয়েস রেকর্ডিং, তাই এতে ক্লিনিক্যাল নোট যোগ করা যাবে না। নোট ব্যবহার করতে নতুন কেস শুরু করুন।",
+          "case.notesOnly":
+            "এই কেসে ক্লিনিক্যাল নোট ব্যবহার করা হয়েছে, তাই এটি রেকর্ডও করা যাবে না। রেকর্ড করতে নতুন কেস শুরু করুন।",
           "case.timeline": "অনুমানের সময়রেখা",
           "case.noInference": "কোনো অনুমান নেই",
           "case.untitled": "সাক্ষাৎকার",
@@ -4791,9 +4883,10 @@
           "settings.storageServerSaves": "Guarda cada caso",
           "settings.storageServerBrowse": "Muestra sus casos en el Historial",
           "settings.storageServerAudio": "Conserva la grabación",
+          "settings.storageServerNotes": "Conserva el texto de las notas clínicas",
           "settings.storageDevice": "Guardar sesiones en este dispositivo",
           "settings.storageDeviceNote":
-            "Guarda la transcripción y los resultados de cada sesión en este navegador. Las grabaciones no se guardan.",
+            "Guarda la transcripción y los resultados de cada sesión en este navegador. Las grabaciones y el texto de las notas clínicas no se guardan.",
           "history.title": "Sesiones anteriores",
           "history.where":
             "Sesiones guardadas en este dispositivo y casos almacenados en este servidor. Cada una indica dónde se guarda.",
@@ -4804,6 +4897,8 @@
           "history.storedBoth": "Servidor + dispositivo",
           "history.recording": "Grabación",
           "history.noRecording": "Sin grabación",
+          "history.sourceRecording": "Grabación de voz",
+          "history.sourceNote": "Nota clínica",
           "history.deleteDevice": "Eliminar la copia de este dispositivo",
           "history.clearConfirm":
             "¿Eliminar todas las sesiones guardadas en este dispositivo? Los casos del servidor no se ven afectados. Esta acción no se puede deshacer.",
@@ -4821,6 +4916,11 @@
           "continue.inference": "Inferencia",
           "continue.inUse": "Esta sesión se está grabando en otro lugar",
           "case.noRecording": "Grabación no disponible",
+          "case.noteTextNotStored": "Texto de la nota no guardado",
+          "case.voiceOnly":
+            "Este caso es una grabación de voz, así que no se le pueden añadir notas clínicas. Inicie un caso nuevo para usar notas.",
+          "case.notesOnly":
+            "Este caso usa notas clínicas, así que no se puede grabar también. Inicie un caso nuevo para grabar.",
           "case.timeline": "Cronología de inferencias",
           "case.noInference": "Sin inferencia",
           "case.untitled": "Entrevista",
@@ -4936,9 +5036,10 @@
           "settings.storageServerSaves": "Yi hlayisa mhaka yin'wana ni yin'wana",
           "settings.storageServerBrowse": "Yi komba timhaka ta yona eka Matimu",
           "settings.storageServerAudio": "Yi hlayisa rhekhodo",
+          "settings.storageServerNotes": "Yi hlayisa matsalwa ya kliniki",
           "settings.storageDevice": "Hlayisa mitshamo eka xitirhisiwa lexi",
           "settings.storageDeviceNote":
-            "Yi hlayisa tsalwa ni mbuyelo wa ntshamo wun'wana ni wun'wana eka bulawuza leyi. Tirhekhodo a ti hlayisiwi.",
+            "Yi hlayisa tsalwa ni mbuyelo wa ntshamo wun'wana ni wun'wana eka bulawuza leyi. Tirhekhodo ni matsalwa ya kliniki a swi hlayisiwi.",
           "history.title": "Mitshamo leyi hundzeke",
           "history.where":
             "Mitshamo leyi hlayisiweke eka xitirhisiwa lexi ni timhaka leti hlayisiweke eka sevha leyi. Yin'wana ni yin'wana yi komba laha yi hlayisiweke kona.",
@@ -4949,6 +5050,8 @@
           "history.storedBoth": "Sevha + xitirhisiwa",
           "history.recording": "Rhekhodo",
           "history.noRecording": "A ku na rhekhodo",
+          "history.sourceRecording": "Rhekhodo ya rito",
+          "history.sourceNote": "Tsalwa ra kliniki",
           "history.deleteDevice": "Sula khopi leyi nga eka xitirhisiwa lexi",
           "history.clearConfirm":
             "Sula mitshamo hinkwayo leyi hlayisiweke eka xitirhisiwa lexi? Timhaka leti nga eka sevha a ti khumbiwi. Leswi a swi nge tlheriseleki endzhaku.",
@@ -4967,6 +5070,11 @@
           "continue.inference": "Nkumbetelo",
           "continue.inUse": "Ntshamo lowu wu karhi wu rhekhodiwa kun'wana",
           "case.noRecording": "Rhekhodo a yi kumeki",
+          "case.noteTextNotStored": "Matsalwa a ya hlayisiwanga",
+          "case.voiceOnly":
+            "Mhaka leyi i rhekhodo ya rito, hikwalaho matsalwa ya kliniki a ma nge engeteriwi. Sungula mhaka leyintshwa ku tirhisa matsalwa.",
+          "case.notesOnly":
+            "Mhaka leyi yi tirhisa matsalwa ya kliniki, hikwalaho a yi nge rhekhodiwi. Sungula mhaka leyintshwa ku rhekhoda.",
           "case.timeline": "Ndzandzelelano wa minkumbetelo",
           "case.noInference": "A ku na nkumbetelo",
           "case.untitled": "Mbulavurisano",
@@ -5070,6 +5178,7 @@
       function setSessionState(next) {
         sessionState = next;
         body.dataset.state = next;
+        syncCaseSource();
       }
 
       // Best available cause code from an identifiers map, regardless of
@@ -5245,7 +5354,18 @@
         const history = loadHistory();
         // A continued session replaces its earlier copy
         const previous = history.findIndex((s) => s.id === currentLocalId);
-        if (previous >= 0) history.splice(previous, 1);
+        const [replaced] = previous >= 0 ? history.splice(previous, 1) : [];
+        const sources = new Set(
+          evolution.map((snap) => snap.source || "recording"),
+        );
+        if (transcriptText.trim()) sources.add("recording");
+        // Like recordings, note text is not kept on the device
+        let notes = [];
+        if (sources.has("clinical_note")) {
+          notes = noteFiles.length
+            ? noteFiles.map((n) => ({ filename: n.filename }))
+            : (replaced && replaced.notes) || [];
+        }
         const session = {
           id:
             previous >= 0
@@ -5273,6 +5393,8 @@
           },
           runInfo: sessionRunInfo,
           parts: sessionPartCount,
+          sources: [...sources],
+          notes,
         };
         if (body.dataset.showUserProfile !== "false") {
           session.user = currentUser();
@@ -5347,6 +5469,7 @@
                 : "incomplete",
             stores: localId ? "both" : "server",
             hasAudio: c.has_audio,
+            sources: c.sources,
             localId,
             open: () => openStoredCase(c.case_id, localId),
           };
@@ -5365,6 +5488,8 @@
               },
               stores: "device",
               hasAudio: false,
+              // Copies saved before notes were kept come from recordings
+              sources: s.sources || ["recording"],
               localId: s.id,
               open: () => openSessionFromHistory(s.id),
             }),
@@ -5380,6 +5505,17 @@
         device: { icon: "bi-laptop", label: "history.storedDevice" },
         both: { icon: "bi-hdd-stack", label: "history.storedBoth" },
       };
+      const INFERRED_FROM = {
+        recording: { icon: "bi-mic", label: "history.sourceRecording" },
+        clinical_note: {
+          icon: "bi-file-earmark-text",
+          label: "history.sourceNote",
+        },
+      };
+
+      function isNotesOnly(sources) {
+        return sources.includes("clinical_note") && !sources.includes("recording");
+      }
 
       // Row labels; where COD results are hidden, rows carry none
       function entryLabels(entry) {
@@ -5421,12 +5557,15 @@
         entries.slice(0, 3).forEach((entry) => {
           const { title, code, score } = entryLabels(entry);
           const date = formatShortDate(entry.startedAt);
+          const noteIcon = entry.sources.includes("clinical_note")
+            ? `<i class="bi ${INFERRED_FROM.clinical_note.icon}" title="${escapeHtml(t(INFERRED_FROM.clinical_note.label))}"></i> `
+            : "";
           const row = document.createElement("div");
           row.className = "idle-recent-row";
           row.innerHTML = `
                     <div class="idle-recent-row-body">
                         <strong>${escapeHtml(title)}</strong>
-                        <small>${escapeHtml(score ? `${score} · ${code || "—"} · ${date}` : date)}</small>
+                        <small>${noteIcon}${escapeHtml(score ? `${score} · ${code || "—"} · ${date}` : date)}</small>
                     </div>
                     <i class="bi bi-chevron-right" style="color: var(--ink-faint);"></i>
                 `;
@@ -5471,9 +5610,26 @@
             flag = `<span class="history-flag">${escapeHtml(t("case.flagIncomplete"))}</span>`;
           }
           const stored = STORED_IN[entry.stores];
+          // Deployments without notes keep their rows as they were
+          const showSources =
+            body.dataset.showClinicalNote !== "false" ||
+            entry.sources.includes("clinical_note");
+          const sources = showSources
+            ? Object.entries(INFERRED_FROM)
+                .filter(([source]) => entry.sources.includes(source))
+                .map(
+                  ([, from]) =>
+                    `<span class="history-flag history-flag--source"><i class="bi ${from.icon}"></i> ${escapeHtml(t(from.label))}</span>`,
+                )
+                .join("")
+            : "";
           const recording = entry.hasAudio
             ? `<span class="history-item-recording has-audio"><i class="bi bi-mic-fill"></i> ${escapeHtml(t("history.recording"))}</span>`
             : `<span class="history-item-recording"><i class="bi bi-mic-mute"></i> ${escapeHtml(t("history.noRecording"))}</span>`;
+          // A case made from notes alone has no length or recording to show
+          const meta = isNotesOnly(entry.sources)
+            ? escapeHtml(formatShortDate(entry.startedAt))
+            : `${escapeHtml(formatShortDate(entry.startedAt))} · ${escapeHtml(formatDuration(entry.durationSeconds))} · ${recording}`;
           const deleteLabel = escapeHtml(t("history.deleteDevice"));
           const row = document.createElement("div");
           row.className = "history-item";
@@ -5483,9 +5639,10 @@
                             <strong>${escapeHtml(title)}</strong>
                             <span class="code">${escapeHtml(code)}</span>
                             <span class="history-flag history-flag--store"><i class="bi ${stored.icon}"></i> ${escapeHtml(t(stored.label))}</span>
+                            ${sources}
                             ${flag}
                         </div>
-                        <div class="history-item-meta">${escapeHtml(formatShortDate(entry.startedAt))} · ${escapeHtml(formatDuration(entry.durationSeconds))} · ${recording}</div>
+                        <div class="history-item-meta">${meta}</div>
                     </div>
                     <div class="history-item-conf">${escapeHtml(score)}</div>
                     ${entry.localId ? `<button class="history-item-delete" aria-label="${deleteLabel}" title="${deleteLabel}"><i class="bi bi-trash"></i></button>` : ""}
@@ -5510,6 +5667,14 @@
         setSessionState("history");
       }
       function closeHistory() {
+        // Idle starts a new case, so a case left on screen is closed
+        if (
+          evolution.length ||
+          transcriptText.trim() ||
+          body.classList.contains("viewing-case")
+        ) {
+          clearSessionView();
+        }
         renderIdleRecent();
         setSessionState("idle");
       }
@@ -5524,6 +5689,7 @@
       const caseMeta = document.getElementById("caseMeta");
       const caseIdLabel = document.getElementById("caseIdLabel");
       const caseNote = document.getElementById("caseNote");
+      const caseNotes = document.getElementById("caseNotes");
 
       function clockTime(ms) {
         return new Date(ms).toLocaleTimeString([], {
@@ -5535,12 +5701,14 @@
 
       // Every inference shown, stacked newest first as in the live panel, with
       // the chart and differentials. Records are { t, causes, reasoning,
-      // heading }, and become the evolution a continued session adds to.
+      // source, heading }, and become the evolution a continued session adds
+      // to.
       function renderInferenceTimeline(records, emptyText) {
         evolution = records.map((rec) => ({
           t: rec.t,
           causes: rec.causes,
           reasoning: rec.reasoning,
+          source: rec.source,
         }));
         records.forEach((rec, i) => {
           const previous = i > 0 ? records[i - 1].causes : null;
@@ -5573,6 +5741,27 @@
         renderResultHero();
       }
 
+      // The time an inference was shown, and whether it came from notes
+      function timelineHeading(ms, source) {
+        const when = ms ? clockTime(ms) : null;
+        if (source !== "clinical_note") return when;
+        return [when, t("history.sourceNote")].filter(Boolean).join(" · ");
+      }
+
+      // The clinical notes a case was last inferred from, with their text
+      // when it was kept
+      function renderCaseNotes(notes) {
+        caseNotes.innerHTML = notes
+          .map((n) => {
+            const name = `<i class="bi ${INFERRED_FROM.clinical_note.icon}"></i> ${escapeHtml(n.filename)}`;
+            if (n.text == null) {
+              return `<div class="case-note">${name} · ${escapeHtml(t("case.noteTextNotStored"))}</div>`;
+            }
+            return `<details class="case-note"><summary>${name}</summary><div class="case-note-text">${escapeHtml(n.text)}</div></details>`;
+          })
+          .join("");
+      }
+
       function openSessionFromHistory(id) {
         const session = loadHistory().find((s) => s.id === id);
         if (!session) return;
@@ -5601,10 +5790,12 @@
             t: snap.t || null,
             causes: snap.causes,
             reasoning: snap.reasoning || null,
-            heading: snap.t ? clockTime(snap.t) : null,
+            source: snap.source || "recording",
+            heading: timelineHeading(snap.t, snap.source),
           })),
           t("case.noInference"),
         );
+        renderCaseNotes(session.notes || []);
 
         renderCaseBanner(
           {
@@ -5612,6 +5803,7 @@
             started_at: session.startedAt,
             ended_at: session.endedAt,
             duration_s: session.durationSeconds,
+            sources: session.sources || ["recording"],
           },
           "case.kickerDevice",
         );
@@ -5671,10 +5863,15 @@
             t: rec.shown_at * 1000,
             causes: rec.causes,
             reasoning: rec.reasoning,
-            heading: clockTime(rec.shown_at * 1000),
+            source: rec.source || "recording",
+            heading: timelineHeading(rec.shown_at * 1000, rec.source),
           })),
           t(c.inference ? "case.noInference" : "case.noInferenceStored"),
         );
+        // Notes whose text was kept are attached again, for Run
+        renderCaseNotes(c.notes);
+        noteFiles = c.notes.filter((n) => n.text != null);
+        renderNoteCards();
 
         const recorded = parts.filter((part) => part.audio_s);
         sessionAudioParts = recorded.map((part) => ({
@@ -5715,7 +5912,7 @@
             dateStyle: "medium",
             timeStyle: "short",
           }),
-          formatDuration(c.duration_s),
+          isNotesOnly(c.sources) ? "" : formatDuration(c.duration_s),
           c.segments && c.segments.length > 1
             ? `${c.segments.length} ${t("case.parts")}`
             : "",
@@ -6389,6 +6586,7 @@
             ["storageServerSaves", data.storage_enabled],
             ["storageServerBrowse", casesBrowsable],
             ["storageServerAudio", data.storage_audio],
+            ["storageServerNotes", data.storage_notes],
           ].forEach(([id, on]) => {
             const status = document.getElementById(id);
             status.classList.toggle("on", on === true);
@@ -6719,6 +6917,7 @@
       // appends to the stored case, and the transcript so far is sent ahead of
       // the audio so inference picks up the whole interview.
       async function startRecording({ continuing = false } = {}) {
+        if (!recordingAllowed()) return;
         try {
           if (caseIdUsed && !continuing) await assignCaseId();
           caseIdUsed = true;
@@ -6774,7 +6973,6 @@
               currentInferenceSessionId = data.session_id || null;
               currentInferenceSessionGeneration =
                 data.session_generation ?? null;
-              if (noteFiles.length) runClinicalNotes();
               currentCaseId = data.case_id || null;
             } else if (data.type === "transcript") {
               if (transcript.querySelector(".placeholder")) {
@@ -6809,13 +7007,20 @@
               showStatus(data.message, "warning");
             } else if (data.type === "error") {
               // A fatal error means the server refused to continue the
-              // session, which another connection is recording. Its close
-              // code can be lost while audio is in flight, so this is the
-              // signal to rely on. Errors scoped to an inference chunk
+              // session, which another connection is recording or which was
+              // inferred from clinical notes. Its close code can be lost
+              // while audio is in flight, so this is the signal to rely on. Errors scoped to an inference chunk
               // (backend sets chunk_id) flip the UI into the offline state
               // rather than a fleeting toast. Other errors stay as toasts.
               if (data.fatal) {
-                showStatus(t("continue.inUse"), "warning");
+                showStatus(
+                  t(
+                    data.reason === "clinical_note"
+                      ? "case.notesOnly"
+                      : "continue.inUse",
+                  ),
+                  "warning",
+                );
                 stopRecording({ save: false });
               } else if (data.chunk_id) {
                 enterInferenceOffline(data.error);
@@ -7365,10 +7570,15 @@
         });
       });
 
-      // Empty the transcript, inference, chart, and playback of the last
+      // Empty the transcript, notes, inference, chart, and playback of the last
       // session or stored case
       function clearSessionView() {
         body.classList.remove("viewing-case");
+        noteFiles = [];
+        renderNoteCards();
+        typedNoteCount = 0;
+        closeNoteEditor();
+        caseNotes.innerHTML = "";
         transcriptText = "";
         chunkCount = 0;
         transcript.innerHTML =
@@ -7416,7 +7626,7 @@
       // Record more of the session on screen, warning first when the settings
       // it was recorded with have changed
       async function continueSession() {
-        if (isRecording || caseInProgress) return;
+        if (isRecording || caseInProgress || !recordingAllowed()) return;
         if (caseRunInfo) {
           const current = await fetchRunInfo();
           if (current) {
@@ -7456,10 +7666,6 @@
             stopRecording();
           }
           clearProfileInputs();
-          noteFiles = [];
-          renderNoteCards();
-          typedNoteCount = 0;
-          closeNoteEditor();
           resetMccd();
           clearSessionView();
           renderIdleRecent();
@@ -7514,6 +7720,7 @@
           t: Date.now(),
           causes: latestCauses,
           reasoning: data.reasoning || null,
+          source: data.source || "recording",
         });
 
         const html = renderCauseList(
@@ -7541,7 +7748,44 @@
       const noteCards = document.getElementById("noteCards");
       const noteRunBtn = document.getElementById("noteRunBtn");
 
-      noteBtn.addEventListener("click", () => noteInput.click());
+      // A case is inferred either from a voice recording or from clinical
+      // notes, whichever it starts with, until New. Null before either.
+      function caseSource() {
+        if (
+          isRecording ||
+          transcriptText.trim() ||
+          evolution.some((snap) => snap.source === "recording")
+        ) {
+          return "recording";
+        }
+        if (
+          noteFiles.length ||
+          evolution.some((snap) => snap.source === "clinical_note")
+        ) {
+          return "clinical_note";
+        }
+        return null;
+      }
+
+      function syncCaseSource() {
+        body.dataset.caseSource = caseSource() || "";
+      }
+
+      function notesAllowed() {
+        if (caseSource() !== "recording") return true;
+        showStatus(t("case.voiceOnly"), "warning");
+        return false;
+      }
+
+      function recordingAllowed() {
+        if (caseSource() !== "clinical_note") return true;
+        showStatus(t("case.notesOnly"), "warning");
+        return false;
+      }
+
+      noteBtn.addEventListener("click", () => {
+        if (notesAllowed()) noteInput.click();
+      });
       noteInput.addEventListener("change", async () => {
         await addNoteFiles(noteInput.files);
         noteInput.value = "";
@@ -7559,6 +7803,7 @@
       }
 
       document.getElementById("noteTypeBtn").addEventListener("click", () => {
+        if (!notesAllowed()) return;
         noteEditor.hidden = false;
         noteText.focus();
       });
@@ -7567,7 +7812,7 @@
         .addEventListener("click", closeNoteEditor);
       document.getElementById("noteSaveBtn").addEventListener("click", () => {
         const text = noteText.value.trim();
-        if (!text) return;
+        if (!text || !notesAllowed()) return;
         typedNoteCount += 1;
         noteFiles.push({ filename: `typed-note-${typedNoteCount}.txt`, text });
         renderNoteCards();
@@ -7582,7 +7827,10 @@
       if (body.dataset.showClinicalNote !== "false") {
         window.addEventListener("dragover", (e) => {
           e.preventDefault();
-          body.classList.add("note-drag-over");
+          // A drop on a recorded case is refused with a message instead
+          if (caseSource() !== "recording") {
+            body.classList.add("note-drag-over");
+          }
         });
         window.addEventListener("dragleave", (e) => {
           if (!e.relatedTarget) body.classList.remove("note-drag-over");
@@ -7595,6 +7843,7 @@
       }
 
       async function addNoteFiles(files) {
+        if (!notesAllowed()) return;
         for (const file of files) {
           const name = file.name.toLowerCase();
           let text;
@@ -7643,34 +7892,42 @@
           )
           .join("");
         noteStrip.classList.toggle("has-notes", noteFiles.length > 0);
+        syncCaseSource();
       }
 
-      // Send the notes to the live session, or without one, infer once from
-      // the notes and the transcript so far and show the result
+      // Infer once from the notes, show the result and save it with the case
+      // on screen
       async function runClinicalNotes() {
-        const live =
-          ws && ws.readyState === WebSocket.OPEN && currentInferenceSessionId;
+        // Another connection is recording the stored case on screen
+        if (caseInProgress) {
+          showStatus(t("continue.inUse"), "warning");
+          return;
+        }
         showStatus("Running inference on clinical notes…", "info");
         try {
+          // A stored case is inferred with its own profile, as when continuing
+          if (caseProfile) {
+            fillProfileInputs(caseProfile);
+            await pushMetadata();
+          }
           const resp = await fetch("/clinical-notes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              notes: noteFiles,
-              session_id: live ? currentInferenceSessionId : null,
-              transcript: transcriptText,
-            }),
+            body: JSON.stringify({ notes: noteFiles, case_id: currentCaseId }),
           });
           if (!resp.ok) {
             const err = await resp.json();
             showStatus(err.detail || "Inference failed", "danger");
             return;
           }
-          if (!live) {
-            showInference(await resp.json());
-            renderResultHero();
-            setSessionState("result");
-          }
+          const data = await resp.json();
+          if (data.case_id) currentCaseId = data.case_id;
+          sessionStartedAt ??= new Date().toISOString();
+          caseIdUsed = true;
+          showInference(data);
+          finalizeSessionIfSaving();
+          renderResultHero();
+          setSessionState("result");
           showStatus("Clinical notes processed", "success");
         } catch (e) {
           console.error("Clinical notes inference failed:", e);

@@ -161,6 +161,7 @@ storage:
     transcripts: true       # transcript text, original language and English
     annotations: true       # per-chunk text with grounding annotations
     inference: true         # every inference result, incl. questions shown
+    notes: false            # clinical note text (inferences keep the filenames)
     metadata: true          # case profile / demographics
     user: true              # name and ID of the person using the app
     timing: true            # per-chunk and per-inference timings

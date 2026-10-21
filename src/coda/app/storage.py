@@ -3,8 +3,10 @@
 Each case gets its own folder under ``storage.output_dir`` holding a
 ``manifest.json`` plus one file per enabled ``storage.store`` item. A case is
 recorded in one or more segments, one per connection: continuing a case
-appends to its files and records the new segment's audio in its own WAV. A
-``CaseRecorder`` is only created when ``storage.enabled`` is true.
+appends to its files and records the new segment's audio in its own WAV. An
+inference made from clinical notes outside a connection is appended to its
+case without adding a segment. A ``CaseRecorder`` is only created when
+``storage.enabled`` is true.
 ``list_cases`` and ``load_case`` read the folders back for viewing.
 """
 
@@ -39,6 +41,10 @@ def storage_keeps_audio() -> bool:
     return storage_enabled() and bool(settings.storage.store.get("audio", False))
 
 
+def storage_keeps_notes() -> bool:
+    return storage_enabled() and bool(settings.storage.store.get("notes", False))
+
+
 def cases_root() -> Path:
     output_dir = settings.storage.get("output_dir", "")
     if output_dir:
@@ -50,7 +56,8 @@ class CaseRecorder:
     """Writes everything recorded for one case into its own folder.
 
     With ``case_id`` the existing case is reopened and a new segment appended
-    to it. The time between the two segments is recorded as a pause.
+    to it. The time between the two segments is recorded as a pause. Without
+    ``audio`` the segment keeps no audio, as for a clinical-notes inference.
     """
 
     def __init__(
@@ -59,8 +66,10 @@ class CaseRecorder:
         generation: int,
         run_info: dict,
         case_id: str | None = None,
+        audio: bool = True,
     ):
         self.store = {key: bool(value) for key, value in settings.storage.store.items()}
+        keeps_audio = audio and self.store.get("audio", False)
         started = datetime.now()
         self.reopened = case_id is not None
         self._heard = False
@@ -95,7 +104,7 @@ class CaseRecorder:
                 "ended_at": None,
                 "coda_version": coda.__version__,
                 "run_info": run_info,
-                "audio": audio_file if self.store.get("audio") else None,
+                "audio": audio_file if keeps_audio else None,
             }
         )
         self._write_manifest()
@@ -105,7 +114,7 @@ class CaseRecorder:
         self._inference = self._open("inference.jsonl", "inference")
         self._timing = self._open("timing.jsonl", "timing")
         self._audio: wave.Wave_write | None = None
-        if self.store.get("audio"):
+        if keeps_audio:
             self._audio = wave.open(str(self.case_dir / audio_file), "wb")
             self._audio.setnchannels(1)
             self._audio.setsampwidth(2)
@@ -233,15 +242,28 @@ class CaseRecorder:
         )
 
     def write_inference(self, request: dict, result: dict, shown_at: float):
+        """Append an inference result. One made from clinical notes keeps the
+        notes' filenames, and their text if ``store.notes`` is set."""
+        notes = request.get("clinical_notes")
         record = {
             "shown_at": shown_at,
             "chunk_id": result.get("chunk_id", request.get("chunk_id")),
             "timestamp": result.get("timestamp", request.get("timestamp")),
             "chunks_processed": result.get("chunks_processed"),
+            "source": "recording" if notes is None else "clinical_note",
             "causes": result.get("causes"),
             "reasoning": result.get("reasoning"),
             "questions": result.get("questions"),
         }
+        if notes is not None:
+            record["notes"] = [
+                (
+                    {"filename": n["filename"], "text": n["text"]}
+                    if self.store.get("notes")
+                    else {"filename": n["filename"]}
+                )
+                for n in notes
+            ]
         if self.store.get("metadata"):
             record["metadata"] = request.get("metadata")
         self._append_json(self._inference, record)
@@ -412,6 +434,28 @@ def _with_utc_offset(timestamp: str) -> str:
     return datetime.fromisoformat(timestamp).astimezone().isoformat()
 
 
+def _sources(chunks: list[dict], inference: list[dict]) -> list[str]:
+    """What a case's inferences were made from: ``recording`` or
+    ``clinical_note``. Empty for a case that has neither yet."""
+    sources = {record.get("source", "recording") for record in inference}
+    # Imported chunks are the transcript of an earlier recording too
+    if chunks:
+        sources.add("recording")
+    return sorted(sources)
+
+
+def case_sources(case_id: str) -> list[str]:
+    """What a stored case's inferences were made from, empty if there is no
+    such case."""
+    case_dir = find_case(case_id)
+    if case_dir is None:
+        return []
+    return _sources(
+        _read_jsonl(case_dir / "chunks.jsonl") or [],
+        _read_jsonl(case_dir / "inference.jsonl") or [],
+    )
+
+
 def _summary(
     case_dir: Path, manifest: dict, chunks: list[dict], inference: list[dict]
 ) -> dict:
@@ -431,6 +475,7 @@ def _summary(
             max(causes.values(), key=lambda c: c["score"]) if causes else None
         ),
         "has_audio": any(part["audio_s"] for part in _parts(case_dir, manifest)),
+        "sources": _sources(chunks, inference),
     }
 
 
@@ -491,7 +536,8 @@ def load_case(case_id: str) -> dict | None:
 
     ``chunks`` and ``inference`` are None when that item was not stored. The
     case profile is written when a case closes, so for one that never closed
-    it is taken from the last inference request.
+    it is taken from the last inference request. ``notes`` are the clinical
+    notes of the last inference made from them.
     """
     case_dir = find_case(case_id)
     if case_dir is None:
@@ -500,6 +546,9 @@ def load_case(case_id: str) -> dict | None:
     metadata = manifest.get("metadata")
     if metadata is None and inference:
         metadata = inference[-1].get("metadata")
+    note_inferences = [
+        record for record in inference or [] if record.get("source") == "clinical_note"
+    ]
     return {
         **_summary(case_dir, manifest, chunks or [], inference or []),
         "coda_version": manifest.get("coda_version"),
@@ -513,6 +562,7 @@ def load_case(case_id: str) -> dict | None:
             for path in sorted(case_dir.glob("transcript_*.txt"))
         },
         "inference": inference,
+        "notes": note_inferences[-1].get("notes", []) if note_inferences else [],
     }
 
 

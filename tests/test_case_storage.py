@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
-from fastapi import WebSocketDisconnect
+from fastapi import HTTPException, WebSocketDisconnect
 from fastapi.testclient import TestClient
 
 from coda.app import server
@@ -22,6 +22,7 @@ STORAGE_ENV_VARS = (
     "CODA_STORAGE__OUTPUT_DIR",
     "CODA_STORAGE__STORE__AUDIO",
     "CODA_STORAGE__STORE__INFERENCE",
+    "CODA_STORAGE__STORE__NOTES",
     "CODA_LOGGING__FILE",
 )
 
@@ -427,17 +428,22 @@ def test_settings_report_storage_methods(storage_dir, monkeypatch):
     assert reported["storage_enabled"] is True
     assert reported["cases_browsable"] is False
     assert reported["storage_audio"] is False
+    assert reported["storage_notes"] is False
 
     monkeypatch.setenv("CODA_STORAGE__BROWSE", "true")
     monkeypatch.setenv("CODA_STORAGE__STORE__AUDIO", "true")
+    monkeypatch.setenv("CODA_STORAGE__STORE__NOTES", "true")
     reload_settings()
     reported = client.get("/settings").json()
     assert reported["cases_browsable"] is True
     assert reported["storage_audio"] is True
+    assert reported["storage_notes"] is True
 
     monkeypatch.setenv("CODA_STORAGE__ENABLED", "false")
     reload_settings()
-    assert client.get("/settings").json()["storage_audio"] is False
+    reported = client.get("/settings").json()
+    assert reported["storage_audio"] is False
+    assert reported["storage_notes"] is False
 
 
 class ClosingWebSocket(DummyWebSocket):
@@ -687,6 +693,7 @@ async def test_case_being_recorded_is_not_continued(storage_dir, idle_transcript
     assert websocket.close_code == server.CASE_IN_USE_CLOSE_CODE
     [error] = websocket.messages
     assert error["type"] == "error" and error["fatal"] is True
+    assert error["reason"] == "in_use"
     assert server.active_inference_sessions == {live}
     live.end_case()
 
@@ -742,7 +749,7 @@ async def test_seed_is_kept_by_a_new_case_only(storage_dir, offline_server):
     new.end_case()
 
     reopened = server.InferenceSessionCoordinator(DummyWebSocket(), "bbbb0002")
-    assert await reopened.continue_case(case_id)
+    assert await reopened.continue_case(case_id) is None
     with pytest.raises(WebSocketDisconnect):
         await server.capture_audio(ScriptedWebSocket([seed, disconnect]),
                                    asyncio.Queue(), reopened)
@@ -752,3 +759,164 @@ async def test_seed_is_kept_by_a_new_case_only(storage_dir, offline_server):
     [chunk] = load_case(case_id)["chunks"]
     assert chunk["imported"] is True
     assert chunk["transcript"] == "fever for three days"
+
+
+NOTE = {"filename": "referral.txt", "text": "Fever and convulsions."}
+LAB = {"filename": "lab.pdf", "text": "Malaria RDT positive."}
+
+
+def write_note_inference(recorder: CaseRecorder, notes: list[dict]):
+    recorder.write_inference(
+        {"chunk_id": "note-1", "clinical_notes": notes},
+        {"causes": {"icd10:B54": MALARIA}},
+        shown_at=200.0,
+    )
+
+
+@pytest.fixture
+def notes_inference(monkeypatch):
+    async def fake_post(path, json):
+        return FakeResponse({"chunk_id": json["chunk_id"],
+                             "causes": {"icd10:B54": MALARIA}})
+
+    monkeypatch.setattr(server, "inference_client",
+                        SimpleNamespace(post=fake_post))
+
+
+async def run_notes(**request) -> dict:
+    return await server.set_clinical_notes(
+        server.ClinicalNotesRequest(notes=[NOTE], **request))
+
+
+def test_note_text_is_kept_only_when_stored(storage_dir, monkeypatch):
+    without_text = CaseRecorder("aaaa0001", 0, {})
+    write_note_inference(without_text, [NOTE])
+    without_text.close()
+    monkeypatch.setenv("CODA_STORAGE__STORE__NOTES", "true")
+    reload_settings()
+    with_text = CaseRecorder("bbbb0002", 0, {})
+    write_note_inference(with_text, [NOTE])
+    with_text.close()
+
+    [record] = read_jsonl(without_text.case_dir / "inference.jsonl")
+    assert record["source"] == "clinical_note"
+    assert record["notes"] == [{"filename": "referral.txt"}]
+    [record] = read_jsonl(with_text.case_dir / "inference.jsonl")
+    assert record["notes"] == [NOTE]
+
+
+def test_cases_report_what_they_were_inferred_from(storage_dir, monkeypatch):
+    monkeypatch.setenv("CODA_STORAGE__STORE__NOTES", "true")
+    reload_settings()
+    recorded = record_case("aaaa0001")
+    from_notes = CaseRecorder("bbbb0002", 0, {})
+    write_note_inference(from_notes, [NOTE])
+    write_note_inference(from_notes, [NOTE, LAB])
+    from_notes.close()
+
+    sources = {c["case_id"]: c["sources"] for c in list_cases()}
+    assert sources == {
+        recorded.case_id: ["recording"],
+        from_notes.case_id: ["clinical_note"],
+    }
+    assert load_case(from_notes.case_id)["notes"] == [NOTE, LAB]
+    assert load_case(recorded.case_id)["notes"] == []
+
+
+def test_segment_without_audio_keeps_no_wav(storage_dir, monkeypatch):
+    monkeypatch.setenv("CODA_STORAGE__STORE__AUDIO", "true")
+    reload_settings()
+    recorder = CaseRecorder("aaaa0001", 0, {}, audio=False)
+    recorder.close()
+
+    manifest = json.loads((recorder.case_dir / "manifest.json").read_text())
+    assert manifest["segments"][0]["audio"] is None
+    assert not (recorder.case_dir / "audio.wav").exists()
+
+
+async def test_notes_without_a_session_are_stored_in_a_new_case(
+        storage_dir, offline_server, notes_inference, monkeypatch):
+    monkeypatch.setenv("CODA_STORAGE__STORE__AUDIO", "true")
+    reload_settings()
+    result = await run_notes()
+
+    [case_dir] = case_dirs(storage_dir)
+    assert result["case_id"] == case_dir.name
+    assert result["source"] == "clinical_note"
+    assert result["causes"] == {"icd10:B54": MALARIA}
+    case = load_case(result["case_id"])
+    assert case["sources"] == ["clinical_note"]
+    assert case["notes"] == [{"filename": "referral.txt"}]
+    assert case["has_audio"] is False
+    assert not (case_dir / "audio.wav").exists()
+
+
+async def test_notes_on_a_notes_case_join_it(storage_dir, offline_server,
+                                             notes_inference):
+    first = await run_notes()
+    case_dir = storage_dir / first["case_id"]
+    before = json.loads((case_dir / "manifest.json").read_text())
+
+    second = await run_notes(case_id=first["case_id"])
+
+    assert second["case_id"] == first["case_id"]
+    assert case_dirs(storage_dir) == [case_dir]
+    after = json.loads((case_dir / "manifest.json").read_text())
+    assert after["segments"] == before["segments"]
+    case = load_case(first["case_id"])
+    assert [r["source"] for r in case["inference"]] == \
+        ["clinical_note", "clinical_note"]
+    assert case["sources"] == ["clinical_note"]
+
+
+async def test_notes_cannot_join_a_recorded_case(storage_dir, offline_server,
+                                                 notes_inference):
+    stored = record_case("aaaa0001")
+
+    with pytest.raises(HTTPException) as refused:
+        await run_notes(case_id=stored.case_id)
+
+    assert refused.value.status_code == 409
+    assert load_case(stored.case_id)["sources"] == ["recording"]
+
+
+async def test_notes_cannot_join_a_case_being_recorded(
+        storage_dir, offline_server, notes_inference, monkeypatch):
+    live = server.InferenceSessionCoordinator(DummyWebSocket(), "aaaa0001")
+    await live.start_case()
+    monkeypatch.setattr(server, "active_inference_sessions", {live})
+
+    with pytest.raises(HTTPException) as refused:
+        await run_notes(case_id=live.recorder.case_id)
+
+    assert refused.value.status_code == 409
+    assert case_dirs(storage_dir) == [live.recorder.case_dir]
+    live.end_case()
+
+
+async def test_notes_case_is_not_continued(storage_dir, idle_transcription,
+                                           notes_inference, monkeypatch):
+    monkeypatch.setattr(server, "active_inference_sessions", set())
+    from_notes = await run_notes()
+
+    websocket = RefusedWebSocket()
+    await server.websocket_endpoint(websocket, case_id=from_notes["case_id"])
+
+    assert websocket.close_code == server.CASE_IN_USE_CLOSE_CODE
+    [error] = websocket.messages
+    assert error["fatal"] is True
+    assert error["reason"] == "clinical_note"
+    assert server.active_inference_sessions == set()
+    assert load_case(from_notes["case_id"])["sources"] == ["clinical_note"]
+
+
+async def test_notes_are_not_stored_without_storage(offline_server,
+                                                    notes_inference, tmp_path,
+                                                    monkeypatch):
+    monkeypatch.setenv("CODA_STORAGE__OUTPUT_DIR", str(tmp_path))
+    reload_settings()
+    result = await run_notes()
+
+    assert result["case_id"] is None
+    assert list(tmp_path.iterdir()) == []
+

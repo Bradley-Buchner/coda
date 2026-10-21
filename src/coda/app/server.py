@@ -37,6 +37,7 @@ from coda.app.onboarding_notice import (
 from coda.app.storage import (
     CaseRecorder,
     case_audio_path,
+    case_sources,
     cases_browsable,
     cases_root,
     find_case,
@@ -44,6 +45,7 @@ from coda.app.storage import (
     load_case,
     storage_enabled,
     storage_keeps_audio,
+    storage_keeps_notes,
 )
 from coda.config import inference_url, settings
 from coda.dialogue import (
@@ -79,8 +81,13 @@ PAUSE_SILENCE_BYTES = 32000
 # How long a connection asking to continue a case waits for the connection that
 # last recorded it to finish closing it
 CASE_RELEASE_WAIT_S = 5.0
-# WebSocket close code sent when the case asked for is still being recorded
+# WebSocket close code sent when the case asked for cannot be continued
 CASE_IN_USE_CLOSE_CODE = 4409
+# Why a case cannot be continued, by the reason sent to the client
+CASE_REFUSALS = {
+    "in_use": "This case is being recorded elsewhere",
+    "clinical_note": "This case was inferred from clinical notes",
+}
 
 here = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(here, "templates")
@@ -184,13 +191,14 @@ class InferenceSessionCoordinator:
                 CaseRecorder(self.session_id, self.generation, await _run_info())
             )
 
-    async def continue_case(self, case_id: str) -> bool:
+    async def continue_case(self, case_id: str) -> str | None:
         """Record into a stored case, or a new case if there is no such case.
 
-        Returns False if the case is still being recorded by another connection.
+        Returns the reason the case cannot be continued, a key of
+        ``CASE_REFUSALS``, or None once recording into it.
         """
         if not storage_enabled():
-            return True
+            return None
         run_info = await _run_info()
         # A connection that just stopped may still be closing the case
         deadline = time.monotonic() + CASE_RELEASE_WAIT_S
@@ -198,14 +206,16 @@ class InferenceSessionCoordinator:
             await asyncio.sleep(0.1)
         # No await from here on, so no other connection can take the case meanwhile
         if case_id in _recording_case_ids():
-            return False
+            return "in_use"
         if find_case(case_id) is None:
             logger.warning("No stored case %s to continue, starting a new one", case_id)
             case_id = None
+        elif "clinical_note" in case_sources(case_id):
+            return "clinical_note"
         self._record_to(
             CaseRecorder(self.session_id, self.generation, run_info, case_id=case_id)
         )
-        return True
+        return None
 
     def _record_to(self, recorder: CaseRecorder):
         self.end_case()
@@ -344,8 +354,8 @@ class ClinicalNote(BaseModel):
 
 class ClinicalNotesRequest(BaseModel):
     notes: list[ClinicalNote]
-    session_id: str | None = None
-    transcript: str = ""
+    # The stored case on screen, which the inference joins
+    case_id: str | None = None
 
 
 def get_language_name(code: str) -> str:
@@ -605,6 +615,7 @@ async def get_settings():
         "storage_enabled": storage_enabled(),
         "cases_browsable": cases_browsable(),
         "storage_audio": storage_keeps_audio(),
+        "storage_notes": storage_keeps_notes(),
         "transcriber_backend": current_transcriber_backend,
         "transcriber_model": current_transcriber_model,
         "grounder": current_grounder,
@@ -768,6 +779,7 @@ async def update_settings(req: SettingsRequest):
         "storage_enabled": storage_enabled(),
         "cases_browsable": cases_browsable(),
         "storage_audio": storage_keeps_audio(),
+        "storage_notes": storage_keeps_notes(),
         "transcriber_backend": current_transcriber_backend,
         "transcriber_model": current_transcriber_model,
         "grounder": current_grounder,
@@ -789,7 +801,8 @@ async def websocket_endpoint(websocket: WebSocket, case_id: str | None = None):
     overflows/disconnects), the other transcribes + grounds it at its own pace.
 
     Each connection records one segment of a case. With ``case_id`` it
-    continues that stored case instead of starting a new one.
+    continues that stored case instead of starting a new one, unless the case
+    was inferred from clinical notes.
     """
     await websocket.accept()
     logger.info("WebSocket connection established")
@@ -798,14 +811,15 @@ async def websocket_endpoint(websocket: WebSocket, case_id: str | None = None):
     active_inference_sessions.add(inference_session)
     if case_id is None:
         await inference_session.start_case()
-    elif not await inference_session.continue_case(case_id):
-        logger.warning("Case %s is still being recorded, not continuing it", case_id)
+    elif (refusal := await inference_session.continue_case(case_id)) is not None:
+        logger.warning("Not continuing case %s: %s", case_id, CASE_REFUSALS[refusal])
         active_inference_sessions.discard(inference_session)
         await _ws_send_safe(
             websocket,
             {
                 "type": "error",
-                "error": "This case is being recorded elsewhere",
+                "error": CASE_REFUSALS[refusal],
+                "reason": refusal,
                 "fatal": True,
             },
         )
@@ -1124,55 +1138,71 @@ async def pdf_text(request: Request):
     return {"text": text}
 
 
+async def _store_note_inference(
+    case_id: str | None, request: dict, result: dict
+) -> str | None:
+    """Store an inference made from clinical notes in the stored case it was
+    made on, else in a new case, and return that case."""
+    if not storage_enabled():
+        return None
+    run_info = await _run_info()
+    # No await from here on, so no connection can take the case meanwhile
+    if case_id is not None and (
+        case_id in _recording_case_ids() or find_case(case_id) is None
+    ):
+        logger.warning("Cannot add to case %s, starting a new one", case_id)
+        case_id = None
+    recorder = CaseRecorder(
+        request["session_id"], 0, run_info, case_id=case_id, audio=False
+    )
+    recorder.write_inference(request, result, shown_at=time.time())
+    recorder.close(current_metadata.to_dict(), current_user)
+    logger.info("Stored clinical-notes inference in case %s", recorder.case_id)
+    return recorder.case_id
+
+
 @app.post("/clinical-notes")
 async def set_clinical_notes(req: ClinicalNotesRequest):
-    """Set a session's clinical notes and rerun inference.
+    """Infer once from clinical notes, store the result in ``case_id`` or a
+    new case, and return it.
 
-    Without a session, infer once from the notes and the given transcript
-    and return the result.
+    A case is inferred either from a voice recording or from clinical notes,
+    so notes cannot join a case that is or was recorded.
     """
     notes = [{"filename": n.filename, "text": n.text.strip()} for n in req.notes]
     if sum(len(n["text"]) for n in notes) > MAX_NOTE_SIZE:
         raise HTTPException(
             status_code=413, detail="Clinical notes too large (max 100KB)"
         )
-    session = None
-    if req.session_id is not None:
-        session = next(
-            (s for s in active_inference_sessions if s.session_id == req.session_id),
-            None,
+    if req.case_id is not None and (
+        req.case_id in _recording_case_ids()
+        or "recording" in await asyncio.to_thread(case_sources, req.case_id)
+    ):
+        raise HTTPException(
+            status_code=409, detail="Clinical notes cannot join a recorded case"
         )
-        if session is None:
-            raise HTTPException(status_code=404, detail="No active session")
 
     note_text = "\n\n".join(n["text"] for n in notes)
     annotations = await asyncio.to_thread(grounder.annotate, note_text)
-    session_id = session.session_id if session else str(uuid.uuid4())
-    generation = session.generation if session else 0
+    session_id = str(uuid.uuid4())
     request = {
         "chunk_id": "note-" + str(uuid.uuid4()),
         "timestamp": time.time(),
         "clinical_notes": notes,
-        "text": "" if session else req.transcript.strip(),
+        "text": "",
         "annotations": [a.to_json() for a in annotations],
         "metadata": current_metadata.to_dict(),
         "session_id": session_id,
-        "session_generation": generation,
+        "session_generation": 0,
     }
     try:
         response = await inference_client.post("/clinical_note", json=request)
         response.raise_for_status()
-        result = response.json()
+        result = {**response.json(), "source": "clinical_note"}
     finally:
-        if session is None:
-            await _reset_inference_session(session_id, generation)
-    if session is None:
-        return result
-    if await session.is_current_generation(generation):
-        if session.recorder is not None:
-            session.recorder.write_inference(request, result, shown_at=time.time())
-        await _ws_send_safe(session.websocket, {"type": "inference", **result})
-    return {}
+        await _reset_inference_session(session_id, 0)
+    stored_in = await _store_note_inference(req.case_id, request, result)
+    return {**result, "case_id": stored_in}
 
 
 @app.post("/reset")
@@ -1220,7 +1250,7 @@ def _recording_case_ids() -> set[str]:
 
 @app.get("/cases")
 async def get_cases() -> list[dict]:
-    """List stored cases, newest first, for the read-only case view."""
+    """List stored cases, newest first, for the History view."""
     _require_cases_browsable()
     cases = await asyncio.to_thread(list_cases)
     recording = _recording_case_ids()
