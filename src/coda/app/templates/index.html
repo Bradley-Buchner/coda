@@ -7065,8 +7065,16 @@
             stopRecording();
           };
 
-          ws.onclose = () => {
+          ws.onclose = (event) => {
             console.log("WebSocket disconnected");
+            // Closed by the server, not by stopRecording
+            if (event.target === ws) {
+              showStatus(
+                "Connection error. Make sure the server is running.",
+                "danger",
+              );
+              stopRecording();
+            }
           };
 
           const audioConstraints = {
