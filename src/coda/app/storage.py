@@ -255,7 +255,7 @@ class CaseRecorder:
             },
         )
 
-    def close(self, metadata: dict | None = None):
+    def close(self, metadata: dict | None = None, user: dict | None = None):
         for f in [
             *self._transcripts.values(),
             self._chunks,
