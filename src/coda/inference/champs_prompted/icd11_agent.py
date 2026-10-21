@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import re
 from functools import lru_cache
 
 import yaml
@@ -204,11 +205,19 @@ class ChampsPromptedIcd11TwoPassAgent(ChampsPromptedIcd11Agent):
         return response, clinical_assessment(assessment)
 
 
+def heading(name):
+    """Return a pattern matching a heading or bold label, colon optional."""
+    return re.compile(rf"(?:#+ *)?\**{name}\**:?\**", re.IGNORECASE)
+
+
+ASSESSMENT_HEADING = heading("Clinical Assessment")
+CODES_HEADING = heading("Candidate Codes")
+
+
 def clinical_assessment(text):
     """Return the Clinical Assessment section of a first-pass response."""
-    start = text.find("**Clinical Assessment:**")
-    if start < 0:
+    start = ASSESSMENT_HEADING.search(text)
+    if start is None:
         return text.strip()
-    start += len("**Clinical Assessment:**")
-    end = text.find("**Candidate Codes:**", start)
-    return text[start:end if end >= 0 else None].strip()
+    end = CODES_HEADING.search(text, start.end())
+    return text[start.end():end.start() if end else None].strip()

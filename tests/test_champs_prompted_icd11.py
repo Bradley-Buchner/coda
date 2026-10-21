@@ -4,6 +4,7 @@ from coda.inference.champs_prompted.icd11_agent import (
     ChampsPromptedIcd11SinglePassAgent,
     ChampsPromptedIcd11TwoPassAgent,
     age_group,
+    clinical_assessment,
     load_labels,
 )
 from coda.metadata import Profile
@@ -78,3 +79,20 @@ async def test_two_pass_codes_from_first_pass_assessment():
     assert "Severe malaria." in second["user_prompt"]
     assert result["reasoning"] == "Severe malaria."
     assert len(result["causes"]) == 5
+
+
+@pytest.mark.parametrize("label", [
+    "**Clinical Assessment:**",
+    "**Clinical Assessment**:",
+    "**Clinical Assessment**",
+    "### Clinical Assessment:",
+    "## Clinical Assessment",
+])
+def test_clinical_assessment_headings(label):
+    codes = label.replace("Clinical Assessment", "Candidate Codes")
+    text = f"{label}\nSevere malaria.\n\n{codes}\n1. 1F40"
+    assert clinical_assessment(text) == "Severe malaria."
+
+
+def test_clinical_assessment_without_heading():
+    assert clinical_assessment(" Severe malaria. ") == "Severe malaria."
