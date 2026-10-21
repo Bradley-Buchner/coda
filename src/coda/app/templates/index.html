@@ -834,14 +834,14 @@
       .chunk:hover {
         background: rgba(34, 34, 59, 0.04);
       }
-      /* Highlight the most recent chunk as the "current" live window */
-      .chunk:last-of-type {
-        display: block;
-        padding: 6px 0 6px 16px;
-        border-left: 3px solid var(--record-red);
-        color: var(--ink);
-        font-weight: 500;
-        margin-top: 16px;
+      /* Newly transcribed text, tinted briefly where it lands */
+      .chunk.fresh {
+        animation: chunk-fresh 1.2s ease-out;
+      }
+      @keyframes chunk-fresh {
+        from {
+          background: var(--border-warm-strong);
+        }
       }
       .annotation {
         text-decoration: underline dotted var(--ink-muted);
@@ -872,7 +872,6 @@
       /* Interim, not-yet-committed transcription text (streaming backends) */
       .preview-line {
         color: var(--ink-muted);
-        font-style: italic;
       }
 
       /* Inference / cause list — show only the latest ranking */
@@ -7082,7 +7081,7 @@
 
       // Append a committed chunk with its grounded terms marked, preceded by
       // its original-language text when it was translated
-      function appendTranscriptChunk(data) {
+      function appendTranscriptChunk(data, fresh = false) {
         const text = data.transcript;
         transcriptText += text + " ";
 
@@ -7104,7 +7103,7 @@
         }
 
         chunkCount++;
-        const chunkSpan = `<span class="chunk" data-chunk-id="${data.chunk_id}" title="Chunk: ${data.chunk_id.slice(0, 8)}">${chunkHtml} </span>`;
+        const chunkSpan = `<span class="chunk${fresh ? " fresh" : ""}" data-chunk-id="${data.chunk_id}" title="Chunk: ${data.chunk_id.slice(0, 8)}">${chunkHtml} </span>`;
 
         if (data.original_transcript) {
           const origSpan = `<span class="original-text" title="${data.original_language}">${escapeHtml(data.original_transcript)}</span> `;
@@ -7198,7 +7197,7 @@
               const prevLine = document.getElementById("preview-line");
               if (prevLine) prevLine.remove();
 
-              appendTranscriptChunk(data);
+              appendTranscriptChunk(data, true);
               transcript.scrollTop = transcript.scrollHeight;
               updateWordCount();
             } else if (data.type === "preview") {
