@@ -7826,8 +7826,13 @@
       document.getElementById("noteSaveBtn").addEventListener("click", () => {
         const text = noteText.value.trim();
         if (!text || !notesAllowed()) return;
-        typedNoteCount += 1;
-        noteFiles.push({ filename: `typed-note-${typedNoteCount}.txt`, text });
+        // Skip numbers already taken, e.g. by the notes of a reopened case
+        let filename;
+        do {
+          typedNoteCount += 1;
+          filename = `typed-note-${typedNoteCount}.txt`;
+        } while (noteFiles.some((n) => n.filename === filename));
+        noteFiles.push({ filename, text });
         renderNoteCards();
         closeNoteEditor();
       });
