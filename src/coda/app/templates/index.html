@@ -5772,6 +5772,7 @@
         lastDuration = session.durationSeconds || 0;
         caseRunInfo = session.runInfo || null;
         caseProfile = (session.metadata && session.metadata.profile) || null;
+        caseMetadataId = (session.metadata && session.metadata.case_id) || null;
         sessionPartCount = session.parts || 1;
 
         transcriptText = session.transcript || "";
@@ -5835,6 +5836,7 @@
         lastDuration = c.duration_s || 0;
         caseRunInfo = parts.length ? parts[parts.length - 1].run_info : c.run_info;
         caseProfile = (c.metadata && c.metadata.profile) || null;
+        caseMetadataId = (c.metadata && c.metadata.case_id) || null;
         caseInProgress = !!c.in_progress;
         continueBtn.disabled = caseInProgress;
         sessionPartCount = parts.length;
@@ -6157,6 +6159,8 @@
       let sessionPartCount = 0;
       let caseRunInfo = null;
       let caseProfile = null;
+      // Case ID entered for the stored case, kept when adding to it
+      let caseMetadataId = null;
       let caseInProgress = false;
       // Settings in effect for the recording in progress
       let sessionRunInfo = null;
@@ -7604,6 +7608,7 @@
         discardAudioParts();
         caseRunInfo = null;
         caseProfile = null;
+        caseMetadataId = null;
         caseInProgress = false;
         continueBtn.disabled = false;
         resetAudio();
@@ -7629,6 +7634,13 @@
 
       // Record more of the session on screen, warning first when the settings
       // it was recorded with have changed
+      // Put the stored case's own case ID and profile back before adding to it
+      async function restoreCaseMetadata() {
+        if (caseMetadataId) caseIdInput.value = caseMetadataId;
+        if (caseProfile) fillProfileInputs(caseProfile);
+        if (caseMetadataId || caseProfile) await pushMetadata();
+      }
+
       async function continueSession() {
         if (isRecording || caseInProgress || !recordingAllowed()) return;
         if (caseRunInfo) {
@@ -7654,10 +7666,7 @@
             }
           }
         }
-        if (caseProfile) {
-          fillProfileInputs(caseProfile);
-          await pushMetadata();
-        }
+        await restoreCaseMetadata();
         startRecording({ continuing: true });
       }
 
@@ -7910,10 +7919,7 @@
         showStatus("Running inference on clinical notes…", "info");
         try {
           // A stored case is inferred with its own profile, as when continuing
-          if (caseProfile) {
-            fillProfileInputs(caseProfile);
-            await pushMetadata();
-          }
+          await restoreCaseMetadata();
           const resp = await fetch("/clinical-notes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
