@@ -69,6 +69,13 @@ inference:
   llm:
     provider: openai        # alternatives: openai | ollama
     model: gpt-5.4-mini
+  champs_prompted:          # CHAMPS prompted agent (LLM)
+    # Cause coding: icd10 (CHAMPS group causes) | icd11 (ICD-11 codes allowed
+    # for the decedent's CHAMPS age group)
+    coding: icd10
+    # ICD-11 only: 1 (one structured call) | 2 (free-text reasoning, then
+    # code selection)
+    passes: 1
   champs_finetuned:         # CHAMPS-fine-tuned classifier agent (MedGemma LoRA)
     adapter_path: ""        # local path to the LoRA adapter; set via CODA_INFERENCE__CHAMPS_FINETUNED__ADAPTER_PATH
     menu: icd_all_labels.json
