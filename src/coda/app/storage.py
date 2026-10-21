@@ -60,6 +60,7 @@ class CaseRecorder:
     With ``case_id`` the existing case is reopened and a new segment appended
     to it. The time between the two segments is recorded as a pause. Without
     ``audio`` the segment keeps no audio, as for a clinical-notes inference.
+    A new case starts with ``metadata``, replaced by that given on close.
     """
 
     def __init__(
@@ -69,6 +70,7 @@ class CaseRecorder:
         run_info: dict,
         case_id: str | None = None,
         audio: bool = True,
+        metadata: dict | None = None,
     ):
         self.store = {key: bool(value)
                       for key, value in settings.storage.store.items()}
@@ -92,6 +94,8 @@ class CaseRecorder:
                 "run_info": run_info,
                 "segments": [],
             }
+            if self.store.get("metadata") and metadata:
+                self.manifest["metadata"] = metadata
         else:
             self.case_id = case_id
             self.case_dir = cases_root() / case_id
@@ -151,8 +155,11 @@ class CaseRecorder:
         return open(path, "a", encoding="utf-8")
 
     def _write_manifest(self):
-        with open(self.case_dir / "manifest.json", "w", encoding="utf-8") as f:
+        path = self.case_dir / "manifest.json"
+        tmp = path.with_suffix(".tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
             json.dump(self.manifest, f, indent=2, default=str)
+        os.replace(tmp, path)
 
     @staticmethod
     def _append_json(f: Optional[TextIO], record: dict):

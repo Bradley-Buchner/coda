@@ -172,7 +172,8 @@ class InferenceSessionCoordinator:
         """Begin recording a new case for the current generation, if enabled."""
         if storage_enabled():
             self._record_to(CaseRecorder(self.session_id, self.generation,
-                                         await _run_info()))
+                                         await _run_info(),
+                                         metadata=current_metadata.to_dict()))
 
     async def continue_case(self, case_id: str) -> str | None:
         """Record into a stored case, or a new case if there is no such case.
@@ -198,7 +199,8 @@ class InferenceSessionCoordinator:
         elif "clinical_note" in case_sources(case_id):
             return "clinical_note"
         self._record_to(CaseRecorder(self.session_id, self.generation,
-                                     run_info, case_id=case_id))
+                                     run_info, case_id=case_id,
+                                     metadata=current_metadata.to_dict()))
         return None
 
     def _record_to(self, recorder: CaseRecorder):
@@ -585,7 +587,10 @@ async def next_case_id():
     """Return CODA-NNN, one past the highest such case ID saved so far."""
     numbers = [0]
     for path in cases_root().glob("*/manifest.json"):
-        metadata = json.loads(path.read_text()).get("metadata") or {}
+        try:
+            metadata = json.loads(path.read_text()).get("metadata") or {}
+        except ValueError:
+            continue
         match = re.fullmatch(r"CODA-(\d+)", metadata.get("case_id") or "")
         if match:
             numbers.append(int(match[1]))
