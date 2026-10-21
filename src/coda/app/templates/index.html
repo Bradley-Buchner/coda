@@ -1738,6 +1738,9 @@
         font-weight: 600;
         color: var(--ink-soft);
       }
+      .mccd-grid label[hidden] {
+        display: none;
+      }
       .mccd-grid .mccd-check {
         flex-direction: row;
         align-items: center;
@@ -3149,6 +3152,10 @@
               >Stillbirth</span
             ></label
           >
+          <label
+            ><span>Birth weight (g)</span
+            ><input type="number" name="birthWeight" min="0" step="1"
+          /></label>
         </div>
 
         <h2>Certifier</h2>
@@ -7776,6 +7783,14 @@
       });
       mccdSheet.addEventListener("submit", (e) => e.preventDefault());
 
+      // Whether the entered age at death is under one year
+      function under1Year() {
+        if (ageValueInput.value === "") return false;
+        const value = Number(ageValueInput.value);
+        const under = { hours: true, days: true, months: value < 12 };
+        return under[ageUnitSelect.value] ?? value < 1;
+      }
+
       function fillMccd() {
         mccd.caseId.value = caseIdInput.value.trim();
         mccd.sex.value = checkedSex()?.value || "";
@@ -7786,6 +7801,12 @@
         mccd.dateOfDeath.value = dateOfDeathInput.value;
         mccd.manner.value = mannerSelect.value;
         mccd.stillbirth.checked = stillbirthToggle.checked;
+        // Birth weight belongs to the fetal or infant death section
+        const infant = stillbirthToggle.checked || under1Year();
+        mccd.birthWeight.closest("label").hidden = !infant;
+        mccd.birthWeight.value = infant
+          ? measurementInputs.birth_weight_g.value
+          : "";
         mccd.certifierName.value = userNameInput.value.trim();
         mccd.certifierId.value = userIdInput.value.trim();
         mccd.certifiedOn.value = localDate();
