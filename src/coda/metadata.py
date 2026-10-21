@@ -58,6 +58,13 @@ class Age:
         return {"value": self.value, "unit": self.unit}
 
 
+def _measurement(value) -> Optional[float]:
+    """Return a positive measurement as a float, or None."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value) if value > 0 else None
+
+
 @dataclass
 class Profile:
     age: Optional[Age] = None
@@ -68,10 +75,20 @@ class Profile:
     sex: Optional[str] = None
     # One of MANNERS_OF_DEATH
     manner_of_death: Optional[str] = None
+    birth_weight_g: Optional[float] = None
+    # One of HIV_STATUSES
+    hiv_status: Optional[str] = None
+    weight_kg_admission: Optional[float] = None
+    weight_kg_death: Optional[float] = None
+    muac_cm_admission: Optional[float] = None
+    muac_cm_death: Optional[float] = None
 
     SEXES = ("female", "male", "ambiguous")
     MANNERS_OF_DEATH = ("disease", "accident", "self_harm", "assault",
                         "pending_investigation", "unknown")
+    HIV_STATUSES = ("negative", "positive", "exposed", "unknown")
+    MEASUREMENTS = ("birth_weight_g", "weight_kg_admission", "weight_kg_death",
+                    "muac_cm_admission", "muac_cm_death")
 
     @classmethod
     def from_dict(cls, d: Optional[dict]) -> Optional["Profile"]:
@@ -79,12 +96,15 @@ class Profile:
             return None
         sex = d.get("sex")
         manner = d.get("manner_of_death")
+        hiv = d.get("hiv_status")
         profile = cls(
             age=Age.from_dict(d.get("age")),
             stillbirth=bool(d.get("stillbirth", False)),
             date_of_death=d.get("date_of_death") or None,
             sex=sex if sex in cls.SEXES else None,
             manner_of_death=manner if manner in cls.MANNERS_OF_DEATH else None,
+            hiv_status=hiv if hiv in cls.HIV_STATUSES else None,
+            **{name: _measurement(d.get(name)) for name in cls.MEASUREMENTS},
         )
         if profile == cls():
             return None
@@ -97,6 +117,8 @@ class Profile:
             "date_of_death": self.date_of_death,
             "sex": self.sex,
             "manner_of_death": self.manner_of_death,
+            "hiv_status": self.hiv_status,
+            **{name: getattr(self, name) for name in self.MEASUREMENTS},
         }
 
 
