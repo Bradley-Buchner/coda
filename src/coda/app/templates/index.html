@@ -7669,8 +7669,27 @@
         if (caseMetadataId || caseProfile) await pushMetadata();
       }
 
+      // Set while a continue awaits, so that a second click is ignored
+      let continueStarting = false;
+
       async function continueSession() {
-        if (isRecording || caseInProgress || !recordingAllowed()) return;
+        if (
+          continueStarting ||
+          isRecording ||
+          caseInProgress ||
+          !recordingAllowed()
+        ) {
+          return;
+        }
+        continueStarting = true;
+        try {
+          await startContinuing();
+        } finally {
+          continueStarting = false;
+        }
+      }
+
+      async function startContinuing() {
         if (caseRunInfo) {
           const current = await fetchRunInfo();
           if (current) {
@@ -7695,7 +7714,7 @@
           }
         }
         await restoreCaseMetadata();
-        startRecording({ continuing: true });
+        await startRecording({ continuing: true });
       }
 
       continueBtn.addEventListener("click", continueSession);
