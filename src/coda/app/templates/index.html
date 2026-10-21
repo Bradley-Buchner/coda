@@ -7920,8 +7920,6 @@
         };
       }
 
-      // Record more of the session on screen, warning first when the settings
-      // it was recorded with have changed
       // Put the stored case's own case ID and profile back before adding to it
       async function restoreCaseMetadata() {
         if (caseMetadataId) caseIdInput.value = caseMetadataId;
@@ -7932,6 +7930,8 @@
       // Set while a continue awaits, so that a second click is ignored
       let continueStarting = false;
 
+      // Record more of the session on screen, warning first when the settings
+      // it was recorded with have changed
       async function continueSession() {
         if (
           continueStarting ||
