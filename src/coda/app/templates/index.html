@@ -7057,6 +7057,11 @@
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: audioConstraints,
           });
+          // The server may have refused the session while the mic was asked for
+          if (!ws) {
+            stream.getTracks().forEach((track) => track.stop());
+            return;
+          }
           micConstraints = audioConstraints;
           sessionPartCount += 1;
 
