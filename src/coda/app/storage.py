@@ -17,7 +17,7 @@ import time
 import wave
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, Optional, TextIO
 
 from gilda.term import get_curie
 
@@ -38,11 +38,13 @@ def cases_browsable() -> bool:
 
 
 def storage_keeps_audio() -> bool:
-    return storage_enabled() and bool(settings.storage.store.get("audio", False))
+    return storage_enabled() and \
+        bool(settings.storage.store.get("audio", False))
 
 
 def storage_keeps_notes() -> bool:
-    return storage_enabled() and bool(settings.storage.store.get("notes", False))
+    return storage_enabled() and \
+        bool(settings.storage.store.get("notes", False))
 
 
 def cases_root() -> Path:
@@ -68,15 +70,15 @@ class CaseRecorder:
         case_id: str | None = None,
         audio: bool = True,
     ):
-        self.store = {key: bool(value) for key, value in settings.storage.store.items()}
+        self.store = {key: bool(value)
+                      for key, value in settings.storage.store.items()}
         keeps_audio = audio and self.store.get("audio", False)
         started = datetime.now()
         self.reopened = case_id is not None
         self._heard = False
         if case_id is None:
-            self.case_id = (
-                f"{started.strftime('%Y-%m-%d_%H%M%S')}_{session_id[:8]}_g{generation}"
-            )
+            self.case_id = (f"{started.strftime('%Y-%m-%d_%H%M%S')}"
+                            f"_{session_id[:8]}_g{generation}")
             self.case_dir = cases_root() / self.case_id
             self.case_dir.mkdir(parents=True, exist_ok=True)
             self.manifest = {
@@ -96,7 +98,8 @@ class CaseRecorder:
             self.manifest = self._reopened_manifest(started)
 
         self.segment = len(self.manifest["segments"])
-        audio_file = "audio.wav" if self.segment == 0 else f"audio_{self.segment}.wav"
+        audio_file = "audio.wav" if self.segment == 0 \
+            else f"audio_{self.segment}.wav"
         self.manifest["segments"].append(
             {
                 "session_id": session_id,
@@ -113,7 +116,7 @@ class CaseRecorder:
         self._chunks = self._open("chunks.jsonl", "annotations")
         self._inference = self._open("inference.jsonl", "inference")
         self._timing = self._open("timing.jsonl", "timing")
-        self._audio: wave.Wave_write | None = None
+        self._audio: Optional[wave.Wave_write] = None
         if keeps_audio:
             self._audio = wave.open(str(self.case_dir / audio_file), "wb")
             self._audio.setnchannels(1)
@@ -152,7 +155,7 @@ class CaseRecorder:
             json.dump(self.manifest, f, indent=2, default=str)
 
     @staticmethod
-    def _append_json(f: TextIO | None, record: dict):
+    def _append_json(f: Optional[TextIO], record: dict):
         if f is None:
             return
         f.write(json.dumps(record, default=str) + "\n")
@@ -161,9 +164,8 @@ class CaseRecorder:
     def _append_transcript(self, text: str, lang_code: str):
         f = self._transcripts.get(lang_code)
         if f is None:
-            f = open(
-                self.case_dir / f"transcript_{lang_code}.txt", "a", encoding="utf-8"
-            )
+            f = open(self.case_dir / f"transcript_{lang_code}.txt", "a",
+                     encoding="utf-8")
             self._transcripts[lang_code] = f
         f.write(text + "\n")
         f.flush()
@@ -175,8 +177,7 @@ class CaseRecorder:
 
     def write_pause(self):
         self.manifest["pauses"].append(
-            {"paused_at": datetime.now().isoformat(), "resumed_at": None}
-        )
+            {"paused_at": datetime.now().isoformat(), "resumed_at": None})
         self._write_manifest()
 
     def write_resume(self):
@@ -213,15 +214,9 @@ class CaseRecorder:
             record["original_text"] = original_text
             record["original_language"] = original_language
         self._append_json(self._chunks, record)
-        self._append_json(
-            self._timing,
-            {
-                "kind": "chunk",
-                "chunk_id": chunk_id,
-                "at": received_at,
-                **timings,
-            },
-        )
+        self._append_json(self._timing, {
+            "kind": "chunk", "chunk_id": chunk_id, "at": received_at, **timings,
+        })
 
     def write_imported(self, text: str):
         """Write a transcript recorded elsewhere as one chunk of this case."""
@@ -267,23 +262,14 @@ class CaseRecorder:
         if self.store.get("metadata"):
             record["metadata"] = request.get("metadata")
         self._append_json(self._inference, record)
-        self._append_json(
-            self._timing,
-            {
-                "kind": "inference",
-                "chunk_id": record["chunk_id"],
-                "at": shown_at,
-                **(result.get("timings") or {}),
-            },
-        )
+        self._append_json(self._timing, {
+            "kind": "inference", "chunk_id": record["chunk_id"],
+            "at": shown_at, **(result.get("timings") or {}),
+        })
 
     def close(self, metadata: dict | None = None, user: dict | None = None):
-        for f in [
-            *self._transcripts.values(),
-            self._chunks,
-            self._inference,
-            self._timing,
-        ]:
+        for f in [*self._transcripts.values(), self._chunks, self._inference,
+                  self._timing]:
             if f is not None:
                 f.close()
         self._transcripts.clear()
@@ -342,7 +328,8 @@ def _end_last_line(path: Path):
 
 
 def _last_write(case_dir: Path) -> datetime:
-    return datetime.fromtimestamp(max(p.stat().st_mtime for p in case_dir.iterdir()))
+    return datetime.fromtimestamp(
+        max(p.stat().st_mtime for p in case_dir.iterdir()))
 
 
 def find_case(case_id: str) -> Path | None:
@@ -374,7 +361,8 @@ def _segments(manifest: dict, case_dir: Path) -> list[dict]:
     ]
 
 
-def _read_case(case_dir: Path) -> tuple[dict, list[dict] | None, list[dict] | None]:
+def _read_case(case_dir: Path) -> \
+        tuple[dict, list[dict] | None, list[dict] | None]:
     return (
         _read_manifest(case_dir),
         _read_jsonl(case_dir / "chunks.jsonl"),
@@ -398,9 +386,8 @@ def _parts(case_dir: Path, manifest: dict) -> list[dict]:
         {
             "part": i,
             "started_at": _with_utc_offset(segment["started_at"]),
-            "ended_at": (
-                _with_utc_offset(segment["ended_at"]) if segment["ended_at"] else None
-            ),
+            "ended_at": _with_utc_offset(segment["ended_at"])
+            if segment["ended_at"] else None,
             "run_info": segment.get("run_info"),
             "audio_s": (
                 _audio_seconds(case_dir / segment["audio"])
@@ -416,7 +403,8 @@ def _recording_seconds(manifest: dict, ended: datetime) -> float:
     """Time from start to ``ended``, less the time spent paused."""
     paused = sum(
         (
-            (datetime.fromisoformat(p["resumed_at"]) if p["resumed_at"] else ended)
+            (datetime.fromisoformat(p["resumed_at"])
+             if p["resumed_at"] else ended)
             - datetime.fromisoformat(p["paused_at"])
         ).total_seconds()
         for p in manifest.get("pauses", [])
@@ -461,7 +449,8 @@ def _summary(
 ) -> dict:
     ended_at = manifest.get("ended_at")
     # A case that never closed ends at its last write
-    ended = datetime.fromisoformat(ended_at) if ended_at else _last_write(case_dir)
+    ended = datetime.fromisoformat(ended_at) if ended_at \
+        else _last_write(case_dir)
     causes = inference[-1].get("causes") if inference else None
     return {
         "case_id": case_dir.name,
@@ -474,7 +463,8 @@ def _summary(
         "top_cause": (
             max(causes.values(), key=lambda c: c["score"]) if causes else None
         ),
-        "has_audio": any(part["audio_s"] for part in _parts(case_dir, manifest)),
+        "has_audio": any(part["audio_s"]
+                         for part in _parts(case_dir, manifest)),
         "sources": _sources(chunks, inference),
     }
 
@@ -525,10 +515,10 @@ def list_cases() -> list[dict]:
             continue
         if not (chunks or inference or any(case_dir.glob("transcript_*.txt"))):
             continue
-        cases.append(_summary(case_dir, manifest, chunks or [], inference or []))
-    return sorted(
-        cases, key=lambda c: datetime.fromisoformat(c["started_at"]), reverse=True
-    )
+        cases.append(_summary(case_dir, manifest, chunks or [],
+                              inference or []))
+    return sorted(cases, key=lambda c: datetime.fromisoformat(c["started_at"]),
+                  reverse=True)
 
 
 def load_case(case_id: str) -> dict | None:
@@ -546,9 +536,8 @@ def load_case(case_id: str) -> dict | None:
     metadata = manifest.get("metadata")
     if metadata is None and inference:
         metadata = inference[-1].get("metadata")
-    note_inferences = [
-        record for record in inference or [] if record.get("source") == "clinical_note"
-    ]
+    note_inferences = [record for record in inference or []
+                       if record.get("source") == "clinical_note"]
     return {
         **_summary(case_dir, manifest, chunks or [], inference or []),
         "coda_version": manifest.get("coda_version"),
@@ -556,13 +545,16 @@ def load_case(case_id: str) -> dict | None:
         "pauses": manifest.get("pauses", []),
         "segments": _parts(case_dir, manifest),
         "metadata": metadata,
-        "chunks": ([_display_chunk(c) for c in chunks] if chunks is not None else None),
+        "chunks": [_display_chunk(c) for c in chunks]
+        if chunks is not None else None,
         "transcripts": {
-            path.stem.removeprefix("transcript_"): path.read_text(encoding="utf-8")
+            path.stem.removeprefix("transcript_"):
+            path.read_text(encoding="utf-8")
             for path in sorted(case_dir.glob("transcript_*.txt"))
         },
         "inference": inference,
-        "notes": note_inferences[-1].get("notes", []) if note_inferences else [],
+        "notes": note_inferences[-1].get("notes", [])
+        if note_inferences else [],
     }
 
 
