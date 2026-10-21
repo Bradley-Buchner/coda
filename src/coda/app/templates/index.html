@@ -5470,6 +5470,7 @@
             stores: localId ? "both" : "server",
             hasAudio: c.has_audio,
             sources: c.sources,
+            metadata: c.metadata,
             localId,
             open: () => openStoredCase(c.case_id, localId),
           };
@@ -5490,6 +5491,7 @@
               hasAudio: false,
               // Copies saved before notes were kept come from recordings
               sources: s.sources || ["recording"],
+              metadata: s.metadata,
               localId: s.id,
               open: () => openSessionFromHistory(s.id),
             }),
@@ -5515,6 +5517,16 @@
 
       function isNotesOnly(sources) {
         return sources.includes("clinical_note") && !sources.includes("recording");
+      }
+
+      // Case ID and age of a listed case, those it has
+      function entryCaseLabel(entry) {
+        const caseId = entry.metadata?.case_id;
+        const profile = entry.metadata?.profile;
+        const age = profile?.stillbirth
+          ? t("profile.stillbirth")
+          : profile?.age && `${profile.age.value} ${profile.age.unit}`;
+        return [caseId, age].filter(Boolean).join(" · ");
       }
 
       // Row labels; where COD results are hidden, rows carry none
@@ -5556,7 +5568,9 @@
         idleRecentList.innerHTML = "";
         entries.slice(0, 3).forEach((entry) => {
           const { title, code, score } = entryLabels(entry);
-          const date = formatShortDate(entry.startedAt);
+          const date = [entryCaseLabel(entry), formatShortDate(entry.startedAt)]
+            .filter(Boolean)
+            .join(" · ");
           const noteIcon = entry.sources.includes("clinical_note")
             ? `<i class="bi ${INFERRED_FROM.clinical_note.icon}" title="${escapeHtml(t(INFERRED_FROM.clinical_note.label))}"></i> `
             : "";
@@ -5627,9 +5641,15 @@
             ? `<span class="history-item-recording has-audio"><i class="bi bi-mic-fill"></i> ${escapeHtml(t("history.recording"))}</span>`
             : `<span class="history-item-recording"><i class="bi bi-mic-mute"></i> ${escapeHtml(t("history.noRecording"))}</span>`;
           // A case made from notes alone has no length or recording to show
+          const caseLabel = entryCaseLabel(entry);
+          const date = escapeHtml(
+            caseLabel
+              ? `${caseLabel} · ${formatShortDate(entry.startedAt)}`
+              : formatShortDate(entry.startedAt),
+          );
           const meta = isNotesOnly(entry.sources)
-            ? escapeHtml(formatShortDate(entry.startedAt))
-            : `${escapeHtml(formatShortDate(entry.startedAt))} · ${escapeHtml(formatDuration(entry.durationSeconds))} · ${recording}`;
+            ? date
+            : `${date} · ${escapeHtml(formatDuration(entry.durationSeconds))} · ${recording}`;
           const deleteLabel = escapeHtml(t("history.deleteDevice"));
           const row = document.createElement("div");
           row.className = "history-item";

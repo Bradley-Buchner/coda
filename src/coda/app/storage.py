@@ -452,6 +452,9 @@ def _summary(
     ended = datetime.fromisoformat(ended_at) if ended_at \
         else _last_write(case_dir)
     causes = inference[-1].get("causes") if inference else None
+    metadata = manifest.get("metadata")
+    if metadata is None and inference:
+        metadata = inference[-1].get("metadata")
     return {
         "case_id": case_dir.name,
         "started_at": _with_utc_offset(manifest["started_at"]),
@@ -466,6 +469,7 @@ def _summary(
         "has_audio": any(part["audio_s"]
                          for part in _parts(case_dir, manifest)),
         "sources": _sources(chunks, inference),
+        "metadata": metadata,
     }
 
 
@@ -533,9 +537,6 @@ def load_case(case_id: str) -> dict | None:
     if case_dir is None:
         return None
     manifest, chunks, inference = _read_case(case_dir)
-    metadata = manifest.get("metadata")
-    if metadata is None and inference:
-        metadata = inference[-1].get("metadata")
     note_inferences = [record for record in inference or []
                        if record.get("source") == "clinical_note"]
     return {
@@ -544,7 +545,6 @@ def load_case(case_id: str) -> dict | None:
         "run_info": manifest.get("run_info"),
         "pauses": manifest.get("pauses", []),
         "segments": _parts(case_dir, manifest),
-        "metadata": metadata,
         "chunks": [_display_chunk(c) for c in chunks]
         if chunks is not None else None,
         "transcripts": {
