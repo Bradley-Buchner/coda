@@ -70,6 +70,8 @@ settings = Dynaconf(
             "storage.store.inference",
             "storage.store.metadata",
             "storage.store.timing",
+            "storage.store.notes",
+            "storage.store.user",
             cast=bool,
         ),
         # And the other direction: keep these text. Dynaconf infers types, so a
