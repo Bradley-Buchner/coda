@@ -428,16 +428,18 @@ def test_settings_report_storage_methods(storage_dir, monkeypatch):
     assert reported["storage_enabled"] is True
     assert reported["cases_browsable"] is False
     assert reported["storage_audio"] is False
-    assert reported["storage_notes"] is False
+    assert reported["storage_notes"] is True
 
     monkeypatch.setenv("CODA_STORAGE__BROWSE", "true")
     monkeypatch.setenv("CODA_STORAGE__STORE__AUDIO", "true")
-    monkeypatch.setenv("CODA_STORAGE__STORE__NOTES", "true")
+    monkeypatch.setenv("CODA_STORAGE__STORE__NOTES", "false")
     reload_settings()
     reported = client.get("/settings").json()
     assert reported["cases_browsable"] is True
     assert reported["storage_audio"] is True
-    assert reported["storage_notes"] is True
+    assert reported["storage_notes"] is False
+
+    monkeypatch.setenv("CODA_STORAGE__STORE__NOTES", "true")
 
     monkeypatch.setenv("CODA_STORAGE__ENABLED", "false")
     reload_settings()
@@ -789,14 +791,14 @@ async def run_notes(**request) -> dict:
 
 
 def test_note_text_is_kept_only_when_stored(storage_dir, monkeypatch):
-    without_text = CaseRecorder("aaaa0001", 0, {})
-    write_note_inference(without_text, [NOTE])
-    without_text.close()
-    monkeypatch.setenv("CODA_STORAGE__STORE__NOTES", "true")
-    reload_settings()
     with_text = CaseRecorder("bbbb0002", 0, {})
     write_note_inference(with_text, [NOTE])
     with_text.close()
+    monkeypatch.setenv("CODA_STORAGE__STORE__NOTES", "false")
+    reload_settings()
+    without_text = CaseRecorder("aaaa0001", 0, {})
+    write_note_inference(without_text, [NOTE])
+    without_text.close()
 
     [record] = read_jsonl(without_text.case_dir / "inference.jsonl")
     assert record["source"] == "clinical_note"
@@ -846,7 +848,7 @@ async def test_notes_without_a_session_are_stored_in_a_new_case(
     assert result["causes"] == {"icd10:B54": MALARIA}
     case = load_case(result["case_id"])
     assert case["sources"] == ["clinical_note"]
-    assert case["notes"] == [{"filename": "referral.txt"}]
+    assert case["notes"] == [NOTE]
     assert case["has_audio"] is False
     assert not (case_dir / "audio.wav").exists()
 

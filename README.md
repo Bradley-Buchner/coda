@@ -190,7 +190,8 @@ The Compose path is env-driven. The main runtime variables are:
   `CODA_STORAGE__STORE__AUDIO=true` also keeps the raw audio as `audio.wav`.
   A case is inferred either from a voice recording or from clinical notes,
   never both. A case made from notes is stored too, keeping the notes'
-  filenames, and with `CODA_STORAGE__STORE__NOTES=true` their text.
+  filenames and text, or only their filenames with
+  `CODA_STORAGE__STORE__NOTES=false`.
   Each item can be switched off under `storage.store` in `settings.yaml`.
 - `CODA_STORAGE__BROWSE=true` lists the stored cases in History, where they
   open with their recording when audio was kept, and can be continued. Anyone
