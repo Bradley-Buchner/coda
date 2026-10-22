@@ -3434,7 +3434,7 @@
             <i class="bi bi-pencil-square"></i>
             <span data-i18n="note.type">Type note</span>
           </button>
-          <input type="file" id="noteInput" accept=".txt,.pdf" multiple hidden />
+          <input type="file" id="noteInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp" multiple hidden />
           <button
             id="continueBtn"
             class="btn btn-ghost"
@@ -8285,12 +8285,12 @@
           let text;
           if (name.endsWith(".txt")) {
             text = await file.text();
-          } else if (name.endsWith(".pdf")) {
-            text = await pdfText(file);
+          } else if (/\.(pdf|png|jpe?g|webp)$/.test(name)) {
+            text = await documentText(file);
             if (text === null) continue;
           } else {
             showStatus(
-              `Skipped "${file.name}": not a .txt or .pdf file`,
+              `Skipped "${file.name}": not a text, PDF or image file`,
               "warning",
             );
             continue;
@@ -8303,14 +8303,15 @@
       }
 
       // Text of a PDF via the server, or null with a status message on failure
-      async function pdfText(file) {
+      async function documentText(file) {
         try {
-          const resp = await fetch("/pdf-text", { method: "POST", body: file });
+          const url = `/document-text?name=${encodeURIComponent(file.name)}`;
+          const resp = await fetch(url, { method: "POST", body: file });
           const data = await resp.json();
           if (resp.ok) return data.text;
           showStatus(`"${file.name}": ${data.detail}`, "warning");
         } catch (e) {
-          console.error("PDF text extraction failed:", e);
+          console.error("Document text extraction failed:", e);
           showStatus(`Failed to read "${file.name}"`, "danger");
         }
         return null;

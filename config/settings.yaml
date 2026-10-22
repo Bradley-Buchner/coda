@@ -28,6 +28,9 @@ app:
   # differentials heading. Follow-up questions, transcript, and advisory
   # stay visible.
   show_cod_result: true
+  # Ollama model that reads the text of uploaded document images and of
+  # scanned PDF pages. Empty turns reading them off.
+  ocr_model: glm-ocr
   # When false, the clinical note button, file cards and drag-and-drop are
   # hidden.
   show_clinical_note: false
