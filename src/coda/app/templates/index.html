@@ -2810,10 +2810,12 @@
 
       /* Tablet portrait + large phones */
       @media (max-width: 768px) {
+        /* Grows to a second row when the buttons do not fit */
         .app-top {
-          padding: 0 14px;
+          padding: 10px 14px;
           gap: 8px;
-          height: 56px;
+          height: auto;
+          min-height: 56px;
         }
         .top-divider {
           display: none;
@@ -2954,6 +2956,16 @@
 
       /* Small phones */
       @media (max-width: 480px) {
+        .mccd-sheet {
+          padding: 20px 14px;
+        }
+        /* Wide enough for a full ICD code, leaving the cause the rest */
+        .mccd-table td:nth-child(3) {
+          width: 72px;
+        }
+        .mccd-table td:nth-child(4) {
+          width: 64px;
+        }
         .idle-mic-btn {
           width: 120px;
           height: 120px;
