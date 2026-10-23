@@ -3,6 +3,7 @@
 import os
 
 import pytest
+from dynaconf.validator import ValidationError
 
 from coda.config import PROMPTS, inference_url, reload_settings, settings
 
@@ -19,6 +20,8 @@ CODA_ENV_VARS = (
     "CODA_INFERENCE__LLM__PROVIDER",
     "CODA_INFERENCE__LLM__MODEL",
     "CODA_INFERENCE__QUESTIONNAIRE__ENABLED",
+    "CODA_INFERENCE__QUESTIONNAIRE__STRATEGY",
+    "CODA_INFERENCE__QUESTIONNAIRE__ADD_TO_PROMPT",
     "CODA_INFERENCE__QUESTIONNAIRE__TOP_K",
     "CODA_INFERENCE__QUESTIONNAIRE__MIN_SIMILARITY",
     "CODA_LLM__OLLAMA__BASE_URL",
@@ -71,6 +74,8 @@ def test_defaults():
     assert settings.inference.llm.provider == "openai"
     assert settings.inference.llm.model == "gpt-5.4-mini"
     assert settings.inference.questionnaire.enabled is False
+    assert settings.inference.questionnaire.strategy == "who_form"
+    assert settings.inference.questionnaire.add_to_prompt is False
     assert settings.inference.questionnaire.bank == ""
     assert settings.inference.questionnaire.embedding_model == "all-MiniLM-L6-v2"
     assert settings.inference.questionnaire.top_k == 10
@@ -112,12 +117,20 @@ def test_types_are_coerced():
 
 def test_questionnaire_env_overrides_are_coerced(monkeypatch):
     monkeypatch.setenv("CODA_INFERENCE__QUESTIONNAIRE__ENABLED", "true")
+    monkeypatch.setenv("CODA_INFERENCE__QUESTIONNAIRE__ADD_TO_PROMPT", "true")
     monkeypatch.setenv("CODA_INFERENCE__QUESTIONNAIRE__TOP_K", "15")
     monkeypatch.setenv("CODA_INFERENCE__QUESTIONNAIRE__MIN_SIMILARITY", "0.45")
     reload_settings()
     assert settings.inference.questionnaire.enabled is True
+    assert settings.inference.questionnaire.add_to_prompt is True
     assert settings.inference.questionnaire.top_k == 15
     assert settings.inference.questionnaire.min_similarity == 0.45
+
+
+def test_unknown_questionnaire_strategy_is_rejected(monkeypatch):
+    monkeypatch.setenv("CODA_INFERENCE__QUESTIONNAIRE__STRATEGY", "rules")
+    with pytest.raises(ValidationError):
+        reload_settings()
 
 
 def test_onboarding_notice_version_stays_a_string(monkeypatch):
@@ -182,6 +195,7 @@ def test_prompts_loaded():
         "extractor_default",
         "extractor_medcoder",
         "questionnaire_answerer_default",
+        "questionnaire_who_default",
         "reranker_default",
     }
     # The prompt referenced by the default extractor config exists and is usable.

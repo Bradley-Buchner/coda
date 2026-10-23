@@ -97,7 +97,8 @@ where = ["src"]
 "coda.inference.champs_prompted" = ["prompts/*.txt", "prompts/icd10/*.txt",
                                      "prompts/icd11/*.txt",
                                      "prompts/icd11/*.yaml"]
-"coda.resources" = ["*.csv", "*.tsv", "*.json", "champs/*.txt", "champs/*.tsv", "questionnaires/*.tsv"]
+"coda.resources" = ["*.csv", "*.tsv", "*.json", "champs/*.txt", "champs/*.tsv", "questionnaires/*.tsv",
+    "questionnaires/*.json"]
 
 [tool.setuptools.dynamic]
 version = {attr = "coda.__version__"}
