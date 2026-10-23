@@ -2810,10 +2810,12 @@
 
       /* Tablet portrait + large phones */
       @media (max-width: 768px) {
+        /* Grows to a second row when the buttons do not fit */
         .app-top {
-          padding: 0 14px;
+          padding: 10px 14px;
           gap: 8px;
-          height: 56px;
+          height: auto;
+          min-height: 56px;
         }
         .top-divider {
           display: none;
@@ -2954,6 +2956,9 @@
 
       /* Small phones */
       @media (max-width: 480px) {
+        .mccd-sheet {
+          padding: 20px 14px;
+        }
         .idle-mic-btn {
           width: 120px;
           height: 120px;
@@ -3025,6 +3030,109 @@
         }
         .btn {
           min-width: 44px;
+        }
+      }
+
+      /* Phone screens: fields under their labels, one per row, and the
+         MCCD lines as stacked cards. The printed certificate keeps the
+         table. */
+      @media screen and (max-width: 600px) {
+        .profile-toggles {
+          padding: 0 6px;
+        }
+        .profile-toggle {
+          flex: 1 1 0;
+          min-width: 0;
+          flex-wrap: wrap;
+          row-gap: 2px;
+          padding: 8px 10px;
+          text-align: left;
+        }
+        .profile-summary {
+          flex-basis: 100%;
+          margin-left: 0;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          font-size: 12px;
+        }
+        .profile-fields {
+          gap: 12px;
+          padding: 4px 16px 14px;
+        }
+        .profile-row {
+          gap: 12px;
+        }
+        .profile-row > .profile-field,
+        .profile-row-label {
+          flex-basis: 100%;
+        }
+        .profile-field {
+          flex-wrap: wrap;
+          gap: 6px 8px;
+        }
+        .profile-field > label:first-child,
+        .profile-field > .profile-label {
+          flex-basis: 100%;
+        }
+        .profile-field input[type="text"],
+        .profile-field input[type="date"],
+        #caseId,
+        #mannerOfDeath,
+        #hivStatus {
+          flex: 1;
+          width: auto;
+          min-width: 0;
+          padding: 8px 10px;
+          font-size: 15px;
+        }
+        .profile-field input[type="number"],
+        .profile-field select {
+          padding: 8px 10px;
+          font-size: 15px;
+        }
+        .profile-segmented label {
+          padding: 8px 14px;
+        }
+
+        .mccd-table thead {
+          display: none;
+        }
+        .mccd-table,
+        .mccd-table tbody {
+          display: block;
+        }
+        .mccd-table tr {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          padding: 12px 0;
+          border-top: 1px solid var(--border-warm);
+        }
+        .mccd-table tbody th {
+          grid-column: 1 / -1;
+          width: auto;
+        }
+        .mccd-table td,
+        .mccd-table td:nth-child(n) {
+          display: block;
+          width: auto;
+          padding: 0;
+        }
+        .mccd-table td:nth-child(2) {
+          grid-column: 1 / -1;
+        }
+        .mccd-table td::before {
+          content: attr(data-label);
+          display: block;
+          margin-bottom: 3px;
+          font-size: 11px;
+          color: var(--ink-muted);
+        }
+        .mccd-table td input,
+        .mccd-table td textarea {
+          width: 100%;
+          box-sizing: border-box;
         }
       }
     </style>
@@ -5392,7 +5500,7 @@
         }
         const [, top] = sorted[0];
         resultTitle.textContent = top.name;
-        resultConfidence.textContent = top.score.toFixed(2);
+        resultConfidence.textContent = Math.round(top.score * 100) + "%";
         const icd = causeCode(top.identifiers);
         resultIcd.textContent = icd || "—";
         if (resultIcdLabel) resultIcdLabel.textContent = causeSystemLabel(top.identifiers);
@@ -5725,7 +5833,7 @@
         return {
           title: cause.name,
           code: cause.code,
-          score: cause.score.toFixed(2),
+          score: Math.round(cause.score * 100) + "%",
         };
       }
 
@@ -7756,6 +7864,11 @@
 
       // Add a Part 1 line labeled with the next letter, copied from the last
       const mccdPart1 = mccdSheet.querySelector(".mccd-table tbody");
+      // Each cell names its column, shown as its label on phones
+      const mccdHeads = mccdSheet.querySelectorAll(".mccd-table thead th");
+      mccdPart1.querySelectorAll("td").forEach((cell) => {
+        cell.dataset.label = mccdHeads[cell.cellIndex].textContent;
+      });
       document.getElementById("mccdAddLine").addEventListener("click", () => {
         const rows = mccdPart1.rows;
         const letter = String.fromCharCode(97 + rows.length);
