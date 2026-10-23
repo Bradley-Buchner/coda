@@ -122,7 +122,7 @@ class ChampsPromptedIcd10Agent(ChampsPromptedInferenceAgent):
             + self.schema_guidance + "\n\n" \
             + self.clinical_note_guidance
 
-    async def infer(self, chunk_id: str, text: str,
+    async def infer_causes(self, chunk_id: str, text: str,
                     annotations: List[Annotation]):
         """Perform COD inference using accumulated dialogue via LLM."""
         try:

@@ -252,7 +252,7 @@ class Interview:
     def __init__(self, form: WhoForm, age_days: Optional[float] = None,
                  sex: Optional[str] = None, prefill: Optional[Mapping[str, Any]] = None):
         self.form = form
-        self.profile_age = age_days
+        self.profile_age = age_days if age_days is not None and age_days >= 0 else None
         self.profile_sex = sex
         self.answers: Dict[str, Any] = dict(prefill or {})
         self.prefilled = set(prefill or ())

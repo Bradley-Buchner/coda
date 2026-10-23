@@ -2,11 +2,13 @@
 
 import asyncio
 import logging
+import textwrap
 import time
 from pathlib import Path
 
 from coda.inference.agent import InferenceAgent
 from coda.llm_api.client import LLMClient
+from coda.questionnaire.questionnaire import Questionnaire
 
 logger = logging.getLogger(__name__)
 
@@ -123,15 +125,17 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
     Works with dialogue text, the case profile and clinical notes - no MITS,
     structured VA, or clinical abstraction sections.
 
-    Subclasses implement infer and set diagnosis_standard, the text put
-    before the input when use_diagnosis_standard is on.
+    Subclasses implement infer_causes and set diagnosis_standard, the text
+    put before the input when use_diagnosis_standard is on.
     """
 
     def __init__(self, llm_client: LLMClient,
                  use_diagnosis_standard: bool = False,
                  llm_semaphore: asyncio.Semaphore | None = None,
                  num_questions=DEFAULT_NUM_QUESTIONS,
-                 question_style=DEFAULT_QUESTION_STYLE):
+                 question_style=DEFAULT_QUESTION_STYLE,
+                 questionnaire: Questionnaire | None = None,
+                 add_questionnaire_to_prompt: bool = False):
         super().__init__()
         self.llm_client = llm_client
         self.llm_semaphore = llm_semaphore or asyncio.Semaphore(1)
@@ -139,6 +143,38 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
         self.use_diagnosis_standard = use_diagnosis_standard
         self.num_questions = num_questions
         self.question_style = question_style
+
+        # The questionnaire step runs before every inference when on
+        self.questionnaire = questionnaire
+        self.add_questionnaire_to_prompt = add_questionnaire_to_prompt
+        self.questionnaire_answers = None
+
+    async def infer(self, chunk_id, text, annotations):
+        """Run the questionnaire step, if any, then infer the causes."""
+        if self.questionnaire is None:
+            return await self.infer_causes(chunk_id, text, annotations)
+        started = time.perf_counter()
+        await self.update_questionnaire(chunk_id)
+        questionnaire_s = round(time.perf_counter() - started, 3)
+        result = await self.infer_causes(chunk_id, text, annotations)
+        result["questionnaire_answers"] = self.questionnaire_answers
+        result["timings"] = {"questionnaire_s": questionnaire_s}
+        return result
+
+    async def infer_causes(self, chunk_id, text, annotations):
+        """Infer the causes of death from the case input so far."""
+        raise NotImplementedError
+
+    async def update_questionnaire(self, chunk_id):
+        """Update the questionnaire answers from the dialogue so far. A
+        failure keeps the earlier answers."""
+        try:
+            async with self.llm_semaphore:
+                self.questionnaire_answers = await asyncio.to_thread(
+                    self.questionnaire.update, self.questionnaire_answers,
+                    self.dialogue_history, self.metadata.profile)
+        except Exception:
+            logger.exception("Questionnaire step failed for chunk %s", chunk_id)
 
     def build_user_prompt(self):
         """Return the user prompt with the case input accumulated so far."""
@@ -153,6 +189,18 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             f"- narrative:\n"
             f"  {self.all_text.strip()}"
         )
+        if self.add_questionnaire_to_prompt and self.questionnaire_answers:
+            answers = self.questionnaire.format(self.questionnaire_answers,
+                                                self.all_text)
+            if answers:
+                user_prompt += (
+                    "\n- structured VA answers (each quote is one statement "
+                    "from the narrative above, restated as standard VA "
+                    "questions; weigh each statement once, ignore an answer "
+                    "its quote does not support, and let the narrative take "
+                    "precedence if they conflict):\n"
+                    + textwrap.indent(answers, "  ")
+                )
         if self.clinical_notes:
             user_prompt += "\n\n" + "\n".join(
                 f'<clinical_note filename="{note["filename"]}">\n'
@@ -180,6 +228,10 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             raise LLMCallFailed("LLM API call failed after retries.")
         return response
 
+    def reset(self):
+        super().reset()
+        self.questionnaire_answers = None
+
     def create_session_agent(self) -> "ChampsPromptedInferenceAgent":
         return self.__class__(
             llm_client=self.llm_client,
@@ -187,4 +239,6 @@ class ChampsPromptedInferenceAgent(InferenceAgent):
             llm_semaphore=self.llm_semaphore,
             num_questions=self.num_questions,
             question_style=self.question_style,
+            questionnaire=self.questionnaire,
+            add_questionnaire_to_prompt=self.add_questionnaire_to_prompt,
         )
