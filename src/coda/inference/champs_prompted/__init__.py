@@ -21,6 +21,7 @@ from coda.inference.champs_prompted.icd11_agent import (
     ChampsPromptedIcd11SinglePassAgent,
     ChampsPromptedIcd11TwoPassAgent,
 )
+from coda.questionnaire.questionnaire import create_questionnaire
 
 __all__ = [
     "AdultIcd11SinglePassAgent",
@@ -76,9 +77,16 @@ def create_champs_prompted_agent(
                                                DEFAULT_NUM_QUESTIONS))
     question_style = str(settings.inference.get("question_style",
                                                 DEFAULT_QUESTION_STYLE))
+    questionnaire = None
+    questionnaire_settings = settings.inference.get("questionnaire") or {}
+    if questionnaire_settings.get("enabled", False):
+        questionnaire = create_questionnaire(client, questionnaire_settings)
     return AGENT_CLASSES[key](
         llm_client=client,
         llm_semaphore=asyncio.Semaphore(max_concurrency),
         num_questions=num_questions,
         question_style=question_style,
+        questionnaire=questionnaire,
+        add_questionnaire_to_prompt=questionnaire_settings.get("add_to_prompt",
+                                                               False),
     )

@@ -1,4 +1,4 @@
-"""Tests for questionnaire retrieval inside the CHAMPS prompted agent."""
+"""Tests for the questionnaire step of the CHAMPS prompted agents."""
 
 import asyncio
 import re
@@ -8,10 +8,13 @@ import time
 import numpy as np
 
 from coda.config import PROMPTS
-from coda.inference.champs_prompted_agent import ChampsPromptedInferenceAgent
+from coda.inference.champs_prompted import ChampsPromptedIcd10Agent
 from coda.questionnaire.answerer import QuestionAnswerer
-from coda.questionnaire.bank import Question
+from coda.questionnaire.bank import Question, load_question_bank
+from coda.questionnaire.questionnaire import Questionnaire
 from coda.questionnaire.retriever import QuestionRetriever
+from coda.questionnaire.who_answerer import WhoAnswerer
+from coda.questionnaire.who_form import load_who_form
 
 KEYWORDS = ("fever", "cough", "rash")
 QUESTIONS = (
@@ -47,14 +50,17 @@ class _FakeLLMClient:
                 "questions": ["q1", "q2", "q3"]}
 
 
-def _agent(llm, questionnaire=True):
+def _agent(llm, questionnaire=True, add_to_prompt=True):
     if not questionnaire:
-        return ChampsPromptedInferenceAgent(llm)
-    return ChampsPromptedInferenceAgent(
+        return ChampsPromptedIcd10Agent(llm)
+    return ChampsPromptedIcd10Agent(
         llm,
-        question_retriever=QuestionRetriever(QUESTIONS, encoder=_keyword_encoder,
-                                             top_k=3, min_similarity=0.5),
-        question_answerer=QuestionAnswerer(llm, PROMPTS["questionnaire_answerer_default"]),
+        questionnaire=Questionnaire(
+            "retrieval",
+            QuestionAnswerer(llm, PROMPTS["questionnaire_answerer_default"]),
+            retriever=QuestionRetriever(QUESTIONS, encoder=_keyword_encoder,
+                                        top_k=3, min_similarity=0.5)),
+        add_questionnaire_to_prompt=add_to_prompt,
     )
 
 
@@ -83,8 +89,17 @@ async def test_questionnaire_answers_reach_cod_prompt():
     assert '- "He had a fever": Did he or she have a fever? yes' in prompt
     assert [(a["id"], a["answer"]) for a in result["questionnaire_answers"]] == \
         [("q:fever-o", "yes")]
-    assert set(result["timings"]) == {"questionnaire_retrieval_s",
-                                      "questionnaire_answering_s", "inference_s"}
+    assert set(result["timings"]) == {"questionnaire_s", "inference_s"}
+
+
+async def test_answers_stay_out_of_prompt_unless_added():
+    llm = _FakeLLMClient()
+    llm.answers = {"Did he or she have a fever?":
+                   {"evidence": "He had a fever", "answer": "yes"}}
+    result = await _agent(llm, add_to_prompt=False).process_chunk(
+        "c1", "He had a fever for five days.", [])
+    assert "structured VA answers" not in _cod_prompt(llm)
+    assert result["questionnaire_answers"]
 
 
 async def test_answers_accumulate_across_chunks():
@@ -115,13 +130,13 @@ async def test_questionnaire_failure_still_returns_causes():
     def fake_retrieve(text):
         raise RuntimeError("boom")
 
-    agent.question_retriever.retrieve = fake_retrieve
+    agent.questionnaire.retriever.retrieve = fake_retrieve
     result = await agent.process_chunk("c1", "He had a fever.", [])
     assert result["causes"]
-    assert result["questionnaire_answers"] == []
+    assert result["questionnaire_answers"] is None
 
 
-async def test_session_agents_share_retriever_but_not_answers():
+async def test_session_agents_share_questionnaire_but_not_answers():
     llm = _FakeLLMClient()
     llm.answers = {"Did he or she have a fever?":
                    {"evidence": "He had a fever", "answer": "yes"}}
@@ -129,12 +144,11 @@ async def test_session_agents_share_retriever_but_not_answers():
     session = agent.create_session_agent()
     await session.process_chunk("c1", "He had a fever.", [])
 
-    assert session.question_retriever is agent.question_retriever
-    assert session.question_answerer is agent.question_answerer
-    assert list(session.questionnaire_answers) == ["q:fever-o"]
-    assert agent.questionnaire_answers == {}
+    assert session.questionnaire is agent.questionnaire
+    assert [a["id"] for a in session.questionnaire_answers] == ["q:fever-o"]
+    assert agent.questionnaire_answers is None
     session.reset()
-    assert session.questionnaire_answers == {}
+    assert session.questionnaire_answers is None
 
 
 async def test_questionnaire_work_runs_off_event_loop_within_llm_bound():
@@ -158,13 +172,13 @@ async def test_questionnaire_work_runs_off_event_loop_within_llm_bound():
     llm.answers = {"Did he or she have a fever?":
                    {"evidence": "He had a fever", "answer": "yes"}}
     prototype = _agent(llm)
-    retrieve = prototype.question_retriever.retrieve
+    retrieve = prototype.questionnaire.retriever.retrieve
 
     def fake_retrieve(text):
         threads.append(threading.get_ident())
         return retrieve(text)
 
-    prototype.question_retriever.retrieve = fake_retrieve
+    prototype.questionnaire.retriever.retrieve = fake_retrieve
     await asyncio.gather(
         prototype.create_session_agent().process_chunk("a", "He had a fever.", []),
         prototype.create_session_agent().process_chunk("b", "He had a fever.", []),
@@ -174,3 +188,29 @@ async def test_questionnaire_work_runs_off_event_loop_within_llm_bound():
     assert len(threads) == 6
     assert threading.get_ident() not in threads
     assert counter["max_active"] == 1
+
+
+async def test_who_form_follows_the_profile():
+    llm = _FakeLLMClient()
+    llm.answers = {
+        "Did he or she have a fever?": {"evidence": "He had a fever", "answer": "yes"},
+        "How long did the fever last?": {
+            "evidence": "a fever for about a week or two",
+            "answer": {"low": 7, "high": 14, "unit": "days", "basis": "stated"}},
+    }
+    agent = ChampsPromptedIcd10Agent(
+        llm,
+        questionnaire=Questionnaire(
+            "who_form", WhoAnswerer(llm, PROMPTS["questionnaire_who_default"]),
+            form=load_who_form(), bank=load_question_bank()),
+        add_questionnaire_to_prompt=True)
+    profile = {"age": {"value": 30, "unit": "years"}, "sex": "male"}
+    result = await agent.process_chunk(
+        "c1", "He had a fever for about a week or two.", [],
+        metadata={"profile": profile})
+
+    record = result["questionnaire_answers"]
+    given = {a["id"]: a["answer"] for a in record["answers"]}
+    assert record["complete"] and given["Id10147"] == "yes"
+    assert "Id10019" not in given   # the sex comes from the profile
+    assert "How long did the fever last? 7 to 14 days" in _cod_prompt(llm)

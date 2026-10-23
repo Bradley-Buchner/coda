@@ -62,6 +62,10 @@ def test_sections_follow_age_and_sex(form):
     assert "Id10294" in woman.answers and "Id10294" not in man.answers       # breast lump
 
 
+def test_negative_age_is_unknown(form):
+    assert "age_group" in _interview(form, {}, age_days=-1).answers   # asked for the age
+
+
 def test_follow_ups_open_on_yes(form):
     assert "Id10079" in _interview(form, {"Id10077": "yes"}).answers   # road traffic injury
     assert "Id10079" not in _interview(form, {"Id10077": "no"}).answers

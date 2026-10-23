@@ -414,7 +414,10 @@ if __name__ == "__main__":
         info.update(agent_class=type(agent).__name__,
                     provider=args.provider, model=agent.llm_client.model,
                     num_questions=agent.num_questions,
-                    question_style=agent.question_style)
+                    question_style=agent.question_style,
+                    questionnaire=agent.questionnaire.strategy
+                    if agent.questionnaire else None,
+                    add_questionnaire_to_prompt=agent.add_questionnaire_to_prompt)
 
     server = InferenceServer(agent, host=args.host, port=args.port, info=info)
     server.run()

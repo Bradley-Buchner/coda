@@ -116,7 +116,7 @@ class ChampsPromptedIcd11Agent(ChampsPromptedInferenceAgent):
             .replace("{age_group_guidance}", guidance) \
             .replace("{question_guidance}", self.question_guidance)
 
-    async def infer(self, chunk_id, text, annotations):
+    async def infer_causes(self, chunk_id, text, annotations):
         """Rank ICD-11 codes for the case and return them as causes."""
         group = age_group(self.metadata.profile, self.age_group_limits)
         labels = self.allowed_labels(group)

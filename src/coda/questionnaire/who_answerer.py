@@ -147,7 +147,7 @@ def _enum_size(q: WhoQuestion) -> int:
 def _bound(value: Any) -> Optional[float]:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
-    return float(value) if math.isfinite(value) else None
+    return float(value) if math.isfinite(value) and value >= 0 else None
 
 
 def _parse_number(q: WhoQuestion, given: Any) -> Any:
