@@ -5500,7 +5500,7 @@
         }
         const [, top] = sorted[0];
         resultTitle.textContent = top.name;
-        resultConfidence.textContent = top.score.toFixed(2);
+        resultConfidence.textContent = Math.round(top.score * 100) + "%";
         const icd = causeCode(top.identifiers);
         resultIcd.textContent = icd || "—";
         if (resultIcdLabel) resultIcdLabel.textContent = causeSystemLabel(top.identifiers);
@@ -5833,7 +5833,7 @@
         return {
           title: cause.name,
           code: cause.code,
-          score: cause.score.toFixed(2),
+          score: Math.round(cause.score * 100) + "%",
         };
       }
 
