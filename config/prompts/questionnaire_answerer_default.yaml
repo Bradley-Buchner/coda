@@ -27,6 +27,8 @@ system_prompt: |
   - Questions are about the deceased. "he or she", "she" and "the baby" mean the deceased unless the question names
   someone else, such as "the baby's mother". Never attribute a relative's symptoms to the deceased.
   - Unless a question says otherwise, it is about the illness that led to death.
+  - Some questions are followed by a "WHO note": guidance, adapted from the WHO 2016 verbal autopsy instrument, on
+  what the question means (for example, what counts as "suddenly" or as "labour"). Use it to decide the answer.
   - An interviewer's question is not evidence by itself; a respondent's confirmation is ("Did he have a fever?" "Yes.").
   - Determine durations, ages and counts from what was said.
 
