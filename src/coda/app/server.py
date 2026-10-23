@@ -22,9 +22,8 @@ from fastapi import Body, FastAPI, HTTPException, Request, WebSocket, \
     WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
-import ollama
 
-from coda.app.documents import document_text
+from coda.app.documents import OcrUnavailable, document_text
 from coda.app.storage import CaseRecorder, case_audio_path, case_sources, \
     cases_browsable, cases_root, find_case, list_cases, load_case, \
     storage_enabled, storage_keeps_audio, storage_keeps_notes
@@ -1047,7 +1046,7 @@ async def read_document_text(request: Request, name: str):
                                        name)
     except ValueError:
         raise HTTPException(status_code=400, detail="Unsupported file type")
-    except (ollama.ResponseError, ConnectionError) as e:
+    except OcrUnavailable as e:
         logger.error("OCR failed for %s: %s", name, e)
         raise HTTPException(status_code=503, detail="OCR is unavailable")
     except Exception:

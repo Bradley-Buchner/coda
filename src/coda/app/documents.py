@@ -22,12 +22,19 @@ def ocr_model():
     return settings.app.get("ocr_model") or ""
 
 
+class OcrUnavailable(Exception):
+    """The OCR model could not be reached or run."""
+
+
 def ocr_image(data):
     """Return the text the OCR model reads in an image."""
     client = ollama.Client(host=settings.llm.ollama.base_url)
-    response = client.generate(
-        model=ocr_model(), prompt=OCR_PROMPT, images=[data],
-        options={"num_ctx": OCR_CONTEXT, "temperature": 0})
+    try:
+        response = client.generate(
+            model=ocr_model(), prompt=OCR_PROMPT, images=[data],
+            options={"num_ctx": OCR_CONTEXT, "temperature": 0})
+    except (ollama.ResponseError, ConnectionError) as e:
+        raise OcrUnavailable(str(e)) from e
     return response.response.strip()
 
 
