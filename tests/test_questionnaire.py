@@ -10,6 +10,7 @@ from coda.questionnaire.answerer import (
     QuestionAnswerer,
     build_answer_schema,
     format_answers,
+    format_questions,
 )
 from coda.questionnaire.bank import (
     UNKNOWN,
@@ -48,6 +49,10 @@ def test_default_bank_loads():
     assert len({q.text for q in questions}) == len(questions)
     # Regression: the embedder reads "(s)he" as "he"
     assert not any("(s)he" in q.text or "his/her" in q.text for q in questions)
+    # Notes from the WHO instrument say what some questions mean
+    notes = {q.id: q.note for q in questions if q.note}
+    assert len(notes) == 45
+    assert notes["who.va.q:W610312-o"].startswith("Labor is the period of time")
 
 
 def test_custom_bank_responses(tmp_path):
@@ -72,11 +77,11 @@ def test_bank_from_probbase_keeps_symptoms_and_background(tmp_path):
     pd.DataFrame({
         "id:ID": ["who.va.q:W610147-o", "who.va.q:W610411-o",
                   "who.va.q:W610019-a", "who.va.q:W610344-o",
-                  "who.va.q:W610252-o"],
+                  "who.va.q:W610252-o", "who.va.q:W610123-o"],
         "name": ["Did (s)he have a fever?", "Did (s)he drink alcohol?",
                  "Was he male?", "Was the delivery a Caesarean section?",
-                 "Did s/he have puffiness all over his/her body?"],
-        "samb": ["M", "B", "S", "M", "M"],
+                 "Did s/he have puffiness all over his/her body?", "Did (s)he die suddenly?"],
+        "samb": ["M", "B", "S", "M", "M", "M"],
     }).to_csv(nodes, sep="\t", index=False)
 
     question_bank_from_probbase(nodes, tmp_path / "bank.tsv")
@@ -84,7 +89,9 @@ def test_bank_from_probbase_keeps_symptoms_and_background(tmp_path):
     questions = {q.id: q for q in load_question_bank(tmp_path / "bank.tsv")}
     assert set(questions) == {"who.va.q:W610147-o", "who.va.q:W610411-o",
                               "who.va.q:W610019-a", "who.va.q:W610344-o",
-                              "who.va.q:W610252-o"}
+                              "who.va.q:W610252-o", "who.va.q:W610123-o"}
+    assert questions["who.va.q:W610123-o"].note.startswith("Suddenly means")
+    assert questions["who.va.q:W610147-o"].note == ""
     assert questions["who.va.q:W610147-o"].text == "Did he or she have a fever?"
     assert questions["who.va.q:W610019-a"].text == "Was the deceased male?"
     # Regression: replacing "s/he" first turned "his/her" into "hihe or sher"
@@ -155,6 +162,18 @@ def _answer(response, questions=(FEVER, FEVER_2W), dialogue=DIALOGUE):
     answerer = QuestionAnswerer(llm, PROMPTS["questionnaire_answerer_default"])
     answers = answerer.answer(dialogue, list(questions))
     return answers, llm
+
+
+def test_questions_show_their_who_note():
+    labour = Question("q:labour-o", "Did she die during labour or delivery?",
+                      note="Labor is the period of time by which contractions are "
+                           "less than 10 minutes apart.")
+    assert format_questions([labour, FEVER]).splitlines() == [
+        "q1: Did she die during labour or delivery? [yes | no | unknown]",
+        "    WHO note: Labor is the period of time by which contractions are less than "
+        "10 minutes apart.",
+        f"q2: {FEVER.text} [yes | no | unknown]",
+    ]
 
 
 def test_answer_schema_restricts_each_question():

@@ -1,6 +1,7 @@
-"""Build a question bank TSV file used for questionnaire retrieval. The default bank
-holds the symptom, background, and sex VA interview questions linked to WHO VA causes in
-ProbBase, along with ProbBase's skip rules.
+"""Build a question bank TSV file used for questionnaire retrieval and answering.
+The default bank holds the symptom, background, and sex VA interview questions
+linked to WHO VA causes in ProbBase, along with ProbBase's skip rules and notes on
+what some questions mean, adapted from the WHO 2016 VA instrument.
 """
 
 import csv
@@ -15,7 +16,7 @@ from coda.resources import get_resource_path
 UNKNOWN = "unknown"
 DEFAULT_RESPONSES = ("yes", "no")
 DEFAULT_BANK = get_resource_path("questionnaires/who_va_probbase.tsv")
-COLUMNS = ["id", "question", "responses", "category", "ask_if", "skip_if"]
+COLUMNS = ["id", "question", "responses", "category", "ask_if", "skip_if", "note"]
 # Options of one multi-option item share an id stem: who.va.q:W610148-a, -b, -c.
 OPTION_ID = re.compile(r"^(.+)-[a-z]$")
 
@@ -188,6 +189,78 @@ PROBBASE_REWORDED = {
     "who.va.q:W610389-o": "Was the baby born by Caesarean section?",
 }
 
+# Notes on what some questions mean, shown to the LLM with the question. Adapted from
+# the interviewer hints in the WHO 2016 VA instrument (ODK form v1.5.3).
+_ANY_INTENT = ("This includes accidents and cases where it is unknown if it was an "
+               "accident or whether there was intentional violence.")
+_SUDDEN = "Suddenly means died unexpectedly within 24 hours of being in regular health."
+_DIAGNOSIS = ("This is asking for the diagnosis assessed by a doctor, health worker, or "
+              "other health professional during the final illness.")
+_MOTHER_IN_FACILITY = ("For stillbirths and live births delivered in a health facility, "
+                       "answer based on mother's experience.")
+_MOTHER_STILLBIRTH = "For stillbirths answer based on mother's experience."
+WHO_NOTES = {
+    **dict.fromkeys(["who.va.q:W610083-o", "who.va.q:W610084-o", "who.va.q:W610085-o",
+                     "who.va.q:W610086-o", "who.va.q:W610096-o"],
+                    _ANY_INTENT),
+    "who.va.q:W610116-o":
+        ("Macerated means the body was pulpy. This indicates that the baby has been dead"
+         " inside the mother for some time."),
+    **dict.fromkeys(["who.va.q:W610123-o", "who.va.q:W610290-o"],
+                    _SUDDEN),
+    **dict.fromkeys(["who.va.q:W610125-o", "who.va.q:W610127-o", "who.va.q:W610128-o",
+                     "who.va.q:W610129-o", "who.va.q:W610130-o", "who.va.q:W610131-o",
+                     "who.va.q:W610132-o", "who.va.q:W610133-o", "who.va.q:W610134-o",
+                     "who.va.q:W610135-o", "who.va.q:W610136-o", "who.va.q:W610137-o",
+                     "who.va.q:W610138-o", "who.va.q:W610139-o", "who.va.q:W610140-o",
+                     "who.va.q:W610141-o", "who.va.q:W610142-o", "who.va.q:W610143-o",
+                     "who.va.q:W610144-o"],
+                    _DIAGNOSIS),
+    "who.va.q:W610193-o":
+        "Problems could be pain, protruding abdomen or a mass.",
+    "who.va.q:W610223-o":
+        "Urine problems refer to urinating a lot or not at all, and blood in the urine.",
+    "who.va.q:W610268-o":
+        ("Long term deficiency of the blood results in a pale, whitish appearance of the"
+         " lips, tongue, and eye sac. Sometime it is referred to as thinning or lack of "
+         "blood, or pallor."),
+    "who.va.q:W610305-o":
+        ("A “yes” response to this question means a foetus or baby remained in the "
+         "mother’s body after she died, even if she was already in labour."),
+    "who.va.q:W610306-o":
+        ("A “yes” response to this question means that a foetus or baby was lost or "
+         "removed or delivered (vaginally or by C-section) within 6 weeks before she "
+         "died, whether the baby survived or not."),
+    "who.va.q:W610312-o":
+        ("Labor is the period of time by which contractions are less than 10 minutes "
+         "apart."),
+    "who.va.q:W610331-o":
+        ("An abnormally positioned baby refers to babys' whose first body part exiting "
+         "the vagina is not the head."),
+    "who.va.q:W610338-o":
+        ("Professional assistance means delivery attended by a medical professional "
+         "(doctor, nurse or midwife)."),
+    "who.va.q:W610354-o":
+        ("If two or more children are born at the same time, it is counted as a multiple"
+         " birth, even if one or more of the babies are born dead."),
+    "who.va.q:W610361-o":
+        ("Professional assistance means delivery attended by a medical professional "
+         "(doctor, midwife, or nurse)."),
+    "who.va.q:W610450-o":
+        ("Answer yes if the deceased was a stillbirth delivered in a health facility or "
+         "a live birth delivered in a health facility that died before leaving the "
+         "facility."),
+    **dict.fromkeys(["who.va.q:W610451-o", "who.va.q:W610452-o", "who.va.q:W610453-o"],
+                    _MOTHER_IN_FACILITY),
+    "who.va.q:W610454-o":
+        "For stillbirths, answer based on mother's experience.",
+    "who.va.q:W610455-o":
+        ("For stillbirths and live births delivered in a health facility that died "
+         "before leaving the facility, answer based on mother's experience."),
+    **dict.fromkeys(["who.va.q:W610456-o", "who.va.q:W610457-o"],
+                    _MOTHER_STILLBIRTH),
+}
+
 # Change "(s)he" to "he or she" to prevent accidental gendering of questions by
 # the sentence embedder.
 GENDER_NEUTRAL = [
@@ -210,6 +283,7 @@ class Question:
     category: str = ""
     ask_if: Tuple[Tuple[str, str], ...] = ()   # (question id, answer) pairs
     skip_if: Tuple[Tuple[str, str], ...] = ()
+    note: str = ""   # what the question means, shown to the LLM
 
     @property
     def allowed_answers(self) -> Tuple[str, ...]:
@@ -343,6 +417,7 @@ def load_question_bank(path: Optional[str] = None) -> List[Question]:
                 category=(row.get("category") or "").strip(),
                 ask_if=_conditions(row.get("ask_if")),
                 skip_if=_conditions(row.get("skip_if")),
+                note=(row.get("note") or "").strip(),
             ))
     return questions
 
@@ -372,6 +447,7 @@ def question_bank_from_probbase(nodes_file: str, out_file: str,
         "category": nodes["samb"].map(PROBBASE_CATEGORIES),
         **{column: nodes["id:ID"].map(lambda qid, c=conditions: ";".join(c.get(qid, [])))
            for column, conditions in rules.items()},
+        "note": nodes["id:ID"].map(WHO_NOTES).fillna(""),
     })
     bank.sort_values("id").to_csv(out_file, sep="\t", index=False,
                                   columns=COLUMNS, lineterminator="\n")

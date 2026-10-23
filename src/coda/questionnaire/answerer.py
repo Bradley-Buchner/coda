@@ -29,6 +29,7 @@ class QuestionAnswer:
     question: str
     answer: str
     evidence: str
+    source: str = "llm"   # where the answer came from, e.g. "who_form:<question>" for a converted item
 
     def to_dict(self) -> Dict[str, str]:
         return asdict(self)
@@ -57,9 +58,14 @@ def build_answer_schema(questions: Sequence[Question]) -> Dict[str, Any]:
 
 
 def format_questions(questions: Sequence[Question]) -> str:
-    """Format the questions as numbered prompt lines with their allowed answers."""
-    return "\n".join(f"q{i}: {q.text} [{' | '.join(q.allowed_answers)}]"
-                     for i, q in enumerate(questions, 1))
+    """Format the questions as numbered prompt lines with their allowed answers, each
+    followed by its WHO note when it has one."""
+    lines = []
+    for i, q in enumerate(questions, 1):
+        lines.append(f"q{i}: {q.text} [{' | '.join(q.allowed_answers)}]")
+        if q.note:
+            lines.append(f"    WHO note: {q.note}")
+    return "\n".join(lines)
 
 
 def format_answers(answers: Iterable[QuestionAnswer], transcript: str) -> str:
