@@ -224,7 +224,7 @@ def write_outputs(output_dir: Path, full_text: str, per_chunk: list, meta: dict)
                 "reasoning": inf.get("reasoning"),
                 "questions": inf.get("questions", []),
                 "timing": timings,
-                # Only present when questionnaire retrieval is enabled
+                # Only present when the questionnaire is enabled
                 **({"questionnaire_answers": inf["questionnaire_answers"]}
                    if "questionnaire_answers" in inf else {}),
             }) + "\n")

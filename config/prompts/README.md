@@ -3,8 +3,8 @@
 YAML files that define the LLM prompts used by the extractor, the reranker and
 the questionnaire answerer. Each config is referenced by **key** (its filename
 stem) from the main config, via `grounder.rag.extractor.prompt`,
-`grounder.rag.reranker.prompt` and `inference.questionnaire.prompt` in
-`config/settings.yaml`.
+`grounder.rag.reranker.prompt`, `inference.questionnaire.prompt` and
+`inference.questionnaire.who_prompt` in `config/settings.yaml`.
 
 ## Fields
 
@@ -35,7 +35,8 @@ supporting_evidence_key: Supporting Evidence  # key for the evidence list
 | `extractor_default.yaml` | General-purpose extractor. Parametric on `concept_type`. Uses structured output. |
 | `extractor_medcoder.yaml` | Verbatim prompt from the MedCodER paper for ICD-10 disease extraction. Uses raw JSON output (`use_schema: false`). |
 | `reranker_default.yaml` | General-purpose reranker. Uses structured output. |
-| `questionnaire_answerer_default.yaml` | Answers retrieved verbal autopsy questions from the interview transcript with a verbatim evidence quote per answer. Uses structured output (schema built in code). |
+| `questionnaire_answerer_default.yaml` | Answers retrieved verbal autopsy questions (the `retrieval` strategy) from the interview transcript with a verbatim evidence quote per answer. Some questions carry a WHO note on what they mean (`note` column of the question bank). Uses structured output (schema built in code). |
+| `questionnaire_who_default.yaml` | Answers the WHO 2016 VA form's questions (the `who_form` strategy): yes/no, options from a list, numbers (exact or a range) and short text, each with a verbatim evidence quote. Uses structured output (schema built in code). |
 
 ## Custom configs
 

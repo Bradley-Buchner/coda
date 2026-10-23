@@ -1,0 +1,6539 @@
+{
+ "source": {
+  "form": "WHO 2016 VA questionnaire, ODK XLSForm v1.5.3",
+  "file": "WHOVA2016_v1_5_3_XLS_form_for_ODK.xlsx",
+  "sha256": "d01e7f203752047ceebb540b007634e52cae49c77a4786302c14d1877d7a4179"
+ },
+ "checks": [
+  {
+   "id": "id10260_check",
+   "message": "It is not possible to select \"only one side paralysed\" and \"left and right side\" or \"whole body\" together. Please go back and correct the selection.",
+   "condition": "selected(${Id10259}, 'yes') and (selected(${Id10260}, 'whole_body') or  (selected(${Id10260}, 'left_side')  and selected(${Id10260}, 'right_side')))",
+   "reask": [
+    "Id10259",
+    "Id10260"
+   ]
+  },
+  {
+   "id": "id1036X_check",
+   "message": "It is not possible to select \"No usual size at Birth\", \"No weighing under 2.5 kg\" and \"No weighing over 4.5 kg\" together. Please go back and correct the selection.",
+   "condition": "(selected(${Id10362}, 'no') and selected(${Id10363}, 'no') and selected(${Id10365}, 'no'))",
+   "reask": [
+    "Id10362",
+    "Id10363",
+    "Id10365"
+   ]
+  },
+  {
+   "id": "id10389_check",
+   "message": "It is not possible to select \"No\" to all three previous questions. Please go back and review the answers.",
+   "condition": "selected(${Id10387}, 'no') and selected(${Id10388}, 'no')  and selected(${Id10389}, 'no')",
+   "reask": [
+    "Id10387",
+    "Id10388",
+    "Id10389"
+   ]
+  },
+  {
+   "id": "id10414_check",
+   "message": "It is not possible to select cigarettes or pipe and \"no\" to \"Did he or she smoke tobacco?\". Please go back and correct the selections.",
+   "condition": "selected(${Id10413}, 'no') and (selected(${Id10414}, 'cigarettes')  or selected(${Id10414}, 'pipe'))",
+   "reask": [
+    "Id10413",
+    "Id10414"
+   ]
+  },
+  {
+   "id": "Id10310_check",
+   "message": "The answer to the not-pregnant confirmation says she was pregnant or had recently been pregnant, which the earlier answers don't show.",
+   "condition": "selected(${Id10310}, 'no')",
+   "reask": [
+    "Id10296",
+    "Id10297",
+    "Id10298",
+    "Id10301",
+    "Id10299",
+    "Id10302",
+    "Id10303",
+    "Id10300",
+    "Id10304",
+    "Id10305",
+    "Id10306",
+    "Id10307",
+    "Id10308",
+    "Id10309",
+    "Id10310"
+   ]
+  }
+ ],
+ "yes_only": [
+  "Id10077",
+  "Id10104",
+  "Id10370"
+ ],
+ "questions": [
+  {
+   "id": "Id10004",
+   "kind": "choice",
+   "text": "During which season did he or she die?",
+   "fields": [
+    "Id10004"
+   ],
+   "relevant": [],
+   "choices": [
+    [
+     "wet",
+     "Wet"
+    ],
+    [
+     "dry",
+     "Dry"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610004-a",
+     "yes_if": [
+      "wet"
+     ]
+    },
+    {
+     "item": "W610004-b",
+     "yes_if": [
+      "dry"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10019",
+   "kind": "choice",
+   "text": "What was the sex of the deceased?",
+   "fields": [
+    "Id10019"
+   ],
+   "relevant": [],
+   "choices": [
+    [
+     "female",
+     "Female"
+    ],
+    [
+     "male",
+     "Male"
+    ],
+    [
+     "undetermined",
+     "Ambiguous/Intersex"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610019-a",
+     "yes_if": [
+      "male"
+     ]
+    },
+    {
+     "item": "W610019-b",
+     "yes_if": [
+      "female"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "age_group",
+   "text": "What age group corresponds to the deceased?",
+   "fields": [
+    "age_group"
+   ],
+   "relevant": [],
+   "note": "Newborn (neonate): 0–27 completed days; child: 28 days through 11 years; adult: 12 years and over. WHO asks this when the date of birth or of death is unknown; CODA asks it when the case profile has no age.",
+   "converts": [],
+   "kind": "choice",
+   "choices": [
+    [
+     "neonate",
+     "Neonate"
+    ],
+    [
+     "child",
+     "Child"
+    ],
+    [
+     "adult",
+     "Adult"
+    ]
+   ]
+  },
+  {
+   "id": "age",
+   "kind": "number",
+   "text": "How old was the deceased?",
+   "fields": [
+    "age_neonate_days",
+    "age_child_unit",
+    "age_child_days",
+    "age_child_months",
+    "age_child_years",
+    "age_adult"
+   ],
+   "relevant": [],
+   "units": [
+    "days",
+    "months",
+    "years"
+   ],
+   "base_unit": "days",
+   "note": "Only asked when the case profile has no age. Less than 24 hours = 0 days. WHO requires an answer here and asks for a best estimate when the exact age is unknown; CODA's rule (the most exact answer the narrative allows, a range if need be, or unknown) applies instead.",
+   "converts": []
+  },
+  {
+   "id": "Id10058",
+   "text": "Where did the deceased die?",
+   "fields": [
+    "Id10058"
+   ],
+   "relevant": [],
+   "converts": [],
+   "kind": "choice",
+   "choices": [
+    [
+     "hospital",
+     "Hospital"
+    ],
+    [
+     "other_health_facility",
+     "Other health facility"
+    ],
+    [
+     "home",
+     "Home"
+    ],
+    [
+     "on_route_to_hospital_or_facility",
+     "On route to hospital or facility"
+    ],
+    [
+     "other",
+     "Other"
+    ]
+   ]
+  },
+  {
+   "id": "Id10487",
+   "text": "In the two weeks before death, did he or she live with, visit, or care for someone who had any COVID-19 symptoms or a positive COVID-19 test?",
+   "fields": [
+    "Id10487"
+   ],
+   "relevant": [],
+   "note": "COVID-19 symptoms include fever, difficulty breathing, cough, extreme fatigue, and changes in sense of smell or taste.",
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10488",
+   "text": "In the two weeks before death, did he or she travel to an area where COVID-19 is known to be present?",
+   "fields": [
+    "Id10488"
+   ],
+   "relevant": [],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10059",
+   "kind": "choice",
+   "text": "What was his or her marital status?",
+   "fields": [
+    "Id10059"
+   ],
+   "relevant": [
+    "(selected(${isAdult}, '1'))"
+   ],
+   "choices": [
+    [
+     "single",
+     "Single"
+    ],
+    [
+     "married",
+     "Married"
+    ],
+    [
+     "partner",
+     "Life partner"
+    ],
+    [
+     "divorced",
+     "Divorced"
+    ],
+    [
+     "widowed",
+     "Widowed"
+    ],
+    [
+     "too_young_to_be_married",
+     "Too young to be married"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610059-o",
+     "yes_if": [
+      "married"
+     ],
+     "needs": "W610019-b"
+    }
+   ]
+  },
+  {
+   "id": "Id10104",
+   "kind": "yesno",
+   "text": "Did the baby ever cry?",
+   "fields": [
+    "Id10104"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1'))"
+   ],
+   "converts": [
+    {
+     "item": "W610104-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10105",
+   "kind": "yesno",
+   "text": "Did the baby cry immediately after birth, even if only a little bit?",
+   "fields": [
+    "Id10105"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1')) and (selected(${Id10104}, 'yes') or selected(${Id10104}, 'dk'))"
+   ],
+   "converts": [
+    {
+     "item": "W610105-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10106",
+   "kind": "number",
+   "text": "How many minutes after birth did the baby first cry?",
+   "fields": [
+    "Id10106"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1')) and (selected(${Id10104}, 'yes'))"
+   ],
+   "units": [
+    "minutes"
+   ],
+   "base_unit": "minutes",
+   "converts": [
+    {
+     "item": "W610106-a",
+     "op": ">",
+     "value": 5
+    }
+   ]
+  },
+  {
+   "id": "Id10107",
+   "kind": "yesno",
+   "text": "Did the baby stop being able to cry?",
+   "fields": [
+    "Id10107"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1')) and (selected(${Id10104}, 'yes') or selected(${Id10104}, 'dk'))"
+   ],
+   "converts": [
+    {
+     "item": "W610107-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10108",
+   "kind": "number",
+   "text": "How many hours before death did the baby stop crying?",
+   "fields": [
+    "Id10108"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1')) and (selected(${Id10107}, 'yes'))"
+   ],
+   "units": [
+    "hours"
+   ],
+   "base_unit": "hours",
+   "note": "Less than 60 minutes = 0 hours.",
+   "converts": [
+    {
+     "item": "W610108-a",
+     "op": ">",
+     "value": 24
+    }
+   ]
+  },
+  {
+   "id": "Id10109",
+   "kind": "yesno",
+   "text": "Did the baby ever move?",
+   "fields": [
+    "Id10109"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1'))"
+   ],
+   "converts": [
+    {
+     "item": "W610109-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10110",
+   "kind": "yesno",
+   "text": "Did the baby ever breathe?",
+   "fields": [
+    "Id10110"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1'))"
+   ],
+   "converts": [
+    {
+     "item": "W610110-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10111",
+   "kind": "yesno",
+   "text": "Did the baby breathe immediately after birth, even a little?",
+   "fields": [
+    "Id10111"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1')) and (selected(${Id10110}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610111-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10112",
+   "kind": "yesno",
+   "text": "Did the baby have a breathing problem?",
+   "fields": [
+    "Id10112"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1')) and (selected(${Id10110}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610112-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10113",
+   "kind": "yesno",
+   "text": "Was the baby given assistance to breathe at birth?",
+   "fields": [
+    "Id10113"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1')) and (selected(${Id10110}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610113-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10114",
+   "kind": "yesno",
+   "text": "If the baby didn't show any sign of life, was it born dead?",
+   "fields": [
+    "Id10114"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1')) and (not(selected(${Id10104}, 'yes')) and not(selected(${Id10109}, 'yes'))  and not(selected(${Id10110}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610114-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10115",
+   "kind": "yesno",
+   "text": "Were there any bruises or signs of injury on baby's body after the birth?",
+   "fields": [
+    "Id10115"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1'))"
+   ],
+   "converts": [
+    {
+     "item": "W610115-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10116",
+   "kind": "yesno",
+   "text": "Was the baby’s body soft, pulpy and discoloured and the skin peeling away?",
+   "fields": [
+    "Id10116"
+   ],
+   "relevant": [
+    "(selected(${isNeonatal},'1')) and (selected(${Id10114}, 'yes'))"
+   ],
+   "note": "Macerated means the body was pulpy. This indicates that the baby has been dead inside the mother for some time.",
+   "converts": [
+    {
+     "item": "W610116-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10077",
+   "kind": "yesno",
+   "text": "Did he or she suffer from any injury or accident that led to his or her death?",
+   "fields": [
+    "Id10077"
+   ],
+   "relevant": [
+    "(${Id10114}!='yes')"
+   ],
+   "converts": [
+    {
+     "item": "W610077-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10079",
+   "kind": "yesno",
+   "text": "Was the injury from a road traffic accident?",
+   "fields": [
+    "Id10079"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610079-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10080",
+   "text": "What was his or her role in the road traffic accident?",
+   "fields": [
+    "Id10080"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and (selected(${Id10079}, 'yes'))"
+   ],
+   "converts": [],
+   "kind": "choice",
+   "choices": [
+    [
+     "pedestrian",
+     "Pedestrian"
+    ],
+    [
+     "in_car_or_light_vehicle",
+     "Driver or passenger in car or light vehicle"
+    ],
+    [
+     "in_bus_or_heavy_vehicle",
+     "Driver or passenger in bus or heavy vehicle"
+    ],
+    [
+     "on_a_motorcycle",
+     "Driver or passenger on a motorcycle"
+    ],
+    [
+     "on_a_pedal_cycle",
+     "Driver or passenger on a pedal cycle"
+    ],
+    [
+     "other",
+     "Other"
+    ]
+   ]
+  },
+  {
+   "id": "Id10081",
+   "text": "What was the counterpart that was hit during the road traffic accident?",
+   "fields": [
+    "Id10081"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and (selected(${Id10079}, 'yes'))"
+   ],
+   "converts": [],
+   "kind": "choice",
+   "choices": [
+    [
+     "pedestrian",
+     "Pedestrian"
+    ],
+    [
+     "stationary_object",
+     "Stationary object"
+    ],
+    [
+     "car_or_light_vehicle",
+     "Car or light vehicle"
+    ],
+    [
+     "bus_or_heavy_vehicle",
+     "Bus or heavy vehicle"
+    ],
+    [
+     "motorcycle",
+     "Motorcycle"
+    ],
+    [
+     "pedal_cycle",
+     "Pedal cycle"
+    ],
+    [
+     "other",
+     "Other"
+    ]
+   ]
+  },
+  {
+   "id": "Id10082",
+   "kind": "yesno",
+   "text": "Was he or she injured in a non-road transport accident?",
+   "fields": [
+    "Id10082"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610082-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10083",
+   "kind": "yesno",
+   "text": "Was he or she injured in a fall?",
+   "fields": [
+    "Id10083"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "note": "This includes accidents and cases where it is unknown if it was an accident or whether there was intentional violence.",
+   "converts": [
+    {
+     "item": "W610083-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10084",
+   "kind": "yesno",
+   "text": "Was there any poisoning?",
+   "fields": [
+    "Id10084"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "note": "This includes accidents and cases where it is unknown if it was an accident or whether there was intentional violence.",
+   "converts": [
+    {
+     "item": "W610084-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10085",
+   "kind": "yesno",
+   "text": "Did he or she die of drowning?",
+   "fields": [
+    "Id10085"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "note": "This includes accidents and cases where it is unknown if it was an accident or whether there was intentional violence.",
+   "converts": [
+    {
+     "item": "W610085-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10086",
+   "kind": "yesno",
+   "text": "Was he or she injured by the bite or sting of a venomous animal?",
+   "fields": [
+    "Id10086"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "note": "This includes accidents and cases where it is unknown if it was an accident or whether there was intentional violence.",
+   "converts": [
+    {
+     "item": "W610086-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10087",
+   "kind": "yesno",
+   "text": "Was he or she injured by an animal or insect (non-venomous)?",
+   "fields": [
+    "Id10087"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10086}, 'no') or selected(${Id10086}, 'dk') or selected(${Id10086}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610087-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10088",
+   "text": "What was the animal/insect?",
+   "fields": [
+    "Id10088"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and (selected(${Id10087}, 'yes') or selected(${Id10086}, 'yes'))"
+   ],
+   "converts": [],
+   "kind": "choice",
+   "choices": [
+    [
+     "dog",
+     "Dog"
+    ],
+    [
+     "snake",
+     "Snake"
+    ],
+    [
+     "insect_or_scorpion",
+     "Insect or scorpion"
+    ],
+    [
+     "other",
+     "Other"
+    ]
+   ]
+  },
+  {
+   "id": "Id10089",
+   "kind": "yesno",
+   "text": "Was he or she injured by burns or fire?",
+   "fields": [
+    "Id10089"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610089-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10090",
+   "kind": "yesno",
+   "text": "Was he or she subject to violence (suicide, homicide, abuse)?",
+   "fields": [
+    "Id10090"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610090-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10091",
+   "kind": "yesno",
+   "text": "Was he or she injured by a firearm?",
+   "fields": [
+    "Id10091"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610091-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10092",
+   "kind": "yesno",
+   "text": "Was he or she stabbed, cut or pierced?",
+   "fields": [
+    "Id10092"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610092-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10093",
+   "kind": "yesno",
+   "text": "Was he or she strangled?",
+   "fields": [
+    "Id10093"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610093-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10094",
+   "kind": "yesno",
+   "text": "Was he or she injured by a blunt force?",
+   "fields": [
+    "Id10094"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610094-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10095",
+   "kind": "yesno",
+   "text": "Was he or she injured by a force of nature?",
+   "fields": [
+    "Id10095"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610095-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10096",
+   "kind": "yesno",
+   "text": "Was the injury from electrocution?",
+   "fields": [
+    "Id10096"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "note": "This includes accidents and cases where it is unknown if it was an accident or whether there was intentional violence.",
+   "converts": [
+    {
+     "item": "W610096-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10097",
+   "text": "Did he or she encounter any other injury?",
+   "fields": [
+    "Id10097"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and ((selected(${Id10079}, 'no') or selected(${Id10079}, 'dk') or selected(${Id10079}, 'ref')))"
+   ],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10098",
+   "kind": "yesno",
+   "text": "Was the injury accidental?",
+   "fields": [
+    "Id10098"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610098-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10099",
+   "kind": "yesno",
+   "text": "Was the injury self-inflicted?",
+   "fields": [
+    "Id10099"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and (${isAdult} = '1' and not(selected(${Id10098}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610099-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10100",
+   "kind": "yesno",
+   "text": "Was the injury intentionally inflicted by someone else?",
+   "fields": [
+    "Id10100"
+   ],
+   "relevant": [
+    "((selected(${Id10077}, 'yes') or selected(${Id10077}, 'dk') or selected(${Id10077}, 'ref'))) and (not(selected(${Id10098}, 'yes')) and not(selected(${Id10099}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610100-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10351",
+   "text": "How many days old was the baby when the fatal illness started?",
+   "fields": [
+    "Id10351"
+   ],
+   "relevant": [
+    "((selected(${Id10114}, 'no') or ${Id10114} = 'NaN' or string-length(${Id10114}) = 0) and selected(${isNeonatal}, '1') and (selected(${Id10098}, 'yes') or ${Id10098} = 'NaN' or string-length(${Id10098}) = 0)   and not(selected(${Id10099}, 'yes')))"
+   ],
+   "note": "The maximum for a newborn is 27 days. Less than 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [],
+   "kind": "number",
+   "units": [
+    "days"
+   ],
+   "base_unit": "days"
+  },
+  {
+   "id": "Id10408",
+   "kind": "yesno",
+   "text": "Before the illness that led to death, was the baby/the child growing normally?",
+   "fields": [
+    "Id10408"
+   ],
+   "relevant": [
+    "(((selected(${Id10114}, 'no') or ${Id10114} = 'NaN' or string-length(${Id10114}) = 0)  and selected(${isNeonatal}, '1')) or selected(${isChild}, '1'))"
+   ],
+   "converts": [
+    {
+     "item": "W610408-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10120",
+   "kind": "number",
+   "text": "For how long was he or she ill before death?",
+   "fields": [
+    "Id10120_0",
+    "id10120_unit",
+    "Id10120_1",
+    "Id10121",
+    "Id10122"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isNeonatal}, '1'))",
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "units": [
+    "days",
+    "months",
+    "years"
+   ],
+   "base_unit": "days",
+   "converts": [
+    {
+     "item": "W610120-a",
+     "op": "<",
+     "value": 21
+    },
+    {
+     "item": "W610120-b",
+     "op": ">=",
+     "value": 21
+    }
+   ],
+   "text_newborn": "For how many days was he or she ill before death?",
+   "note_newborn": "If less than 1 day or 24 hours, answer 0 days."
+  },
+  {
+   "id": "Id10123",
+   "kind": "yesno",
+   "text": "Did he or she die suddenly?",
+   "fields": [
+    "Id10123"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "note": "Suddenly means died unexpectedly within 24 hours of being in regular health.",
+   "converts": [
+    {
+     "item": "W610123-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10125",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of tuberculosis?",
+   "fields": [
+    "Id10125"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610125-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10126",
+   "text": "Was an HIV test ever positive?",
+   "fields": [
+    "Id10126"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10127",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of AIDS?",
+   "fields": [
+    "Id10127"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610127-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10128",
+   "kind": "yesno",
+   "text": "Did he or she have a recent positive test by a health professional for malaria?",
+   "fields": [
+    "Id10128"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610128-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10129",
+   "kind": "yesno",
+   "text": "Did he or she have a recent negative test by a health professional for malaria?",
+   "fields": [
+    "Id10129"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1'))) and (not(selected(${Id10128}, 'yes')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610129-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10130",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of dengue fever?",
+   "fields": [
+    "Id10130"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610130-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10131",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of measles?",
+   "fields": [
+    "Id10131"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610131-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10132",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of high blood pressure?",
+   "fields": [
+    "Id10132"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1'))) and (not(selected(${isChild}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610132-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10133",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of heart disease?",
+   "fields": [
+    "Id10133"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610133-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10134",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of diabetes?",
+   "fields": [
+    "Id10134"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610134-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10135",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of asthma?",
+   "fields": [
+    "Id10135"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610135-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10136",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of epilepsy?",
+   "fields": [
+    "Id10136"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610136-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10137",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of cancer?",
+   "fields": [
+    "Id10137"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610137-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10138",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of Chronic Obstructive Pulmonary Disease (COPD)?",
+   "fields": [
+    "Id10138"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1'))) and (selected(${isAdult}, '1'))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610138-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10139",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of dementia?",
+   "fields": [
+    "Id10139"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1'))) and (selected(${isAdult}, '1'))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610139-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10140",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of depression?",
+   "fields": [
+    "Id10140"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1'))) and (selected(${isAdult}, '1'))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610140-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10141",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of stroke?",
+   "fields": [
+    "Id10141"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1'))) and (selected(${isAdult}, '1'))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610141-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10142",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of sickle cell disease?",
+   "fields": [
+    "Id10142"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610142-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10143",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of kidney disease?",
+   "fields": [
+    "Id10143"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610143-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10144",
+   "kind": "yesno",
+   "text": "Was there any diagnosis by a health professional of liver disease?",
+   "fields": [
+    "Id10144"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "This is asking for the diagnosis assessed by a doctor, health worker, or other health professional during the final illness.",
+   "converts": [
+    {
+     "item": "W610144-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10482",
+   "text": "Was there any diagnosis by a health professional of COVID-19?",
+   "fields": [
+    "Id10482"
+   ],
+   "relevant": [],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10483",
+   "text": "Did he or she have a recent test by a health professional for COVID-19?",
+   "fields": [
+    "Id10483"
+   ],
+   "relevant": [],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10484",
+   "text": "What was the result of the recent test by a health professional for COVID-19?",
+   "fields": [
+    "Id10484"
+   ],
+   "relevant": [
+    "(selected(${Id10483}, 'yes'))"
+   ],
+   "note": "If there was more than one test, give the result of the most recent one.",
+   "converts": [],
+   "kind": "choice",
+   "choices": [
+    [
+     "positive",
+     "Positive"
+    ],
+    [
+     "negative",
+     "Negative"
+    ],
+    [
+     "unclear",
+     "Unclear"
+    ]
+   ]
+  },
+  {
+   "id": "Id10147",
+   "kind": "yesno",
+   "text": "Did he or she have a fever?",
+   "fields": [
+    "Id10147"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610147-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10148",
+   "kind": "number",
+   "text": "How long did the fever last?",
+   "fields": [
+    "Id10148_a",
+    "Id10148_units",
+    "Id10148_b",
+    "Id10148_c"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10147}, 'yes') and selected(${isNeonatal}, '1'))",
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10147}, 'yes') and (selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610148-a",
+     "op": "<",
+     "value": 7
+    },
+    {
+     "item": "W610148-b",
+     "op": "range",
+     "range": [
+      7,
+      14
+     ]
+    },
+    {
+     "item": "W610148-c",
+     "op": ">=",
+     "value": 14
+    }
+   ],
+   "text_newborn": "How many days did the fever last?",
+   "note_newborn": "If less than 1 day or 24 hours, answer 0 days. Use 1 week = 7 days to determine number of days."
+  },
+  {
+   "id": "Id10149",
+   "kind": "yesno",
+   "text": "Did the fever continue until death?",
+   "fields": [
+    "Id10149"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10147}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610149-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10150",
+   "kind": "choice",
+   "text": "How severe was the fever?",
+   "fields": [
+    "Id10150"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10147}, 'yes'))"
+   ],
+   "choices": [
+    [
+     "mild",
+     "Mild"
+    ],
+    [
+     "moderate",
+     "Moderate"
+    ],
+    [
+     "severe",
+     "Severe"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610150-a",
+     "yes_if": [
+      "severe"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10151",
+   "kind": "choice",
+   "text": "What was the pattern of the fever?",
+   "fields": [
+    "Id10151"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10147}, 'yes'))"
+   ],
+   "choices": [
+    [
+     "continuous",
+     "Continuous"
+    ],
+    [
+     "on_and_off",
+     "On and off"
+    ],
+    [
+     "nightly",
+     "Only at night"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610151-a",
+     "yes_if": [
+      "continuous"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10152",
+   "kind": "yesno",
+   "text": "Did he or she have night sweats?",
+   "fields": [
+    "Id10152"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610152-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10153",
+   "kind": "yesno",
+   "text": "Did he or she have a cough?",
+   "fields": [
+    "Id10153"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610153-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10154",
+   "kind": "number",
+   "text": "For how long did he or she have a cough?",
+   "fields": [
+    "Id10154_units",
+    "Id10154_a",
+    "Id10154_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10153}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610154-a",
+     "op": "<",
+     "value": 21
+    },
+    {
+     "item": "W610154-b",
+     "op": ">=",
+     "value": 21
+    }
+   ]
+  },
+  {
+   "id": "Id10155",
+   "kind": "yesno",
+   "text": "Was the cough productive, with sputum?",
+   "fields": [
+    "Id10155"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10153}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610155-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10156",
+   "kind": "yesno",
+   "text": "Was the cough very severe?",
+   "fields": [
+    "Id10156"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10153}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610156-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10157",
+   "kind": "yesno",
+   "text": "Did he or she cough up blood?",
+   "fields": [
+    "Id10157"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10153}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610157-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10158",
+   "kind": "yesno",
+   "text": "Did he or she make a whooping sound when coughing?",
+   "fields": [
+    "Id10158"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1')  and selected(${Id10153}, 'yes')) or (selected(${isNeonatal}, '1') and  not(selected(${Id10114}, 'yes')) and selected(${Id10153}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610158-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10159",
+   "kind": "yesno",
+   "text": "Did he or she have any difficulty breathing?",
+   "fields": [
+    "Id10159"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610159-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10161",
+   "kind": "number",
+   "text": "For how long did the difficulty breathing last?",
+   "fields": [
+    "Id10161_0",
+    "id10161_unit",
+    "Id10161_1",
+    "Id10162",
+    "Id10163"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10159}, 'yes')) and (selected(${isNeonatal}, '1'))",
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10159}, 'yes')) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "units": [
+    "days",
+    "months",
+    "years"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days, 1-11 months, or 1 or more years. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610161-a",
+     "op": ">=",
+     "value": 3
+    }
+   ],
+   "text_newborn": "For how many days did the difficulty breathing last?",
+   "note_newborn": "If less than 1 day or 24 hours, answer 0 days. Use 1 week = 7 days to determine the number of days."
+  },
+  {
+   "id": "Id10165",
+   "kind": "choice",
+   "text": "Was the difficulty breathing continuous or on and off?",
+   "fields": [
+    "Id10165"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10159}, 'yes'))"
+   ],
+   "choices": [
+    [
+     "continuous",
+     "Continuous"
+    ],
+    [
+     "on_and_off",
+     "On and off"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610165-a",
+     "yes_if": [
+      "continuous"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10166",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did he or she have fast breathing?",
+   "fields": [
+    "Id10166"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610166-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10167",
+   "kind": "number",
+   "text": "How long did the fast breathing last?",
+   "fields": [
+    "Id10167_a",
+    "Id10167_units",
+    "Id10167_b",
+    "Id10167_c"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10166}, 'yes') and selected(${isNeonatal}, '1'))",
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10166}, 'yes') and (selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610167-a",
+     "op": "<",
+     "value": 14
+    },
+    {
+     "item": "W610167-b",
+     "op": ">=",
+     "value": 14
+    }
+   ],
+   "text_newborn": "For how many days did the fast breathing last?",
+   "note_newborn": "If less than 1 day or 24 hours, answer 0 days. Use 1 week = 7 days to determine the number of days."
+  },
+  {
+   "id": "Id10168",
+   "kind": "yesno",
+   "text": "Did he or she have breathlessness?",
+   "fields": [
+    "Id10168"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610168-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10169",
+   "kind": "number",
+   "text": "How long did he or she have breathlessness?",
+   "fields": [
+    "Id10169_a",
+    "Id10169_units",
+    "Id10169_b",
+    "Id10169_c"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10168}, 'yes') and selected(${isNeonatal}, '1'))",
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10168}, 'yes') and (selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610169-a",
+     "op": "<",
+     "value": 14
+    },
+    {
+     "item": "W610169-b",
+     "op": ">=",
+     "value": 14
+    }
+   ],
+   "text_newborn": "For how many days did he or she have breathlessness?",
+   "note_newborn": "If less than 1 day or 24 hours, answer 0 days. Use 1 week = 7 days to determine the number of days."
+  },
+  {
+   "id": "Id10170",
+   "kind": "yesno",
+   "text": "Was he or she unable to carry out daily routines due to breathlessness?",
+   "fields": [
+    "Id10170"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isAdult}, '1') and selected(${Id10168}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610170-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10171",
+   "kind": "yesno",
+   "text": "Was he or she breathless while lying flat?",
+   "fields": [
+    "Id10171"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isAdult}, '1') and selected(${Id10168}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610171-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10172",
+   "kind": "yesno",
+   "text": "Did you see the lower chest wall/ribs being pulled in as the child breathed in?",
+   "fields": [
+    "Id10172"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') or selected(${isChild}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610172-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10173_nc",
+   "kind": "multi",
+   "text": "During the illness that led to death did his or her breathing sound like any of the following: stridor, grunting or wheezing?",
+   "fields": [
+    "Id10173_nc"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') or selected(${isChild}, '1')))"
+   ],
+   "choices": [
+    [
+     "stridor",
+     "Stridor"
+    ],
+    [
+     "grunting",
+     "Grunting"
+    ],
+    [
+     "wheezing",
+     "Wheezing"
+    ],
+    [
+     "no",
+     "No"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610173-a",
+     "yes_if": [
+      "wheezing",
+      "grunting"
+     ],
+     "mode": "any"
+    }
+   ]
+  },
+  {
+   "id": "Id10173_a",
+   "kind": "yesno",
+   "text": "During the illness that led to death did he or she have wheezing?",
+   "fields": [
+    "Id10173_a"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isAdult}, '1'))"
+   ],
+   "converts": [
+    {
+     "item": "W610173-a"
+    }
+   ]
+  },
+  {
+   "id": "Id10174",
+   "kind": "yesno",
+   "text": "Did he or she have chest pain?",
+   "fields": [
+    "Id10174"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610174-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10175",
+   "kind": "yesno",
+   "text": "Was the chest pain severe?",
+   "fields": [
+    "Id10175"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isAdult}, '1')) and selected(${Id10174}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610175-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10176",
+   "kind": "number",
+   "text": "How many days before death did he or she have chest pain?",
+   "fields": [
+    "Id10176"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10174}, 'yes'))"
+   ],
+   "units": [
+    "days"
+   ],
+   "base_unit": "days",
+   "note": "Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610176-a",
+     "op": ">=",
+     "value": 3
+    }
+   ]
+  },
+  {
+   "id": "Id10178",
+   "kind": "number",
+   "text": "How long did the chest pain last?",
+   "fields": [
+    "Id10178_unit",
+    "Id10178",
+    "Id10179",
+    "Id10179_1"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isAdult}, '1') and selected(${Id10174}, 'yes')) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "units": [
+    "minutes",
+    "hours",
+    "days"
+   ],
+   "base_unit": "minutes",
+   "note": "Use one unit: 0-59 minutes, 1-23 hours, or days less than response for how many days before death did he or she have chest pain. 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610178-a",
+     "op": ">=",
+     "value": 30
+    }
+   ]
+  },
+  {
+   "id": "Id10181",
+   "kind": "yesno",
+   "text": "Did he or she have more frequent loose or liquid stools than usual?",
+   "fields": [
+    "Id10181"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610181-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10182",
+   "kind": "number",
+   "text": "How long did he or she have frequent loose or liquid stools?",
+   "fields": [
+    "Id10182_units",
+    "Id10182_a",
+    "Id10182_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10181}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610182-a",
+     "op": "<",
+     "value": 14
+    },
+    {
+     "item": "W610182-b",
+     "op": "range",
+     "range": [
+      14,
+      28
+     ]
+    },
+    {
+     "item": "W610182-c",
+     "op": ">=",
+     "value": 28
+    }
+   ]
+  },
+  {
+   "id": "Id10183",
+   "kind": "number",
+   "text": "How many stools did the baby or child have on the day that loose liquid stools were most frequent?",
+   "fields": [
+    "Id10183"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isNeonatal}, '1')) and selected(${Id10181}, 'yes'))"
+   ],
+   "units": [
+    "stools"
+   ],
+   "base_unit": "stools",
+   "converts": [
+    {
+     "item": "W610183-a",
+     "op": ">=",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": "Id10184",
+   "kind": "number",
+   "text": "How long before death did the frequent loose or liquid stools start?",
+   "fields": [
+    "Id10184_a",
+    "Id10184_units",
+    "Id10184_b",
+    "Id10184_c"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10181}, 'yes') and selected(${isNeonatal}, '1'))",
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10181}, 'yes') and selected(${isChild}, '1'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610184-a",
+     "op": ">=",
+     "value": 3
+    }
+   ],
+   "text_newborn": "How many days before death did the frequent loose or liquid stools start?",
+   "note_newborn": "If less than 1 day or 24 hours, answer 0 days. Use 1 week = 7 days to determine the number of days."
+  },
+  {
+   "id": "Id10185",
+   "kind": "yesno",
+   "text": "Did the frequent loose or liquid stools continue until death?",
+   "fields": [
+    "Id10185"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1')) and selected(${Id10181}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610185-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10186",
+   "kind": "yesno",
+   "text": "At any time during the final illness was there blood in the stools?",
+   "fields": [
+    "Id10186"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610186-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10187",
+   "kind": "yesno",
+   "text": "Was there blood in the stool up until death?",
+   "fields": [
+    "Id10187"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10186}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610187-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10188",
+   "kind": "yesno",
+   "text": "Did he or she vomit?",
+   "fields": [
+    "Id10188"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610188-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10189",
+   "kind": "yesno",
+   "text": "To clarify: Did he or she vomit in the week preceding the death?",
+   "fields": [
+    "Id10189"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610189-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10190",
+   "kind": "number",
+   "text": "How long before death did he or she vomit?",
+   "fields": [
+    "Id10190_units",
+    "Id10190_a",
+    "Id10190_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${Id10188}, 'yes') or selected(${Id10189}, 'yes')) and selected(${isAdult}, '1'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610190-o",
+     "op": ">=",
+     "value": 3
+    }
+   ]
+  },
+  {
+   "id": "Id10191",
+   "kind": "yesno",
+   "text": "Was there blood in the vomit?",
+   "fields": [
+    "Id10191"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${Id10188}, 'yes') or selected(${Id10189}, 'yes'))  and ${isNeonatal} !='1')"
+   ],
+   "converts": [
+    {
+     "item": "W610191-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10192",
+   "kind": "yesno",
+   "text": "Was the vomit black?",
+   "fields": [
+    "Id10192"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and (selected(${Id10188}, 'yes') or selected(${Id10189}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610192-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10193",
+   "kind": "yesno",
+   "text": "Did he or she have any belly (abdominal) problem?",
+   "fields": [
+    "Id10193"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "Problems could be pain, protruding abdomen or a mass.",
+   "converts": [
+    {
+     "item": "W610193-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10194",
+   "kind": "yesno",
+   "text": "Did he or she have belly (abdominal) pain?",
+   "fields": [
+    "Id10194"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610194-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10195",
+   "kind": "yesno",
+   "text": "Was the belly (abdominal) pain severe?",
+   "fields": [
+    "Id10195"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10194}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610195-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10197",
+   "kind": "number",
+   "text": "For how long did he or she have belly (abdominal) pain?",
+   "fields": [
+    "id10196_unit",
+    "Id10196",
+    "Id10197_a",
+    "Id10198"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1')  or selected(${isAdult}, '1')) and selected(${Id10194}, 'yes'))"
+   ],
+   "units": [
+    "hours",
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-23 hours, 1-30 days, or 1-60 months. 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610197-a",
+     "op": "<",
+     "value": 14,
+     "needs": "W610195-o"
+    },
+    {
+     "item": "W610197-b",
+     "op": ">=",
+     "value": 14,
+     "needs": "W610195-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10199",
+   "kind": "choice",
+   "text": "Was the pain in the upper or lower belly (abdomen)?",
+   "fields": [
+    "Id10199"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (((selected(${isChild}, '1')and selected(${Id10195}, 'yes')) or (selected(${isAdult}, '1') and selected(${Id10194}, 'yes'))))"
+   ],
+   "choices": [
+    [
+     "upper_abdomen",
+     "Upper abdomen"
+    ],
+    [
+     "lower_abdomen",
+     "Lower abdomen"
+    ],
+    [
+     "upper_lower_abdomen",
+     "Upper and lower abdomen"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610199-a",
+     "yes_if": [
+      "upper_abdomen",
+      "upper_lower_abdomen"
+     ]
+    },
+    {
+     "item": "W610199-b",
+     "yes_if": [
+      "lower_abdomen",
+      "upper_lower_abdomen"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10200",
+   "kind": "yesno",
+   "text": "Did he or she have a more than usually protruding belly (abdomen)?",
+   "fields": [
+    "Id10200"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610200-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10201",
+   "kind": "number",
+   "text": "For how long before death did he or she have a more than usually protruding belly (abdomen)?",
+   "fields": [
+    "Id10201_unit",
+    "Id10201_a",
+    "Id10202"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10200}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610201-a",
+     "op": "<",
+     "value": 14
+    },
+    {
+     "item": "W610201-b",
+     "op": ">=",
+     "value": 14
+    }
+   ]
+  },
+  {
+   "id": "Id10203",
+   "kind": "choice",
+   "text": "How rapidly did he or she develop the protruding belly (abdomen)?",
+   "fields": [
+    "Id10203"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10200}, 'yes'))"
+   ],
+   "choices": [
+    [
+     "rapidly",
+     "Rapidly"
+    ],
+    [
+     "slowly",
+     "Slowly"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610203-a",
+     "yes_if": [
+      "rapidly"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10204",
+   "kind": "yesno",
+   "text": "Did he or she have any mass in the belly (abdomen)?",
+   "fields": [
+    "Id10204"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610204-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10205",
+   "kind": "number",
+   "text": "For how long did he or she have a mass in the belly (abdomen)?",
+   "fields": [
+    "Id10205_unit",
+    "Id10205_a",
+    "Id10206"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10204}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610205-a",
+     "op": "<",
+     "value": 14
+    },
+    {
+     "item": "W610205-b",
+     "op": ">=",
+     "value": 14
+    }
+   ]
+  },
+  {
+   "id": "Id10207",
+   "kind": "yesno",
+   "text": "Did he or she have a severe headache?",
+   "fields": [
+    "Id10207"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610207-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10208",
+   "kind": "yesno",
+   "text": "Did he or she have a stiff neck during the illness that led to death?",
+   "fields": [
+    "Id10208"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610208-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10209",
+   "kind": "number",
+   "text": "How long before death did he or she have stiff neck?",
+   "fields": [
+    "Id10209_units",
+    "Id10209_a",
+    "Id10209_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10208}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610209-a",
+     "op": "<",
+     "value": 7
+    },
+    {
+     "item": "W610209-b",
+     "op": ">=",
+     "value": 7
+    }
+   ]
+  },
+  {
+   "id": "Id10210",
+   "kind": "yesno",
+   "text": "Did he or she have a painful neck during the illness that led to death?",
+   "fields": [
+    "Id10210"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610210-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10211",
+   "kind": "number",
+   "text": "How long before death did he or she have a painful neck?",
+   "fields": [
+    "Id10211_units",
+    "Id10211_a",
+    "Id10211_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10210}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610211-a",
+     "op": ">=",
+     "value": 7
+    }
+   ]
+  },
+  {
+   "id": "Id10212",
+   "kind": "yesno",
+   "text": "Did he or she have mental confusion?",
+   "fields": [
+    "Id10212"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isAdult}, '1'))"
+   ],
+   "converts": [
+    {
+     "item": "W610212-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10213",
+   "kind": "number",
+   "text": "How long did he or she have mental confusion?",
+   "fields": [
+    "Id10213_units",
+    "Id10213_a",
+    "Id10213_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isAdult}, '1')) and selected(${Id10212}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "months",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610213-o",
+     "op": ">=",
+     "value": 3
+    }
+   ]
+  },
+  {
+   "id": "Id10214",
+   "kind": "yesno",
+   "text": "Was he or she unconscious during the illness that led to death?",
+   "fields": [
+    "Id10214"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610214-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10215",
+   "kind": "yesno",
+   "text": "Was he or she unconscious for more than 24 hours before death?",
+   "fields": [
+    "Id10215"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10214}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610215-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10216",
+   "kind": "number",
+   "text": "How long before death did unconsciousness start?",
+   "fields": [
+    "Id10216_units",
+    "Id10216_a",
+    "Id10216_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isChild}, '1') and (selected(${Id10215}, 'no') or selected(${Id10215}, 'dk') or selected(${Id10215}, 'ref')))"
+   ],
+   "units": [
+    "hours",
+    "days"
+   ],
+   "base_unit": "hours",
+   "note": "Use one unit: 0-23 hours or 1-99 days. 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610216-a",
+     "op": ">=",
+     "value": 6
+    }
+   ]
+  },
+  {
+   "id": "Id10217",
+   "kind": "yesno",
+   "text": "Did the unconsciousness start suddenly, quickly (at least within a single day)?",
+   "fields": [
+    "Id10217"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10214}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610217-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10218",
+   "kind": "yesno",
+   "text": "Did the unconsciousness continue until death?",
+   "fields": [
+    "Id10218"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10214}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610218-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10219",
+   "kind": "yesno",
+   "text": "Did he or she have convulsions?",
+   "fields": [
+    "Id10219"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610219-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10220",
+   "kind": "yesno",
+   "text": "Did he or she experience any generalized convulsions or fits during the illness that led to death?",
+   "fields": [
+    "Id10220"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1')) and selected(${Id10219}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610220-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10221",
+   "kind": "number",
+   "text": "For how many minutes did the convulsions last?",
+   "fields": [
+    "Id10221"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10219}, 'yes'))"
+   ],
+   "units": [
+    "minutes"
+   ],
+   "base_unit": "minutes",
+   "note": "Answer in minutes. Less than 1 minute=0; 1 hour=60 minutes.",
+   "converts": [
+    {
+     "item": "W610221-a",
+     "op": "<",
+     "value": 10
+    },
+    {
+     "item": "W610221-b",
+     "op": ">=",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": "Id10222",
+   "kind": "yesno",
+   "text": "Did he or she become unconscious immediately after the convulsion?",
+   "fields": [
+    "Id10222"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10219}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610222-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10223",
+   "kind": "yesno",
+   "text": "Did he or she have any urine problems?",
+   "fields": [
+    "Id10223"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "Urine problems refer to urinating a lot or not at all, and blood in the urine.",
+   "converts": [
+    {
+     "item": "W610223-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10225",
+   "kind": "yesno",
+   "text": "Did he or she go to urinate more often than usual?",
+   "fields": [
+    "Id10225"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10223}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610225-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10226",
+   "kind": "yesno",
+   "text": "During the final illness did he or she ever pass blood in the urine?",
+   "fields": [
+    "Id10226"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10223}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610226-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10224",
+   "kind": "yesno",
+   "text": "Did he or she stop urinating?",
+   "fields": [
+    "Id10224"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10223}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610224-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10227",
+   "kind": "yesno",
+   "text": "Did he or she have sores or ulcers anywhere on the body?",
+   "fields": [
+    "Id10227"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610227-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10228",
+   "kind": "yesno",
+   "text": "Did he or she have sores?",
+   "fields": [
+    "Id10228"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isAdult}, '1'))"
+   ],
+   "converts": [
+    {
+     "item": "W610228-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10229",
+   "kind": "yesno",
+   "text": "Did the sores have clear fluid or pus?",
+   "fields": [
+    "Id10229"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (((selected(${isAdult}, '1') and selected(${Id10228}, 'yes')) or (selected(${isChild}, '1') and selected(${Id10227}, 'yes'))))"
+   ],
+   "converts": [
+    {
+     "item": "W610229-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10230",
+   "kind": "yesno",
+   "text": "Did he or she have an ulcer (pit) on the foot?",
+   "fields": [
+    "Id10230"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610230-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10231",
+   "kind": "yesno",
+   "text": "Did the ulcer on the foot ooze pus?",
+   "fields": [
+    "Id10231"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10230}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610231-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10232",
+   "kind": "number",
+   "text": "How long did the ulcer on the foot ooze pus?",
+   "fields": [
+    "Id10232_units",
+    "Id10232_a",
+    "Id10232_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10231}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610232-a",
+     "op": ">=",
+     "value": 14
+    }
+   ]
+  },
+  {
+   "id": "Id10233",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did he or she have any skin rash?",
+   "fields": [
+    "Id10233"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610233-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10234",
+   "kind": "number",
+   "text": "For how many days did he or she have the skin rash?",
+   "fields": [
+    "Id10234"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10233}, 'yes'))"
+   ],
+   "units": [
+    "days"
+   ],
+   "base_unit": "days",
+   "note": "Answer in days. Less than 1 day or 24 hours = 0 days; 1 week=7 days; 1 month=30 days.",
+   "converts": [
+    {
+     "item": "W610234-a",
+     "op": "<",
+     "value": 7
+    },
+    {
+     "item": "W610234-b",
+     "op": ">=",
+     "value": 7
+    }
+   ]
+  },
+  {
+   "id": "Id10235",
+   "kind": "multi",
+   "text": "Where was the rash?",
+   "fields": [
+    "Id10235"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10233}, 'yes'))"
+   ],
+   "choices": [
+    [
+     "face",
+     "Face"
+    ],
+    [
+     "trunk",
+     "Trunk or abdomen"
+    ],
+    [
+     "extremities",
+     "Extremities"
+    ],
+    [
+     "everywhere",
+     "Everywhere"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610235-a",
+     "yes_if": [
+      "face",
+      "everywhere"
+     ],
+     "mode": "any"
+    },
+    {
+     "item": "W610235-b",
+     "yes_if": [
+      "trunk",
+      "everywhere"
+     ],
+     "mode": "any"
+    },
+    {
+     "item": "W610235-c",
+     "yes_if": [
+      "extremities",
+      "everywhere"
+     ],
+     "mode": "any"
+    },
+    {
+     "item": "W610235-d",
+     "yes_if": [
+      "everywhere"
+     ],
+     "mode": "any",
+     "yes_if_all": [
+      "face",
+      "trunk",
+      "extremities"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10236",
+   "kind": "yesno",
+   "text": "Did he or she have measles rash?",
+   "fields": [
+    "Id10236"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10233}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610236-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10237",
+   "kind": "yesno",
+   "text": "Did he or she ever have shingles or herpes zoster?",
+   "fields": [
+    "Id10237"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isAdult}, '1'))"
+   ],
+   "converts": [
+    {
+     "item": "W610237-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10238",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did his or her skin flake off in patches?",
+   "fields": [
+    "Id10238"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610238-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10239",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did he or she have areas of the skin that turned black?",
+   "fields": [
+    "Id10239"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') or selected(${isChild}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610239-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10240",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did he or she have areas of the skin with redness and swelling?",
+   "fields": [
+    "Id10240"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') or selected(${isChild}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610240-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10241",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did he or she bleed from anywhere?",
+   "fields": [
+    "Id10241"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610241-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10242",
+   "kind": "yesno",
+   "text": "Did he or she bleed from the nose, mouth or anus?",
+   "fields": [
+    "Id10242"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10241}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610242-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10243",
+   "kind": "yesno",
+   "text": "Did he or she have noticeable weight loss?",
+   "fields": [
+    "Id10243"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610243-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10244",
+   "kind": "yesno",
+   "text": "Was he or she severely thin or wasted?",
+   "fields": [
+    "Id10244"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610244-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10245",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did he or she have a whitish rash inside the mouth or on the tongue?",
+   "fields": [
+    "Id10245"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610245-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10246",
+   "kind": "yesno",
+   "text": "Did he or she have stiffness of the whole body or was unable to open the mouth?",
+   "fields": [
+    "Id10246"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610246-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10247",
+   "kind": "yesno",
+   "text": "Did he or she have puffiness of the face?",
+   "fields": [
+    "Id10247"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610247-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10248",
+   "kind": "number",
+   "text": "How long did he or she have puffiness of the face?",
+   "fields": [
+    "Id10248_units",
+    "Id10248_a",
+    "Id10248_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10247}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610248-a",
+     "op": ">=",
+     "value": 7
+    }
+   ]
+  },
+  {
+   "id": "Id10249",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did he or she have swollen legs or feet?",
+   "fields": [
+    "Id10249"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610249-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10250",
+   "kind": "number",
+   "text": "How long did the swelling last?",
+   "fields": [
+    "Id10250_units",
+    "Id10250_a",
+    "Id10250_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10249}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610250-a",
+     "op": ">=",
+     "value": 3
+    }
+   ]
+  },
+  {
+   "id": "Id10251",
+   "kind": "yesno",
+   "text": "Did he or she have both feet swollen?",
+   "fields": [
+    "Id10251"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10249}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610251-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10252",
+   "kind": "yesno",
+   "text": "Did he or she have general puffiness all over his or her body?",
+   "fields": [
+    "Id10252"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610252-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10253",
+   "kind": "yesno",
+   "text": "Did he or she have any lumps?",
+   "fields": [
+    "Id10253"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610253-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10254",
+   "kind": "yesno",
+   "text": "Did he or she have any lumps or lesions in the mouth?",
+   "fields": [
+    "Id10254"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isAdult}, '1')) and selected(${Id10253}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610254-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10255",
+   "kind": "yesno",
+   "text": "Did he or she have any lumps on the neck?",
+   "fields": [
+    "Id10255"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10253}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610255-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10256",
+   "kind": "yesno",
+   "text": "Did he or she have any lumps on the armpit?",
+   "fields": [
+    "Id10256"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10253}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610256-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10257",
+   "kind": "yesno",
+   "text": "Did he or she have any lumps on the groin?",
+   "fields": [
+    "Id10257"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10253}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610257-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10258",
+   "kind": "yesno",
+   "text": "Was he or she in any way paralysed?",
+   "fields": [
+    "Id10258"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610258-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10259",
+   "kind": "yesno",
+   "text": "Did he or she have paralysis of only one side of the body?",
+   "fields": [
+    "Id10259"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10258}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610259-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10260",
+   "kind": "multi",
+   "text": "Which were the limbs or body parts paralysed?",
+   "fields": [
+    "Id10260"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10258}, 'yes'))"
+   ],
+   "choices": [
+    [
+     "right_side",
+     "Right side"
+    ],
+    [
+     "left_side",
+     "Left side"
+    ],
+    [
+     "lower_part_of_body",
+     "Lower part of body"
+    ],
+    [
+     "upper_part_of_body",
+     "Upper part of body"
+    ],
+    [
+     "one_leg_only",
+     "One leg only"
+    ],
+    [
+     "one_arm_only",
+     "One arm only"
+    ],
+    [
+     "whole_body",
+     "Whole body"
+    ],
+    [
+     "other",
+     "Other"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610260-a",
+     "yes_if": [
+      "right_side"
+     ],
+     "mode": "only"
+    },
+    {
+     "item": "W610260-b",
+     "yes_if": [
+      "left_side"
+     ],
+     "mode": "only"
+    },
+    {
+     "item": "W610260-c",
+     "yes_if": [
+      "lower_part_of_body"
+     ],
+     "mode": "only"
+    },
+    {
+     "item": "W610260-d",
+     "yes_if": [
+      "upper_part_of_body"
+     ],
+     "mode": "only"
+    },
+    {
+     "item": "W610260-e",
+     "yes_if": [
+      "one_leg_only"
+     ],
+     "mode": "only"
+    },
+    {
+     "item": "W610260-f",
+     "yes_if": [
+      "one_arm_only"
+     ],
+     "mode": "only"
+    },
+    {
+     "item": "W610260-g",
+     "yes_if": [
+      "whole_body"
+     ],
+     "mode": "only"
+    }
+   ]
+  },
+  {
+   "id": "Id10261",
+   "kind": "yesno",
+   "text": "Did he or she have difficulty swallowing?",
+   "fields": [
+    "Id10261"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610261-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10262",
+   "kind": "number",
+   "text": "For how long before death did he or she have difficulty swallowing?",
+   "fields": [
+    "Id10262_units",
+    "Id10262_a",
+    "Id10262_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10261}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610262-a",
+     "op": ">=",
+     "value": 7
+    }
+   ]
+  },
+  {
+   "id": "Id10263",
+   "kind": "choice",
+   "text": "Was the difficulty with swallowing with solids, liquids, or both?",
+   "fields": [
+    "Id10263"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10261}, 'yes'))"
+   ],
+   "choices": [
+    [
+     "solids",
+     "Solids"
+    ],
+    [
+     "liquids",
+     "Liquids"
+    ],
+    [
+     "both",
+     "Both"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610263-a",
+     "yes_if": [
+      "solids",
+      "both"
+     ]
+    },
+    {
+     "item": "W610263-b",
+     "yes_if": [
+      "liquids",
+      "both"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10264",
+   "kind": "yesno",
+   "text": "Did he or she have pain upon swallowing?",
+   "fields": [
+    "Id10264"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610264-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10265",
+   "kind": "yesno",
+   "text": "Did he or she have yellow discoloration of the eyes?",
+   "fields": [
+    "Id10265"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610265-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10266",
+   "kind": "number",
+   "text": "For how long did he or she have the yellow discoloration?",
+   "fields": [
+    "Id10266_units",
+    "Id10266_a",
+    "Id10266_b"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')) and selected(${Id10265}, 'yes'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-60 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610266-a",
+     "op": ">=",
+     "value": 21
+    }
+   ]
+  },
+  {
+   "id": "Id10267",
+   "kind": "yesno",
+   "text": "Did his or her hair change in color to a reddish or yellowish color?",
+   "fields": [
+    "Id10267"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610267-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10268",
+   "kind": "yesno",
+   "text": "Did he or she look pale (thinning/lack of blood) or have pale palms, eyes or nail beds?",
+   "fields": [
+    "Id10268"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "note": "Long term deficiency of the blood results in a pale, whitish appearance of the lips, tongue, and eye sac. Sometime it is referred to as thinning or lack of blood, or pallor.",
+   "converts": [
+    {
+     "item": "W610268-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10269",
+   "kind": "yesno",
+   "text": "Did he or she have sunken eyes?",
+   "fields": [
+    "Id10269"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610269-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10270",
+   "kind": "yesno",
+   "text": "Did he or she drink a lot more water than usual?",
+   "fields": [
+    "Id10270"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isChild}, '1') or selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610270-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10271",
+   "kind": "yesno",
+   "text": "Was the baby able to suckle or bottle-feed within the first 24 hours after birth?",
+   "fields": [
+    "Id10271"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') and ${Id10114}!='yes') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "converts": [
+    {
+     "item": "W610271-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10272",
+   "kind": "yesno",
+   "text": "Did the baby ever suckle in a normal way?",
+   "fields": [
+    "Id10272"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') and ${Id10114}!='yes') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "converts": [
+    {
+     "item": "W610272-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10273",
+   "kind": "yesno",
+   "text": "Did the baby stop suckling?",
+   "fields": [
+    "Id10273"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') and ${Id10114}!='yes') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "converts": [
+    {
+     "item": "W610273-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10274",
+   "kind": "number",
+   "text": "How long after birth did the baby stop suckling?",
+   "fields": [
+    "Id10274_a",
+    "Id10274_units",
+    "Id10274_b",
+    "Id10274_c"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10273}, 'yes') and selected(${isNeonatal}, '1'))",
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10273}, 'yes') and selected(${isChild}, '1'))"
+   ],
+   "units": [
+    "days",
+    "months"
+   ],
+   "base_unit": "days",
+   "note": "Use one unit: 0-30 days or 1-11 months. Less than 1 day or 24 hours = 0 days; 1 week = 7 days.",
+   "converts": [
+    {
+     "item": "W610274-a",
+     "op": ">=",
+     "value": 1
+    }
+   ],
+   "text_newborn": "How many days after birth did the baby stop suckling?",
+   "note_newborn": "Less than 1 day= 0."
+  },
+  {
+   "id": "Id10275",
+   "kind": "yesno",
+   "text": "Did the baby have convulsions starting within the first 24 hours of life?",
+   "fields": [
+    "Id10275"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') and ${Id10114}!='yes') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "converts": [
+    {
+     "item": "W610275-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10276",
+   "kind": "yesno",
+   "text": "Did the baby have convulsions starting more than 24 hours after birth?",
+   "fields": [
+    "Id10276"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${Id10275}, 'no') or selected(${Id10275}, 'dk') or selected(${Id10275}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610276-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10277",
+   "kind": "yesno",
+   "text": "Did the baby's body become stiff, with the back arched backwards?",
+   "fields": [
+    "Id10277"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') and ${Id10114}!='yes') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "converts": [
+    {
+     "item": "W610277-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10278",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did the baby have a bulging or raised fontanelle?",
+   "fields": [
+    "Id10278"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') and ${Id10114}!='yes') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<18))"
+   ],
+   "converts": [
+    {
+     "item": "W610278-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10279",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did the baby have a sunken fontanelle?",
+   "fields": [
+    "Id10279"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') or selected(${isChild}, '1')) and (${Id10278} ='no' or ${Id10278} ='dk' or ${Id10278} ='ref'  ))"
+   ],
+   "converts": [
+    {
+     "item": "W610279-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10281",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did the baby become unresponsive or unconscious?",
+   "fields": [
+    "Id10281"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') and ${Id10114}!='yes') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "converts": [
+    {
+     "item": "W610281-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10282",
+   "kind": "yesno",
+   "text": "Did the baby become unresponsive or unconscious soon after birth, within less than 24 hours?",
+   "fields": [
+    "Id10282"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (((selected(${Id10281}, 'yes') and (selected(${isNeonatal}, '1')) and ${Id10114}!='yes') or (selected(${Id10281}, 'yes') and selected(${isChild}, '1'))))"
+   ],
+   "converts": [
+    {
+     "item": "W610282-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10283",
+   "kind": "yesno",
+   "text": "Did the baby become unresponsive or unconscious more than 24 hours after birth?",
+   "fields": [
+    "Id10283"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${Id10281}, 'yes') and not(selected(${Id10282}, 'yes'))) and ((selected(${isNeonatal}, '1') and ${Id10114}!='yes') or selected(${isChild}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610283-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10284",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did the baby become cold to touch?",
+   "fields": [
+    "Id10284"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1')) and ${Id10114}!='yes')"
+   ],
+   "converts": [
+    {
+     "item": "W610284-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10285",
+   "kind": "number",
+   "text": "How many days old was the baby when it started feeling cold to touch?",
+   "fields": [
+    "Id10285"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1')) and ${Id10114}!='yes') and (selected(${Id10284}, 'yes'))"
+   ],
+   "units": [
+    "days"
+   ],
+   "base_unit": "days",
+   "note": "If less than 1 day or 24 hours, answer 0 days. Use 1 week = 7 days to determine the number of days.",
+   "converts": [
+    {
+     "item": "W610285-a",
+     "op": ">",
+     "value": 3
+    }
+   ]
+  },
+  {
+   "id": "Id10286",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did the baby become lethargic after a period of normal activity?",
+   "fields": [
+    "Id10286"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1')) and ${Id10114}!='yes')"
+   ],
+   "converts": [
+    {
+     "item": "W610286-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10287",
+   "kind": "yesno",
+   "text": "Did the baby have redness or pus drainage from the umbilical cord stump?",
+   "fields": [
+    "Id10287"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1')) and ${Id10114}!='yes')"
+   ],
+   "converts": [
+    {
+     "item": "W610287-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10288",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did the baby have skin ulcer(s) or pits?",
+   "fields": [
+    "Id10288"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1')) and ${Id10114}!='yes')"
+   ],
+   "converts": [
+    {
+     "item": "W610288-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10289",
+   "kind": "yesno",
+   "text": "During the illness that led to death, did the baby have yellow skin, palms (hand) or soles (foot)?",
+   "fields": [
+    "Id10289"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1')) and ${Id10114}!='yes')"
+   ],
+   "converts": [
+    {
+     "item": "W610289-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10290",
+   "kind": "yesno",
+   "text": "Did the baby or infant appear to be healthy and then just die suddenly?",
+   "fields": [
+    "Id10290"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1')) and ${Id10114}!='yes')"
+   ],
+   "note": "Suddenly means died unexpectedly within 24 hours of being in regular health.",
+   "converts": [
+    {
+     "item": "W610290-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10485",
+   "text": "Did he or she suffer from extreme fatigue?",
+   "fields": [
+    "Id10485"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isAdult}, '1'))"
+   ],
+   "note": "This means feeling so tired that he or she found it hard to get out of bed and do routine things like taking a shower or changing clothes.",
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10486",
+   "text": "Did he or she experience a new loss, change or decreased sense of smell or taste?",
+   "fields": [
+    "Id10486"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${isAdult}, '1'))"
+   ],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10294",
+   "kind": "yesno",
+   "text": "Did she have any swelling or lump in the breast?",
+   "fields": [
+    "Id10294"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined'))"
+   ],
+   "converts": [
+    {
+     "item": "W610294-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10295",
+   "kind": "yesno",
+   "text": "Did she have any ulcers (pits) in the breast?",
+   "fields": [
+    "Id10295"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined'))"
+   ],
+   "converts": [
+    {
+     "item": "W610295-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10296",
+   "kind": "yesno",
+   "text": "Did she ever have a period or menstruate?",
+   "fields": [
+    "Id10296"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined'))"
+   ],
+   "converts": [
+    {
+     "item": "W610296-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10297",
+   "kind": "yesno",
+   "text": "When she had her period, did she have vaginal bleeding in between menstrual periods?",
+   "fields": [
+    "Id10297"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10296}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610297-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10298",
+   "kind": "yesno",
+   "text": "Was the bleeding in between her menstrual periods excessive?",
+   "fields": [
+    "Id10298"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10297}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610298-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10301",
+   "kind": "yesno",
+   "text": "Was there excessive vaginal bleeding in the week prior to death?",
+   "fields": [
+    "Id10301"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10296}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610301-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10299",
+   "kind": "yesno",
+   "text": "Did her menstrual period stop naturally because of menopause or removal of uterus?",
+   "fields": [
+    "Id10299"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10296}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610299-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10302",
+   "kind": "yesno",
+   "text": "At the time of death was her period overdue?",
+   "fields": [
+    "Id10302"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10299}, 'dk') or selected(${Id10299}, 'no') or selected(${Id10299}, 'ref'))"
+   ],
+   "converts": [
+    {
+     "item": "W610302-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10303",
+   "kind": "number",
+   "text": "For how many weeks had her period been overdue?",
+   "fields": [
+    "Id10303"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10302}, 'yes'))"
+   ],
+   "units": [
+    "weeks"
+   ],
+   "base_unit": "weeks",
+   "note": "Answer in weeks. Less than 1 week=0. 7 days=1 week.",
+   "converts": [
+    {
+     "item": "W610303-a",
+     "op": ">=",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": "Id10300",
+   "kind": "yesno",
+   "text": "Did she have vaginal bleeding after cessation of menstruation?",
+   "fields": [
+    "Id10300"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10299}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610300-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10304",
+   "kind": "yesno",
+   "text": "Did she have a sharp pain in her belly (abdomen) shortly before death?",
+   "fields": [
+    "Id10304"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10299}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610304-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10305",
+   "kind": "yesno",
+   "text": "Was she pregnant or in labour at the time of death?",
+   "fields": [
+    "Id10305"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10299}, 'yes')))"
+   ],
+   "note": "A “yes” response to this question means a foetus or baby remained in the mother’s body after she died, even if she was already in labour.",
+   "converts": [
+    {
+     "item": "W610305-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10306",
+   "kind": "yesno",
+   "text": "Did she die within 6 weeks of delivery, abortion or miscarriage?",
+   "fields": [
+    "Id10306"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10305}, 'dk') or selected(${Id10305}, 'no') or selected(${Id10305}, 'ref'))"
+   ],
+   "note": "A “yes” response to this question means that a foetus or baby was lost or removed or delivered (vaginally or by C-section) within 6 weeks before she died, whether the baby survived or not.",
+   "converts": [
+    {
+     "item": "W610306-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10307",
+   "text": "Did this woman die more than 6 weeks after being pregnant or delivering a baby?",
+   "fields": [
+    "Id10307"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and ((selected(${Id10306}, 'dk') or selected(${Id10306}, 'no') or selected(${Id10306}, 'ref')) and  (selected(${Id10305}, 'dk') or selected(${Id10305}, 'no') or selected(${Id10305}, 'ref')))"
+   ],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10308",
+   "text": "Was this a woman who died less than 1 year after being pregnant or delivering a baby?",
+   "fields": [
+    "Id10308"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10307}, 'yes'))"
+   ],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10309",
+   "kind": "number",
+   "text": "For how many months was she pregnant?",
+   "fields": [
+    "Id10309"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (selected(${Id10305}, 'yes') or selected(${Id10306}, 'yes') or selected(${Id10308}, 'yes'))"
+   ],
+   "units": [
+    "months"
+   ],
+   "base_unit": "months",
+   "converts": [
+    {
+     "item": "W610309-o",
+     "op": "<",
+     "value": 6
+    }
+   ]
+  },
+  {
+   "id": "Id10310",
+   "kind": "yesno",
+   "text": "Please confirm, when she died, she was NEITHER pregnant NOR had delivered, had an abortion, or miscarried within 12 months of when she died--is that right?",
+   "fields": [
+    "Id10310"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (((((selected(${Id10306}, 'dk') or selected(${Id10306}, 'no') or selected(${Id10306}, 'ref')) and \n(selected(${Id10307}, 'dk') or selected(${Id10307}, 'no') or selected(${Id10307}, 'ref') )) or\n((selected(${Id10306}, 'dk') or selected(${Id10306}, 'no') or selected(${Id10306}, 'ref')) and \n(selected(${Id10308}, 'dk') or selected(${Id10308}, 'no') or selected(${Id10308}, 'ref') ))) and\n (${Id10309} = 'NaN' or string-length(${Id10309}) = 0)) or\n (${Id10300} != 'NaN' and string-length(${Id10300}) != 0))"
+   ],
+   "converts": [
+    {
+     "item": "W610310-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10312",
+   "kind": "yesno",
+   "text": "Did she die during labour or delivery?",
+   "fields": [
+    "Id10312"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and ((selected(${Id10308}, 'no') or selected(${Id10308}, 'ref') or selected(${Id10308}, 'dk')) or selected(${Id10305}, 'yes'))"
+   ],
+   "note": "Labor is the period of time by which contractions are less than 10 minutes apart.",
+   "converts": [
+    {
+     "item": "W610312-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10313",
+   "kind": "yesno",
+   "text": "Did she die after delivering a baby?",
+   "fields": [
+    "Id10313"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10312}, 'yes')) and not(selected(${Id10305}, 'yes')) and not(selected(${Id10308}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610313-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10314",
+   "kind": "yesno",
+   "text": "Did she die within 24 hours after delivery?",
+   "fields": [
+    "Id10314"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (selected(${Id10313}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610314-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10315_a",
+   "kind": "yesno",
+   "text": "Did she die within 6 weeks of childbirth?",
+   "fields": [
+    "Id10315_a"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (${Id10312}!='yes' and  ${Id10314}!='yes' and ${Id10306}!='no' and (selected(${Id10305}, 'dk') or selected(${Id10305}, 'no') or selected(${Id10305}, 'ref')) and  ${Id10313}!='no')"
+   ],
+   "converts": [
+    {
+     "item": "W610315-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10316",
+   "kind": "yesno",
+   "text": "Did she give birth to a live baby (within 6 weeks of her death)?",
+   "fields": [
+    "Id10316"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and ((not(selected(${Id10312}, 'no')) and selected(${Id10306}, 'yes')) or (selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610316-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10317",
+   "kind": "yesno",
+   "text": "Did she die during or after a multiple pregnancy?",
+   "fields": [
+    "Id10317"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10305}, 'yes')) or not(selected(${Id10312}, 'yes'))  or (selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610317-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10318",
+   "kind": "yesno",
+   "text": "Was she breastfeeding the child in the days before death?",
+   "fields": [
+    "Id10318"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10312}, 'yes')) and not(selected(${Id10314}, 'yes')) and selected(${Id10316}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610318-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10319",
+   "kind": "number",
+   "text": "How many births, including stillbirths, did she (the mother) have before this baby?",
+   "fields": [
+    "Id10319"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10305}, 'yes')) or not(selected(${Id10312}, 'yes'))  or (selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')))"
+   ],
+   "units": [
+    "births"
+   ],
+   "base_unit": "births",
+   "converts": [
+    {
+     "item": "W610319-a",
+     "op": "=",
+     "value": 0
+    },
+    {
+     "item": "W610319-b",
+     "op": ">=",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": "Id10320",
+   "kind": "yesno",
+   "text": "Had she had any previous Caesarean section?",
+   "fields": [
+    "Id10320"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (${Id10319} > 0)"
+   ],
+   "converts": [
+    {
+     "item": "W610320-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10321",
+   "kind": "yesno",
+   "text": "During pregnancy, did she suffer from high blood pressure?",
+   "fields": [
+    "Id10321"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10305}, 'yes')) or not(selected(${Id10312}, 'yes'))  or (selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610321-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10322",
+   "kind": "yesno",
+   "text": "Did she have foul smelling vaginal discharge during pregnancy or after delivery?",
+   "fields": [
+    "Id10322"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10305}, 'yes')) or not(selected(${Id10312}, 'yes'))  or (selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610322-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10323",
+   "kind": "yesno",
+   "text": "During the last 3 months of pregnancy, did she suffer from convulsions?",
+   "fields": [
+    "Id10323"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10305}, 'yes')) or not(selected(${Id10312}, 'yes'))  or (selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610323-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10324",
+   "kind": "yesno",
+   "text": "During the last 3 months of pregnancy did she suffer from blurred vision?",
+   "fields": [
+    "Id10324"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10305}, 'yes')) or not(selected(${Id10312}, 'yes'))  or (selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610324-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10325",
+   "kind": "yesno",
+   "text": "Did bleeding occur while she was pregnant?",
+   "fields": [
+    "Id10325"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10305}, 'yes')) or not(selected(${Id10312}, 'yes'))  or (selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610325-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10326",
+   "kind": "yesno",
+   "text": "Was there vaginal bleeding during the first 6 months of pregnancy?",
+   "fields": [
+    "Id10326"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (selected(${Id10325}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610326-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10327",
+   "kind": "yesno",
+   "text": "Was there vaginal bleeding during the last 3 months of pregnancy but before labour started?",
+   "fields": [
+    "Id10327"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (selected(${Id10325}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610327-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10328",
+   "kind": "yesno",
+   "text": "Did she have excessive bleeding during labour or delivery?",
+   "fields": [
+    "Id10328"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and ((selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')) or selected(${Id10306}, 'yes') or (selected(${Id10305}, 'no') and selected(${Id10306}, 'yes')) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'no') and selected(${Id10307}, 'yes') and selected(${Id10308}, 'yes') ) or ( selected(${Id10316}, 'yes') or selected(${Id10316}, 'no')))"
+   ],
+   "converts": [
+    {
+     "item": "W610328-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10329",
+   "kind": "yesno",
+   "text": "Did she have excessive bleeding after delivery or abortion?",
+   "fields": [
+    "Id10329"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and ((not(selected(${Id10305}, 'yes')) and not(selected(${Id10312}, 'no'))))"
+   ],
+   "converts": [
+    {
+     "item": "W610329-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10330",
+   "kind": "yesno",
+   "text": "Was the placenta completely delivered?",
+   "fields": [
+    "Id10330"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and ((selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')) or selected(${Id10306}, 'yes') or (selected(${Id10305}, 'no') and selected(${Id10306}, 'yes')) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'no') and selected(${Id10307}, 'yes') and selected(${Id10308}, 'yes') ) or ( selected(${Id10316}, 'yes') or selected(${Id10316}, 'no')))"
+   ],
+   "converts": [
+    {
+     "item": "W610330-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10331",
+   "kind": "yesno",
+   "text": "Did she deliver or try to deliver an abnormally positioned baby?",
+   "fields": [
+    "Id10331"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and ((selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')) or selected(${Id10306}, 'yes') or (selected(${Id10305}, 'no') and selected(${Id10306}, 'yes')) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'no') and selected(${Id10307}, 'yes') and selected(${Id10308}, 'yes') ) or ( selected(${Id10316}, 'yes') or selected(${Id10316}, 'no')))"
+   ],
+   "note": "An abnormally positioned baby refers to babys' whose first body part exiting the vagina is not the head.",
+   "converts": [
+    {
+     "item": "W610331-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10332",
+   "kind": "number",
+   "text": "For how many hours was she in labour?",
+   "fields": [
+    "Id10332"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and ((selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')) or selected(${Id10306}, 'yes') or (selected(${Id10305}, 'no') and selected(${Id10306}, 'yes')) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'no') and selected(${Id10307}, 'yes') and selected(${Id10308}, 'yes')) or ( selected(${Id10316}, 'yes') or selected(${Id10316}, 'no')))"
+   ],
+   "units": [
+    "hours"
+   ],
+   "base_unit": "hours",
+   "note": "Answer in hours. Less than 60 minutes = 0 hours. 1 day=24 hours.",
+   "converts": [
+    {
+     "item": "W610332-a",
+     "op": ">",
+     "value": 24
+    }
+   ]
+  },
+  {
+   "id": "Id10333",
+   "kind": "yesno",
+   "text": "Did she attempt to terminate the pregnancy?",
+   "fields": [
+    "Id10333"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610333-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10334",
+   "kind": "yesno",
+   "text": "Did she recently have a pregnancy that ended in an abortion (spontaneous or induced)?",
+   "fields": [
+    "Id10334"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10316}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610334-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10335",
+   "kind": "yesno",
+   "text": "Did she die during an abortion?",
+   "fields": [
+    "Id10335"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (selected(${Id10334}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610335-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10336",
+   "kind": "yesno",
+   "text": "Did she die within 6 weeks of having an abortion?",
+   "fields": [
+    "Id10336"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (selected(${Id10334}, 'yes') and not(selected(${Id10335}, 'yes')) and not(selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610336-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10337",
+   "kind": "choice",
+   "text": "Where did she give birth / complete the miscarriage / have the abortion?",
+   "fields": [
+    "Id10337"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10312}, 'no') and selected(${Id10305}, 'yes')) or selected(${Id10316}, 'yes') or (selected(${Id10316}, 'no') and (selected(${Id10333}, 'yes') or selected(${Id10334}, 'yes') or selected(${Id10336}, 'yes'))) or (selected(${Id10316}, 'no') and selected(${Id10333}, 'no') and selected(${Id10334}, 'no')) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'no') and selected(${Id10307}, 'yes') and selected(${Id10308}, 'yes') ))"
+   ],
+   "choices": [
+    [
+     "hospital",
+     "Hospital"
+    ],
+    [
+     "other_health_facility",
+     "Other health facility"
+    ],
+    [
+     "home",
+     "Home"
+    ],
+    [
+     "on_route_to_hospital_or_facility",
+     "On route to hospital or facility"
+    ],
+    [
+     "other",
+     "Other"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610337-a",
+     "yes_if": [
+      "hospital",
+      "other_health_facility"
+     ]
+    },
+    {
+     "item": "W610337-b",
+     "yes_if": [
+      "home"
+     ]
+    },
+    {
+     "item": "W610337-c",
+     "yes_if": [
+      "on_route_to_hospital_or_facility",
+      "other"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10338",
+   "kind": "yesno",
+   "text": "Did she receive professional assistance during the delivery?",
+   "fields": [
+    "Id10338"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10312}, 'no') and selected(${Id10305}, 'yes')) or selected(${Id10316}, 'yes') or (selected(${Id10316}, 'no') and (selected(${Id10333}, 'yes') or selected(${Id10334}, 'yes') or selected(${Id10336}, 'yes'))) or (selected(${Id10316}, 'no') and selected(${Id10333}, 'no') and selected(${Id10334}, 'no')) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'no') and selected(${Id10307}, 'yes') and selected(${Id10308}, 'yes') ))"
+   ],
+   "note": "Professional assistance means delivery attended by a medical professional (doctor, nurse or midwife).",
+   "converts": [
+    {
+     "item": "W610338-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10339",
+   "text": "Who delivered the baby / completed the miscarriage / performed the abortion?",
+   "fields": [
+    "Id10339"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (not(selected(${Id10312}, 'no') and selected(${Id10305}, 'yes')) or selected(${Id10316}, 'yes') or (selected(${Id10316}, 'no') and (selected(${Id10333}, 'yes') or selected(${Id10334}, 'yes') or selected(${Id10336}, 'yes'))) or (selected(${Id10316}, 'no') and selected(${Id10333}, 'no') and selected(${Id10334}, 'no')) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'no') and selected(${Id10307}, 'yes') and selected(${Id10308}, 'yes') ))"
+   ],
+   "converts": [],
+   "kind": "choice",
+   "choices": [
+    [
+     "Doctor",
+     "Doctor"
+    ],
+    [
+     "Midwife",
+     "Midwife"
+    ],
+    [
+     "Nurse",
+     "Nurse"
+    ],
+    [
+     "Relative",
+     "Relative"
+    ],
+    [
+     "Self_mother",
+     "Self (the mother)"
+    ],
+    [
+     "Traditional_birth_attendant",
+     "Traditional birth attendant"
+    ],
+    [
+     "Other",
+     "Other"
+    ]
+   ]
+  },
+  {
+   "id": "Id10342",
+   "kind": "yesno",
+   "text": "Was her delivery normal vaginal, without forceps or vacuum?",
+   "fields": [
+    "Id10342"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (((selected(${Id10334}, 'no') or selected(${Id10334}, 'dk') or selected(${Id10334}, 'ref') ) and not(selected(${Id10335}, 'yes')) and not(selected(${Id10336}, 'yes'))) or selected(${Id10316}, 'yes')) and (not(selected(${Id10312}, 'no')and selected(${Id10305}, 'yes'))  or selected(${Id10316}, 'yes') or selected(${Id10316}, 'no')  or (selected(${Id10305}, 'yes') and selected(${Id10312}, 'yes')) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'yes')) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'no') and selected(${Id10307}, 'yes') and selected(${Id10308}, 'yes') ))"
+   ],
+   "converts": [
+    {
+     "item": "W610342-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10343",
+   "kind": "yesno",
+   "text": "Was her delivery vaginal, with forceps or vacuum?",
+   "fields": [
+    "Id10343"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (((selected(${Id10334}, 'no') or selected(${Id10334}, 'dk') or selected(${Id10334}, 'ref') ) and not(selected(${Id10335}, 'yes')) and not(selected(${Id10336}, 'yes'))) or selected(${Id10316}, 'yes')) and (selected(${Id10342}, 'no') or selected(${Id10342}, 'ref') or selected(${Id10342}, 'dk'))"
+   ],
+   "converts": [
+    {
+     "item": "W610343-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10344",
+   "kind": "yesno",
+   "text": "Was her delivery a Caesarean section?",
+   "fields": [
+    "Id10344"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')) and (${Id10019} = 'female' or ${Id10019} = 'undetermined')) and (not(selected(${Id10310}, 'yes'))) and (((selected(${Id10334}, 'no') or selected(${Id10334}, 'dk') or selected(${Id10334}, 'ref') ) and not(selected(${Id10335}, 'yes')) and not(selected(${Id10336}, 'yes'))) or selected(${Id10316}, 'yes')) and (not(selected(${Id10342}, 'yes')) and (selected(${Id10343}, 'no') or selected(${Id10343}, 'dk') or selected(${Id10343}, 'ref')))"
+   ],
+   "converts": [
+    {
+     "item": "W610344-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10347",
+   "kind": "yesno",
+   "text": "Was the baby born more than one month early?",
+   "fields": [
+    "Id10347"
+   ],
+   "relevant": [
+    "(((selected(${isAdult}, '1') and not(selected(${Id10310}, 'yes'))) and (${Id10019} = 'female') or ${Id10019}='undetermined') and (not(selected(${Id10334}, 'yes')) and not(selected(${Id10335}, 'yes')) and not(selected(${Id10336}, 'yes'))) and not(selected(${Id10305}, 'yes') and selected(${Id10312}, 'no')))"
+   ],
+   "converts": [
+    {
+     "item": "W610347-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10340",
+   "kind": "yesno",
+   "text": "Did she have an operation to remove her uterus shortly before death?",
+   "fields": [
+    "Id10340"
+   ],
+   "relevant": [
+    "(selected(${Id10334}, 'yes') or selected(${Id10315_a}, 'yes') or selected(${Id10313}, 'yes') or (selected(${Id10305}, 'yes') and  (selected(${Id10312}, 'yes') or selected(${Id10312}, 'no'))) or (selected(${Id10305}, 'no') and selected(${Id10306}, 'no') and selected(${Id10307}, 'yes') and selected(${Id10308}, 'yes') ))"
+   ],
+   "converts": [
+    {
+     "item": "W610340-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10352",
+   "text": "How old was the child when the fatal illness started?",
+   "fields": [
+    "Id10352_units",
+    "Id10352_a",
+    "Id10352_b"
+   ],
+   "relevant": [
+    "((selected(${isChild}, '1')))"
+   ],
+   "note": "Use one unit: 1-11 months or 1-11 years.",
+   "converts": [],
+   "kind": "number",
+   "units": [
+    "months",
+    "years"
+   ]
+  },
+  {
+   "id": "Id10354",
+   "kind": "yesno",
+   "text": "Was the child part of a multiple birth?",
+   "fields": [
+    "Id10354"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${isNeonatal}, '1') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "note": "If two or more children are born at the same time, it is counted as a multiple birth, even if one or more of the babies are born dead.",
+   "converts": [
+    {
+     "item": "W610354-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10355",
+   "kind": "choice",
+   "text": "Was the child the first, second, or later in the birth order?",
+   "fields": [
+    "Id10355"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${Id10354}, 'yes'))"
+   ],
+   "choices": [
+    [
+     "first",
+     "First"
+    ],
+    [
+     "second_or_later",
+     "Second or later"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610355-a",
+     "yes_if": [
+      "first"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10356",
+   "kind": "yesno",
+   "text": "Is the child's mother still alive?",
+   "fields": [
+    "Id10356"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${isNeonatal}, '1') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "converts": [
+    {
+     "item": "W610356-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10357",
+   "kind": "choice",
+   "text": "Did the mother die before, during or after the delivery?",
+   "fields": [
+    "Id10357"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${Id10356}, 'no'))"
+   ],
+   "choices": [
+    [
+     "before_delivery",
+     "Before delivery"
+    ],
+    [
+     "during_delivery",
+     "During delivery"
+    ],
+    [
+     "after_delivery",
+     "After delivery"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610357-o",
+     "yes_if": [
+      "during_delivery",
+      "after_delivery"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10358",
+   "kind": "number",
+   "text": "How long after the delivery did the mother die?",
+   "fields": [
+    "Id10358_units",
+    "Id10358",
+    "Id10359",
+    "Id10359_a"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${Id10357}, 'after_delivery'))"
+   ],
+   "units": [
+    "days",
+    "weeks",
+    "months"
+   ],
+   "base_unit": "months",
+   "note": "If less than 24 hours, answer 0 days. If less than 7 days answer in days. If more than 7 days but less than 7 weeks, answer in weeks. If more than 7 weeks answer in months.",
+   "converts": [
+    {
+     "item": "W610358-a",
+     "op": "<",
+     "value": 12
+    }
+   ]
+  },
+  {
+   "id": "Id10360",
+   "kind": "choice",
+   "text": "Where was the deceased born?",
+   "fields": [
+    "Id10360"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${isNeonatal}, '1') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "choices": [
+    [
+     "hospital",
+     "Hospital"
+    ],
+    [
+     "other_health_facility",
+     "Other health facility"
+    ],
+    [
+     "home",
+     "Home"
+    ],
+    [
+     "on_route_to_hospital_or_facility",
+     "On route to hospital or facility"
+    ],
+    [
+     "other",
+     "Other"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610360-a",
+     "yes_if": [
+      "hospital",
+      "other_health_facility"
+     ]
+    },
+    {
+     "item": "W610360-b",
+     "yes_if": [
+      "home"
+     ]
+    },
+    {
+     "item": "W610360-c",
+     "yes_if": [
+      "on_route_to_hospital_or_facility",
+      "other"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10361",
+   "kind": "yesno",
+   "text": "Did the baby's mother receive professional assistance during the delivery?",
+   "fields": [
+    "Id10361"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${isNeonatal}, '1') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "note": "Professional assistance means delivery attended by a medical professional (doctor, midwife, or nurse).",
+   "converts": [
+    {
+     "item": "W610361-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10362",
+   "kind": "yesno",
+   "text": "At birth, was the baby of usual size?",
+   "fields": [
+    "Id10362"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${isNeonatal}, '1') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "converts": [
+    {
+     "item": "W610362-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10363",
+   "kind": "yesno",
+   "text": "At birth, was the baby smaller than usual, (weighing under 2.5 kg)?",
+   "fields": [
+    "Id10363"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and ((selected(${isNeonatal}, '1') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12)) and ${Id10362}!='yes')"
+   ],
+   "converts": [
+    {
+     "item": "W610363-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10364",
+   "kind": "yesno",
+   "text": "At birth, was the baby very much smaller than usual, (weighing under 1 kg)?",
+   "fields": [
+    "Id10364"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${Id10363}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610364-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10365",
+   "kind": "yesno",
+   "text": "At birth, was the baby larger than usual, (weighing over 4.5 kg)?",
+   "fields": [
+    "Id10365"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${Id10363}, 'dk') or selected(${Id10363}, 'no') or selected(${Id10363}, 'ref'))"
+   ],
+   "converts": [
+    {
+     "item": "W610365-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10366",
+   "text": "What was the weight (in grammes) of the deceased at birth?",
+   "fields": [
+    "Id10366"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1')))"
+   ],
+   "note": "If a weight recorded on the child's health card is mentioned, use it rather than a remembered weight. The weight may be given in kilograms; 1 kilogram = 1,000 grams.",
+   "converts": [],
+   "kind": "number",
+   "units": [
+    "grams"
+   ],
+   "base_unit": "grams"
+  },
+  {
+   "id": "Id10367",
+   "kind": "number",
+   "text": "How many months long was the pregnancy before the child was born?",
+   "fields": [
+    "Id10367"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and ((selected(${isNeonatal}, '1') or selected(${isChild}, '1')))"
+   ],
+   "units": [
+    "months"
+   ],
+   "base_unit": "months",
+   "converts": [
+    {
+     "item": "W610367-a",
+     "op": ">=",
+     "value": 9
+    },
+    {
+     "item": "W610367-b",
+     "op": "=",
+     "value": 8
+    },
+    {
+     "item": "W610367-c",
+     "op": "<",
+     "value": 8
+    }
+   ]
+  },
+  {
+   "id": "Id10368",
+   "kind": "yesno",
+   "text": "Were there any complications in the late part of the pregnancy (defined as the last 3 months, before labour)?",
+   "fields": [
+    "Id10368"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and ((selected(${isNeonatal}, '1') or selected(${isChild}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610368-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10369",
+   "kind": "yesno",
+   "text": "Were there any complications during labour or delivery?",
+   "fields": [
+    "Id10369"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and ((selected(${isNeonatal}, '1') or selected(${isChild}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610369-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10370",
+   "kind": "yesno",
+   "text": "Was any part of the baby physically abnormal at time of delivery? (for example: body part too large or too small, additional growth on body)?",
+   "fields": [
+    "Id10370"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${isNeonatal}, '1') or (selected(${isChild}, '1') and (${ageInMonthsByYear} = 'NaN' or string-length(${ageInMonthsByYear}) = 0)) or (selected(${isChild}, '1') and ${ageInMonthsByYear} != 'NaN' and string-length(${ageInMonthsByYear}) > 0 and ${ageInMonthsByYear}<12))"
+   ],
+   "converts": [
+    {
+     "item": "W610370-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10371",
+   "kind": "yesno",
+   "text": "Did the baby/child have a swelling or defect on the back at time of birth?",
+   "fields": [
+    "Id10371"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${Id10370}, 'yes') or  selected(${Id10370}, 'dk') or  selected(${Id10370}, 'ref'))"
+   ],
+   "converts": [
+    {
+     "item": "W610371-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10372",
+   "kind": "yesno",
+   "text": "Did the baby/child have a very large head at time of birth?",
+   "fields": [
+    "Id10372"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${Id10370}, 'yes') or  selected(${Id10370}, 'dk') or  selected(${Id10370}, 'ref'))"
+   ],
+   "converts": [
+    {
+     "item": "W610372-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10373",
+   "kind": "yesno",
+   "text": "Did the baby/child have a very small head at time of birth?",
+   "fields": [
+    "Id10373"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (selected(${Id10372}, 'no') or  selected(${Id10372}, 'dk') or  selected(${Id10372}, 'ref'))"
+   ],
+   "converts": [
+    {
+     "item": "W610373-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10394",
+   "kind": "number",
+   "text": "How many births, including stillbirths, did the baby's mother have before this baby?",
+   "fields": [
+    "Id10394"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1') or selected(${isChild}, '1'))) and (${ageInMonthsByYear}<12 or selected(${isNeonatal}, '1'))"
+   ],
+   "units": [
+    "births"
+   ],
+   "base_unit": "births",
+   "converts": [
+    {
+     "item": "W610394-a",
+     "op": "=",
+     "value": 0
+    },
+    {
+     "item": "W610394-b",
+     "op": ">=",
+     "value": 4
+    }
+   ]
+  },
+  {
+   "id": "Id10376",
+   "kind": "yesno",
+   "text": "Was the baby moving in the last few days before the birth?",
+   "fields": [
+    "Id10376"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610376-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10377",
+   "kind": "yesno",
+   "text": "Did the baby stop moving in the womb before labour started?",
+   "fields": [
+    "Id10377"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610377-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10379",
+   "text": "How long before labour did the baby's mother last feel the baby move?",
+   "fields": [
+    "Id10379_unit",
+    "Id10379",
+    "Id10380"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1'))) and (selected(${Id10377}, 'yes'))"
+   ],
+   "note": "Use one unit: 0-23 hours or 1-60 days. 1 week = 7 days.",
+   "converts": [],
+   "kind": "number",
+   "units": [
+    "hours",
+    "days"
+   ]
+  },
+  {
+   "id": "Id10382",
+   "kind": "number",
+   "text": "How many hours did labour and delivery take?",
+   "fields": [
+    "Id10382"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "units": [
+    "hours"
+   ],
+   "base_unit": "hours",
+   "note": "If less than one hour answer 0.",
+   "converts": [
+    {
+     "item": "W610382-a",
+     "op": ">",
+     "value": 24
+    }
+   ]
+  },
+  {
+   "id": "Id10383",
+   "kind": "yesno",
+   "text": "Was the baby born 24 hours or more after the water broke?",
+   "fields": [
+    "Id10383"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610383-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10384",
+   "kind": "yesno",
+   "text": "Was the liquor foul smelling?",
+   "fields": [
+    "Id10384"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610384-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10385",
+   "kind": "choice",
+   "text": "What was the colour of the liquor when the water broke?",
+   "fields": [
+    "Id10385"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "choices": [
+    [
+     "green_or_brown",
+     "Green or brown"
+    ],
+    [
+     "clear",
+     "Clear (normal)"
+    ],
+    [
+     "other",
+     "Other"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610385-a",
+     "yes_if": [
+      "green_or_brown"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10387",
+   "kind": "yesno",
+   "text": "Was the baby's delivery normal vaginal, without forceps or vacuum?",
+   "fields": [
+    "Id10387"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610387-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10388",
+   "kind": "yesno",
+   "text": "Was the baby's delivery vaginal, with forceps or vacuum?",
+   "fields": [
+    "Id10388"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1'))) and (not(selected(${Id10387}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610388-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10389",
+   "kind": "yesno",
+   "text": "Was the baby's delivery a Caesarean section?",
+   "fields": [
+    "Id10389"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1'))) and (not(selected(${Id10387}, 'yes')) and not(selected(${Id10388}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610389-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10391",
+   "kind": "yesno",
+   "text": "Did the baby's mother receive any vaccinations since reaching adulthood including during this pregnancy?",
+   "fields": [
+    "Id10391"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610391-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10392",
+   "text": "In relation to the baby's mother receiving any vaccinations since reaching adulthood including during this pregnancy, how many doses did they receive?",
+   "fields": [
+    "Id10392"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1'))) and (selected(${Id10391}, 'yes'))"
+   ],
+   "converts": [],
+   "kind": "number",
+   "units": [
+    "doses"
+   ],
+   "base_unit": "doses"
+  },
+  {
+   "id": "Id10393",
+   "kind": "yesno",
+   "text": "Did the baby's mother receive tetanus toxoid (TT) vaccine?",
+   "fields": [
+    "Id10393"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1'))) and (selected(${Id10391}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610393-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10395",
+   "kind": "yesno",
+   "text": "During labour, did the baby's mother suffer from fever?",
+   "fields": [
+    "Id10395"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610395-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10396",
+   "kind": "yesno",
+   "text": "During the last 3 months of pregnancy, labour or delivery, did the baby's mother suffer from high blood pressure?",
+   "fields": [
+    "Id10396"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610396-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10397",
+   "kind": "yesno",
+   "text": "Did the baby's mother have diabetes mellitus?",
+   "fields": [
+    "Id10397"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610397-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10398",
+   "kind": "yesno",
+   "text": "Did the baby's mother have foul smelling vaginal discharge during pregnancy or after delivery?",
+   "fields": [
+    "Id10398"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610398-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10399",
+   "kind": "yesno",
+   "text": "During the last 3 months of pregnancy, labour or delivery, did the baby's mother suffer from convulsions?",
+   "fields": [
+    "Id10399"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610399-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10400",
+   "kind": "yesno",
+   "text": "During the last 3 months of pregnancy did the baby's mother suffer from blurred vision?",
+   "fields": [
+    "Id10400"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610400-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10401",
+   "kind": "yesno",
+   "text": "Did the baby's mother have severe anemia?",
+   "fields": [
+    "Id10401"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610401-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10402",
+   "kind": "yesno",
+   "text": "Did the baby's mother have vaginal bleeding during the last 3 months of pregnancy but before labour started?",
+   "fields": [
+    "Id10402"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610402-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10403",
+   "kind": "yesno",
+   "text": "Did the baby's bottom, feet, arm or hand come out of the vagina before its head?",
+   "fields": [
+    "Id10403"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610403-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10404",
+   "kind": "yesno",
+   "text": "Was the umbilical cord wrapped more than once around the neck of the child at birth?",
+   "fields": [
+    "Id10404"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610404-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10405",
+   "kind": "yesno",
+   "text": "Was the umbilical cord delivered first?",
+   "fields": [
+    "Id10405"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610405-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10406",
+   "kind": "yesno",
+   "text": "Was the baby blue in colour at birth?",
+   "fields": [
+    "Id10406"
+   ],
+   "relevant": [
+    "((selected(${isNeonatal}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610406-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10411",
+   "kind": "yesno",
+   "text": "Did he or she drink alcohol?",
+   "fields": [
+    "Id10411"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610411-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10412",
+   "kind": "yesno",
+   "text": "Did he or she use tobacco?",
+   "fields": [
+    "Id10412"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610412-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10413",
+   "kind": "yesno",
+   "text": "Did he or she smoke tobacco (cigarette, cigar, pipe, etc.)?",
+   "fields": [
+    "Id10413"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610413-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10414",
+   "kind": "choice",
+   "text": "What kind of tobacco did he or she use?",
+   "fields": [
+    "Id10414"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1'))) and (selected(${Id10413}, 'yes') or (selected(${Id10412}, 'yes') and selected(${Id10413}, 'no')))"
+   ],
+   "choices": [
+    [
+     "cigarettes",
+     "Cigarettes"
+    ],
+    [
+     "pipe",
+     "Pipe"
+    ],
+    [
+     "chewing_tobacco",
+     "Chewing tobacco"
+    ],
+    [
+     "local_form_of_tobacco",
+     "Local form of tobacco"
+    ],
+    [
+     "other",
+     "Other"
+    ]
+   ],
+   "converts": [
+    {
+     "item": "W610414-a",
+     "yes_if": [
+      "chewing_tobacco"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "Id10415",
+   "kind": "number",
+   "text": "How many cigarettes did he or she smoke daily?",
+   "fields": [
+    "Id10415"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1'))) and (selected(${Id10414}, 'cigarettes'))"
+   ],
+   "units": [
+    "cigarettes"
+   ],
+   "base_unit": "cigarettes",
+   "converts": [
+    {
+     "item": "W610415-a",
+     "op": ">=",
+     "value": 10
+    }
+   ]
+  },
+  {
+   "id": "Id10416",
+   "text": "How many times did he or she use tobacco products each day?",
+   "fields": [
+    "Id10416"
+   ],
+   "relevant": [
+    "((selected(${isAdult}, '1'))) and (selected(${Id10414}, 'pipe') or selected(${Id10414}, 'chewing_tobacco') or selected(${Id10414}, 'local_form_of_tobacco') or  selected(${Id10414}, 'other'))"
+   ],
+   "converts": [],
+   "kind": "number",
+   "units": [
+    "times a day"
+   ],
+   "base_unit": "times a day"
+  },
+  {
+   "id": "Id10418",
+   "kind": "yesno",
+   "text": "Did he or she receive any treatment for the illness that led to death?",
+   "fields": [
+    "Id10418"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [
+    {
+     "item": "W610418-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10419",
+   "kind": "yesno",
+   "text": "Did he or she receive oral rehydration salts?",
+   "fields": [
+    "Id10419"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10418}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610419-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10420",
+   "kind": "yesno",
+   "text": "Did he or she receive (or need) intravenous fluids (drip) treatment?",
+   "fields": [
+    "Id10420"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10418}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610420-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10421",
+   "kind": "yesno",
+   "text": "Did he or she receive (or need) a blood transfusion?",
+   "fields": [
+    "Id10421"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10418}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610421-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10422",
+   "kind": "yesno",
+   "text": "Did he or she receive (or need) treatment/food through a tube passed through the nose?",
+   "fields": [
+    "Id10422"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10418}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610422-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10423",
+   "kind": "yesno",
+   "text": "Did he or she receive (or need) injectable antibiotics?",
+   "fields": [
+    "Id10423"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10418}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610423-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10424",
+   "kind": "yesno",
+   "text": "Did he or she receive (or need) antiretroviral therapy (ART)?",
+   "fields": [
+    "Id10424"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10418}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610424-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10425",
+   "kind": "yesno",
+   "text": "Did he or she have (or need) an operation for the illness?",
+   "fields": [
+    "Id10425"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10418}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610425-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10426",
+   "kind": "yesno",
+   "text": "Did he or she have the operation within 1 month before death?",
+   "fields": [
+    "Id10426"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${Id10418}, 'yes') and ${isNeonatal} !='1') and selected(${Id10425}, 'yes'))"
+   ],
+   "converts": [
+    {
+     "item": "W610426-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10427",
+   "kind": "yesno",
+   "text": "Was he or she discharged from hospital very ill?",
+   "fields": [
+    "Id10427"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10418}, 'yes') and (selected(${isAdult}, '1') or selected(${isChild}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610427-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10428",
+   "kind": "yesno",
+   "text": "Did he or she receive any immunizations?",
+   "fields": [
+    "Id10428"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and ((selected(${isNeonatal}, '1') or selected(${isChild}, '1')))"
+   ],
+   "converts": [
+    {
+     "item": "W610428-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10432",
+   "text": "Was care sought outside the home while he or she had this illness?",
+   "fields": [
+    "Id10432"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10433",
+   "text": "Where or from whom did the family seek care?",
+   "fields": [
+    "Id10433"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10432}, 'yes'))"
+   ],
+   "converts": [],
+   "kind": "multi",
+   "choices": [
+    [
+     "traditional_healer",
+     "Traditional healer"
+    ],
+    [
+     "homeopath",
+     "Homeopath"
+    ],
+    [
+     "religious_leader",
+     "Religious leader"
+    ],
+    [
+     "government_hospital",
+     "Government hospital"
+    ],
+    [
+     "govment_health_center_or_clinic",
+     "Government health center or clinic"
+    ],
+    [
+     "private_hospital",
+     "Private hospital"
+    ],
+    [
+     "community_based_pract_system",
+     "Community-based practitioner associated with health system"
+    ],
+    [
+     "trained_birth_attendant",
+     "Trained birth attendant"
+    ],
+    [
+     "private_physician",
+     "Private physician"
+    ],
+    [
+     "relative_friend",
+     "Relative, friend (outside household)"
+    ],
+    [
+     "pharmacy",
+     "Pharmacy"
+    ]
+   ]
+  },
+  {
+   "id": "Id10435",
+   "text": "Did a health care worker tell the family the cause of death?",
+   "fields": [
+    "Id10435"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes')))"
+   ],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10436",
+   "text": "If a health care worker told the family the cause of death, what did they say?",
+   "fields": [
+    "Id10436"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (selected(${Id10435}, 'yes'))"
+   ],
+   "converts": [],
+   "kind": "text"
+  },
+  {
+   "id": "Id10445",
+   "text": "Has the deceased’s (biological) mother ever been tested for HIV?",
+   "fields": [
+    "Id10445"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (((selected(${isNeonatal}, '1')) or (selected(${isChild}, '1') and selected(${Id10432}, 'yes'))))"
+   ],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10446",
+   "text": "Has the deceased’s (biological) mother ever been told she had HIV/AIDS by a health worker?",
+   "fields": [
+    "Id10446"
+   ],
+   "relevant": [
+    "(not(selected(${Id10114}, 'yes'))) and (((selected(${isNeonatal}, '1')) or (selected(${isChild}, '1') and selected(${Id10432}, 'yes'))))"
+   ],
+   "converts": [],
+   "kind": "yesno"
+  },
+  {
+   "id": "Id10450",
+   "kind": "yesno",
+   "text": "In the final days before death, did he or she travel to a hospital or health facility?",
+   "fields": [
+    "Id10450"
+   ],
+   "relevant": [],
+   "note": "Answer yes if the deceased was a stillbirth delivered in a health facility or a live birth delivered in a health facility that died before leaving the facility.",
+   "converts": [
+    {
+     "item": "W610450-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10451",
+   "kind": "yesno",
+   "text": "Did he or she use motorised transport to get to the hospital or health facility?",
+   "fields": [
+    "Id10451"
+   ],
+   "relevant": [
+    "(selected(${Id10450}, 'yes'))"
+   ],
+   "note": "For stillbirths and live births delivered in a health facility, answer based on mother's experience.",
+   "converts": [
+    {
+     "item": "W610451-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10452",
+   "kind": "yesno",
+   "text": "Were there any problems during admission to the hospital or health facility?",
+   "fields": [
+    "Id10452"
+   ],
+   "relevant": [
+    "(selected(${Id10450}, 'yes'))"
+   ],
+   "note": "For stillbirths and live births delivered in a health facility, answer based on mother's experience.",
+   "converts": [
+    {
+     "item": "W610452-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10453",
+   "kind": "yesno",
+   "text": "Were there any problems with the way he or she was treated (medical treatment, procedures, interpersonal attitudes, respect, dignity) in the hospital or health facility?",
+   "fields": [
+    "Id10453"
+   ],
+   "relevant": [
+    "(selected(${Id10450}, 'yes'))"
+   ],
+   "note": "For stillbirths and live births delivered in a health facility, answer based on mother's experience.",
+   "converts": [
+    {
+     "item": "W610453-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10454",
+   "kind": "yesno",
+   "text": "Were there any problems getting medications or diagnostic tests in the hospital or health facility?",
+   "fields": [
+    "Id10454"
+   ],
+   "relevant": [
+    "(selected(${Id10450}, 'yes'))"
+   ],
+   "note": "For stillbirths, answer based on mother's experience.",
+   "converts": [
+    {
+     "item": "W610454-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10455",
+   "kind": "yesno",
+   "text": "Does it take more than 2 hours to get to the nearest hospital or health facility from the deceased's household?",
+   "fields": [
+    "Id10455"
+   ],
+   "relevant": [],
+   "note": "For stillbirths and live births delivered in a health facility that died before leaving the facility, answer based on mother's experience.",
+   "converts": [
+    {
+     "item": "W610455-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10456",
+   "kind": "yesno",
+   "text": "In the final days before death, were there any doubts about whether medical care was needed?",
+   "fields": [
+    "Id10456"
+   ],
+   "relevant": [],
+   "note": "For stillbirths answer based on mother's experience.",
+   "converts": [
+    {
+     "item": "W610456-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10457",
+   "kind": "yesno",
+   "text": "In the final days before death, was traditional medicine used?",
+   "fields": [
+    "Id10457"
+   ],
+   "relevant": [],
+   "note": "For stillbirths answer based on mother's experience.",
+   "converts": [
+    {
+     "item": "W610457-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10458",
+   "kind": "yesno",
+   "text": "In the final days before death, did anyone use a telephone or cell phone to call for help?",
+   "fields": [
+    "Id10458"
+   ],
+   "relevant": [],
+   "converts": [
+    {
+     "item": "W610458-o"
+    }
+   ]
+  },
+  {
+   "id": "Id10459",
+   "kind": "yesno",
+   "text": "Over the course of illness, did the total costs of care and treatment prohibit other household payments?",
+   "fields": [
+    "Id10459"
+   ],
+   "relevant": [],
+   "converts": [
+    {
+     "item": "W610459-o"
+    }
+   ]
+  }
+ ]
+}
