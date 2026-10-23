@@ -721,6 +721,55 @@
       .note-card-remove:hover {
         color: var(--ink);
       }
+      /* A read note opens its text to check or correct it */
+      .note-card[data-index] {
+        cursor: pointer;
+      }
+      .note-card[data-index]:hover {
+        border-color: var(--border-warm-strong);
+      }
+      .note-card.editing {
+        border-color: var(--ink-soft);
+        box-shadow: 0 0 0 1px var(--ink-soft);
+      }
+      .note-card small {
+        color: var(--ink-muted);
+      }
+      .note-card-tag {
+        padding: 0 5px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        color: var(--paper);
+        background: var(--accent-sage);
+      }
+      .note-card.reading {
+        padding-right: 10px;
+        color: var(--ink-muted);
+      }
+      .note-card-spinner {
+        width: 12px;
+        height: 12px;
+        border: 2px solid var(--border-warm-strong);
+        border-top-color: var(--ink-soft);
+        border-radius: 50%;
+        animation: note-spin 0.8s linear infinite;
+      }
+      @keyframes note-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .note-card.failed,
+      .note-card.failed small {
+        border-color: var(--warning);
+        color: var(--warning);
+      }
+      #noteRunBtn:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
       .note-editor:not([hidden]) {
         display: flex;
         flex-direction: column;
@@ -3434,7 +3483,7 @@
             <i class="bi bi-pencil-square"></i>
             <span data-i18n="note.type">Type note</span>
           </button>
-          <input type="file" id="noteInput" accept=".txt,.pdf" multiple hidden />
+          <input type="file" id="noteInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp" multiple hidden />
           <button
             id="continueBtn"
             class="btn btn-ghost"
@@ -3648,7 +3697,7 @@
       <div class="note-strip" id="noteStrip">
         <div class="note-cards" id="noteCards"></div>
         <span class="note-drop-hint" data-i18n="note.dropHint"
-          >Drop .txt/.pdf clinical notes here</span
+          >Drop clinical notes, PDFs or photos here</span
         >
         <button id="noteRunBtn" class="btn btn-ghost">
           <i class="bi bi-play-fill"></i>
@@ -4294,11 +4343,18 @@
           "common.history": "History",
           "note.upload": "Upload note",
           "note.run": "Run inference",
-          "note.dropHint": "Drop .txt/.pdf clinical notes here",
+          "note.dropHint": "Drop clinical notes, PDFs or photos here",
           "note.type": "Type note",
           "note.placeholder": "Type clinical notes for this case",
           "note.cancel": "Cancel",
           "note.save": "Add to case",
+          "note.reading": "Reading…",
+          "note.readingPhoto": "Reading photo…",
+          "note.failed": "Could not read",
+          "note.waiting": "Waiting for documents…",
+          "note.saveEdit": "Save changes",
+          "note.ocrTitle": "Text read from the image by OCR. Tap to check or correct it.",
+          "note.editTitle": "Tap to view or edit the text",
           "tagline.line1": "Cause of Death",
           "tagline.line2": "Determination Assistant",
           "onboard.eyebrow": "BEFORE YOU BEGIN",
@@ -4454,11 +4510,18 @@
           "common.history": "Historia",
           "note.upload": "Pakia maelezo",
           "note.run": "Endesha uchambuzi",
-          "note.dropHint": "Dondosha maelezo ya kliniki (.txt/.pdf) hapa",
+          "note.dropHint": "Dondosha maelezo ya kliniki, PDF au picha hapa",
           "note.type": "Andika maelezo",
           "note.placeholder": "Andika maelezo ya kliniki ya kesi hii",
           "note.cancel": "Ghairi",
           "note.save": "Ongeza kwenye kesi",
+          "note.reading": "Inasoma…",
+          "note.readingPhoto": "Inasoma picha…",
+          "note.failed": "Haikuweza kusomwa",
+          "note.waiting": "Inasubiri nyaraka…",
+          "note.saveEdit": "Hifadhi mabadiliko",
+          "note.ocrTitle": "Maandishi yamesomwa kutoka kwenye picha kwa OCR. Gusa ili kuyakagua au kuyasahihisha.",
+          "note.editTitle": "Gusa ili kuona au kuhariri maandishi",
           "tagline.line1": "Sababu ya Kifo",
           "tagline.line2": "Msaidizi wa Uamuzi",
           "onboard.eyebrow": "KABLA HUJAANZA",
@@ -4614,11 +4677,18 @@
           "common.history": "Historique",
           "note.upload": "Importer une note",
           "note.run": "Lancer l'inférence",
-          "note.dropHint": "Déposez les notes cliniques .txt/.pdf ici",
+          "note.dropHint": "Déposez ici des notes cliniques, PDF ou photos",
           "note.type": "Saisir une note",
           "note.placeholder": "Saisissez des notes cliniques pour ce cas",
           "note.cancel": "Annuler",
           "note.save": "Ajouter au cas",
+          "note.reading": "Lecture…",
+          "note.readingPhoto": "Lecture de la photo…",
+          "note.failed": "Lecture impossible",
+          "note.waiting": "En attente des documents…",
+          "note.saveEdit": "Enregistrer",
+          "note.ocrTitle": "Texte lu sur l'image par OCR. Touchez pour le vérifier ou le corriger.",
+          "note.editTitle": "Touchez pour voir ou modifier le texte",
           "tagline.line1": "Cause du décès",
           "tagline.line2": "Assistant de détermination",
           "onboard.eyebrow": "AVANT DE COMMENCER",
@@ -4777,11 +4847,18 @@
           "common.history": "السجل",
           "note.upload": "رفع ملاحظة",
           "note.run": "تشغيل الاستدلال",
-          "note.dropHint": "أفلت ملاحظات سريرية بصيغة .txt/.pdf هنا",
+          "note.dropHint": "أفلت هنا الملاحظات السريرية أو ملفات PDF أو الصور",
           "note.type": "كتابة ملاحظة",
           "note.placeholder": "اكتب ملاحظات سريرية لهذه الحالة",
           "note.cancel": "إلغاء",
           "note.save": "إضافة إلى الحالة",
+          "note.reading": "جارٍ القراءة…",
+          "note.readingPhoto": "جارٍ قراءة الصورة…",
+          "note.failed": "تعذّرت القراءة",
+          "note.waiting": "بانتظار المستندات…",
+          "note.saveEdit": "حفظ التغييرات",
+          "note.ocrTitle": "نص مقروء من الصورة بتقنية OCR. اضغط للتحقق منه أو تصحيحه.",
+          "note.editTitle": "اضغط لعرض النص أو تعديله",
           "tagline.line1": "سبب الوفاة",
           "tagline.line2": "مساعد التحديد",
           "onboard.eyebrow": "قبل البدء",
@@ -4934,11 +5011,18 @@
           "common.history": "ইতিহাস",
           "note.upload": "নোট আপলোড করুন",
           "note.run": "অনুমান চালান",
-          "note.dropHint": "এখানে .txt/.pdf ক্লিনিক্যাল নোট ছাড়ুন",
+          "note.dropHint": "ক্লিনিক্যাল নোট, PDF বা ছবি এখানে ছাড়ুন",
           "note.type": "নোট লিখুন",
           "note.placeholder": "এই কেসের জন্য ক্লিনিক্যাল নোট লিখুন",
           "note.cancel": "বাতিল",
           "note.save": "কেসে যোগ করুন",
+          "note.reading": "পড়া হচ্ছে…",
+          "note.readingPhoto": "ছবি পড়া হচ্ছে…",
+          "note.failed": "পড়া যায়নি",
+          "note.waiting": "নথির অপেক্ষায়…",
+          "note.saveEdit": "পরিবর্তন সংরক্ষণ করুন",
+          "note.ocrTitle": "ছবি থেকে OCR দিয়ে পড়া লেখা। যাচাই বা সংশোধন করতে ট্যাপ করুন।",
+          "note.editTitle": "লেখা দেখতে বা সম্পাদনা করতে ট্যাপ করুন",
           "tagline.line1": "মৃত্যুর কারণ",
           "tagline.line2": "নির্ধারণ সহকারী",
           "onboard.eyebrow": "শুরু করার আগে",
@@ -5095,11 +5179,18 @@
           "common.history": "Historial",
           "note.upload": "Subir nota",
           "note.run": "Ejecutar inferencia",
-          "note.dropHint": "Suelte aquí las notas clínicas .txt/.pdf",
+          "note.dropHint": "Suelte aquí notas clínicas, PDF o fotos",
           "note.type": "Escribir nota",
           "note.placeholder": "Escriba notas clínicas para este caso",
           "note.cancel": "Cancelar",
           "note.save": "Añadir al caso",
+          "note.reading": "Leyendo…",
+          "note.readingPhoto": "Leyendo la foto…",
+          "note.failed": "No se pudo leer",
+          "note.waiting": "Esperando los documentos…",
+          "note.saveEdit": "Guardar cambios",
+          "note.ocrTitle": "Texto leído de la imagen con OCR. Toque para revisarlo o corregirlo.",
+          "note.editTitle": "Toque para ver o editar el texto",
           "tagline.line1": "Causa de muerte",
           "tagline.line2": "Asistente de determinación",
           "onboard.eyebrow": "ANTES DE EMPEZAR",
@@ -5257,11 +5348,18 @@
           "common.history": "Matimu",
           "note.upload": "Rhumela tsalwa",
           "note.run": "Kumisisa xivangelo",
-          "note.dropHint": "Wisela matsalwa ya kliniki (.txt/.pdf) laha",
+          "note.dropHint": "Wisela matsalwa ya kliniki, ti-PDF kumbe swifaniso laha",
           "note.type": "Tsala tsalwa",
           "note.placeholder": "Tsala matsalwa ya kliniki ya mhaka leyi",
           "note.cancel": "Khansela",
           "note.save": "Engetela eka mhaka",
+          "note.reading": "Ku hlaya…",
+          "note.readingPhoto": "Ku hlaya xifaniso…",
+          "note.failed": "A swi hlayeki",
+          "note.waiting": "Ku rindzela matsalwa…",
+          "note.saveEdit": "Hlayisa ku cinca",
+          "note.ocrTitle": "Matsalwa lama hlayiweke eka xifaniso hi OCR. Khoma ku ma kambela kumbe ku ma lulamisa.",
+          "note.editTitle": "Khoma ku vona kumbe ku lulamisa matsalwa",
           "tagline.line1": "Mupfuni wo kumisisa",
           "tagline.line2": "xivangelo xa rifu",
           "onboard.eyebrow": "U NGA SI SUNGULA",
@@ -6183,6 +6281,7 @@
         // Notes whose text was kept are attached again, for Run
         renderCaseNotes(c.notes);
         noteFiles = c.notes.filter((n) => n.text != null);
+        pendingNotes = [];
         renderNoteCards();
 
         const recorded = parts.filter((part) => part.audio_s);
@@ -7983,6 +8082,7 @@
           assignCaseId();
         }
         noteFiles = [];
+        pendingNotes = [];
         renderNoteCards();
         typedNoteCount = 0;
         closeNoteEditor();
@@ -8173,11 +8273,15 @@
 
       // Clinical notes, as {filename, text}, sent to inference on Run
       let noteFiles = [];
+      // Documents being read, or that could not be, as
+      // {filename, photo, error}, shown as cards after the read notes
+      let pendingNotes = [];
       const noteBtn = document.getElementById("noteBtn");
       const noteInput = document.getElementById("noteInput");
       const noteStrip = document.getElementById("noteStrip");
       const noteCards = document.getElementById("noteCards");
       const noteRunBtn = document.getElementById("noteRunBtn");
+      const noteRunLabel = noteRunBtn.querySelector("span");
 
       // A case is inferred either from a voice recording or from clinical
       // notes, whichever it starts with, until New. Null before either.
@@ -8191,6 +8295,7 @@
         }
         if (
           noteFiles.length ||
+          pendingNotes.length ||
           evolution.some((snap) => snap.source === "clinical_note")
         ) {
           return "clinical_note";
@@ -8228,15 +8333,32 @@
       const noteEditor = document.getElementById("noteEditor");
       const noteText = document.getElementById("noteText");
 
+      const noteSaveLabel = document.querySelector("#noteSaveBtn span");
+      // Index of the read note whose text is being corrected, if any
+      let editingNote = null;
+
+      function openNoteEditor(index = null) {
+        editingNote = index;
+        noteText.value = index === null ? "" : noteFiles[index].text;
+        noteSaveLabel.dataset.i18n =
+          index === null ? "note.save" : "note.saveEdit";
+        noteSaveLabel.textContent = t(noteSaveLabel.dataset.i18n);
+        noteEditor.hidden = false;
+        noteText.focus();
+        noteText.setSelectionRange(0, 0);
+        noteText.scrollTop = 0;
+        renderNoteCards();
+      }
+
       function closeNoteEditor() {
         noteText.value = "";
         noteEditor.hidden = true;
+        editingNote = null;
+        renderNoteCards();
       }
 
       document.getElementById("noteTypeBtn").addEventListener("click", () => {
-        if (!notesAllowed()) return;
-        noteEditor.hidden = false;
-        noteText.focus();
+        if (notesAllowed()) openNoteEditor();
       });
       document
         .getElementById("noteCancelBtn")
@@ -8244,6 +8366,12 @@
       document.getElementById("noteSaveBtn").addEventListener("click", () => {
         const text = noteText.value.trim();
         if (!text || !notesAllowed()) return;
+        if (editingNote !== null) {
+          noteFiles[editingNote].text = text;
+          renderNoteCards();
+          closeNoteEditor();
+          return;
+        }
         // Skip numbers already taken, e.g. by the notes of a reopened case
         let filename;
         do {
@@ -8256,8 +8384,18 @@
       });
       noteCards.addEventListener("click", (e) => {
         const btn = e.target.closest(".note-card-remove");
-        if (!btn) return;
-        noteFiles.splice(Number(btn.dataset.index), 1);
+        const card = e.target.closest(".note-card[data-index]");
+        if (btn && btn.dataset.pending) {
+          pendingNotes.splice(Number(btn.dataset.pending), 1);
+        } else if (btn) {
+          noteFiles.splice(Number(btn.dataset.index), 1);
+          closeNoteEditor();
+        } else if (card) {
+          openNoteEditor(Number(card.dataset.index));
+          return;
+        } else {
+          return;
+        }
         renderNoteCards();
       });
       if (body.dataset.showClinicalNote !== "false") {
@@ -8280,54 +8418,100 @@
 
       async function addNoteFiles(files) {
         if (!notesAllowed()) return;
+        const reads = [];
         for (const file of files) {
           const name = file.name.toLowerCase();
-          let text;
           if (name.endsWith(".txt")) {
-            text = await file.text();
-          } else if (name.endsWith(".pdf")) {
-            text = await pdfText(file);
-            if (text === null) continue;
+            addNote({ filename: file.name, text: await file.text() });
+          } else if (/\.(pdf|png|jpe?g|webp)$/.test(name)) {
+            reads.push(readDocument(file));
           } else {
             showStatus(
-              `Skipped "${file.name}": not a .txt or .pdf file`,
+              `Skipped "${file.name}": not a text, PDF or image file`,
               "warning",
             );
-            continue;
           }
-          // A file with the same name replaces the earlier one
-          noteFiles = noteFiles.filter((n) => n.filename !== file.name);
-          noteFiles.push({ filename: file.name, text });
         }
+        renderNoteCards();
+        await Promise.all(reads);
+      }
+
+      // A note with the same name replaces the earlier one
+      function addNote(note) {
+        noteFiles = noteFiles.filter((n) => n.filename !== note.filename);
+        noteFiles.push(note);
+      }
+
+      // Read a PDF or photo on the server, its card showing that it is being
+      // read, then the note or what went wrong
+      async function readDocument(file) {
+        const pending = {
+          filename: file.name,
+          photo: !/\.pdf$/i.test(file.name),
+          error: null,
+        };
+        pendingNotes.push(pending);
+        renderNoteCards();
+        let error = t("note.failed");
+        try {
+          const url = `/document-text?name=${encodeURIComponent(file.name)}`;
+          const resp = await fetch(url, { method: "POST", body: file });
+          const data = await resp.json();
+          if (resp.ok) {
+            error = null;
+            // Unless removed, or the case closed, while it was read
+            if (pendingNotes.includes(pending)) {
+              pendingNotes.splice(pendingNotes.indexOf(pending), 1);
+              addNote({ filename: file.name, text: data.text, ocr: data.ocr });
+            }
+          } else {
+            error = data.detail;
+          }
+        } catch (e) {
+          console.error("Document text extraction failed:", e);
+        }
+        if (error) pending.error = error;
         renderNoteCards();
       }
 
-      // Text of a PDF via the server, or null with a status message on failure
-      async function pdfText(file) {
-        try {
-          const resp = await fetch("/pdf-text", { method: "POST", body: file });
-          const data = await resp.json();
-          if (resp.ok) return data.text;
-          showStatus(`"${file.name}": ${data.detail}`, "warning");
-        } catch (e) {
-          console.error("PDF text extraction failed:", e);
-          showStatus(`Failed to read "${file.name}"`, "danger");
-        }
-        return null;
-      }
-
       function renderNoteCards() {
-        noteCards.innerHTML = noteFiles
-          .map(
-            (n, i) =>
-              `<span class="note-card"><i class="bi bi-file-earmark-text"></i>` +
-              `${escapeHtml(n.filename)}<button type="button" ` +
-              `class="note-card-remove" data-index="${i}" ` +
-              `aria-label="Remove" title="Remove">` +
-              `<i class="bi bi-trash"></i></button></span>`,
-          )
-          .join("");
-        noteStrip.classList.toggle("has-notes", noteFiles.length > 0);
+        const remove = (key, i) =>
+          `<button type="button" class="note-card-remove" ` +
+          `data-${key}="${i}" aria-label="Remove" title="Remove">` +
+          `<i class="bi bi-trash"></i></button>`;
+        const read = noteFiles.map(
+          (n, i) =>
+            `<span class="note-card${i === editingNote ? " editing" : ""}" ` +
+            `data-index="${i}" title="` +
+            `${escapeHtml(t(n.ocr ? "note.ocrTitle" : "note.editTitle"))}">` +
+            `<i class="bi bi-file-earmark-text"></i>` +
+            `${escapeHtml(n.filename)}` +
+            (n.ocr ? '<span class="note-card-tag">OCR</span>' : "") +
+            `${remove("index", i)}</span>`,
+        );
+        const pending = pendingNotes.map((p, i) =>
+          p.error
+            ? `<span class="note-card failed" title="${escapeHtml(p.error)}">` +
+              `<i class="bi bi-exclamation-triangle"></i>` +
+              `${escapeHtml(p.filename)}` +
+              `<small>${escapeHtml(t("note.failed"))}</small>` +
+              `${remove("pending", i)}</span>`
+            : `<span class="note-card reading">` +
+              `<span class="note-card-spinner"></span>` +
+              `${escapeHtml(p.filename)}<small>` +
+              `${escapeHtml(t(p.photo ? "note.readingPhoto" : "note.reading"))}` +
+              `</small></span>`,
+        );
+        noteCards.innerHTML = read.concat(pending).join("");
+        // Inference waits for the documents still being read
+        const reading = pendingNotes.some((p) => !p.error);
+        noteRunBtn.disabled = reading;
+        noteRunLabel.dataset.i18n = reading ? "note.waiting" : "note.run";
+        noteRunLabel.textContent = t(noteRunLabel.dataset.i18n);
+        noteStrip.classList.toggle(
+          "has-notes",
+          noteFiles.length + pendingNotes.length > 0,
+        );
         syncCaseSource();
       }
 

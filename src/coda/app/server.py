@@ -14,7 +14,6 @@ import os
 import re
 import time
 import uuid
-from io import BytesIO
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -23,8 +22,8 @@ from fastapi import Body, FastAPI, HTTPException, Request, WebSocket, \
     WebSocketDisconnect
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
-from pypdf import PdfReader
 
+from coda.app.documents import OcrUnavailable, document_text
 from coda.app.storage import CaseRecorder, case_audio_path, case_sources, \
     cases_browsable, cases_root, find_case, list_cases, load_case, \
     storage_enabled, storage_keeps_audio, storage_keeps_notes
@@ -1038,22 +1037,23 @@ async def _start_inference(inference_session: InferenceSessionCoordinator,
 MAX_NOTE_SIZE = 100_000
 
 
-def extract_pdf_text(data):
-    """Return the text of all pages of a PDF."""
-    reader = PdfReader(BytesIO(data))
-    return "\n\n".join(page.extract_text() for page in reader.pages)
-
-
-@app.post("/pdf-text")
-async def pdf_text(request: Request):
-    """Return the text of a PDF sent as the raw request body."""
+@app.post("/document-text")
+async def read_document_text(request: Request, name: str):
+    """Return the text of a PDF or document image sent as the raw request
+    body, given its file name, and whether it was read with OCR."""
     try:
-        text = await asyncio.to_thread(extract_pdf_text, await request.body())
+        text, ocr = await asyncio.to_thread(document_text,
+                                            await request.body(), name)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Unsupported file type")
+    except OcrUnavailable as e:
+        logger.error("OCR failed for %s: %s", name, e)
+        raise HTTPException(status_code=503, detail="OCR is unavailable")
     except Exception:
-        raise HTTPException(status_code=400, detail="Unreadable PDF")
+        raise HTTPException(status_code=400, detail="Unreadable document")
     if not text.strip():
-        raise HTTPException(status_code=422, detail="No text found in PDF")
-    return {"text": text}
+        raise HTTPException(status_code=422, detail="No text found")
+    return {"text": text, "ocr": ocr}
 
 
 async def _store_note_inference(
