@@ -40,7 +40,7 @@ def ocr_image(data):
 
 def pdf_text(data):
     """Return the text of all pages of a PDF, reading pages that have no
-    text layer, such as scans, with OCR."""
+    text layer, such as scans, with OCR, and whether any page was."""
     texts = []
     pdf = None
     for i, page in enumerate(PdfReader(BytesIO(data)).pages):
@@ -51,14 +51,15 @@ def pdf_text(data):
             pdf[i].render(scale=RENDER_SCALE).to_pil().save(image, "PNG")
             text = ocr_image(image.getvalue())
         texts.append(text)
-    return "\n\n".join(texts)
+    return "\n\n".join(texts), pdf is not None
 
 
 def document_text(data, filename):
-    """Return the text of a PDF or an image of a document."""
+    """Return the text of a PDF or an image of a document, and whether it
+    was read with OCR."""
     name = filename.lower()
     if name.endswith(".pdf"):
         return pdf_text(data)
     if name.endswith(IMAGE_SUFFIXES) and ocr_model():
-        return ocr_image(data)
+        return ocr_image(data), True
     raise ValueError(f"Unsupported document {filename}")

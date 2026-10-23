@@ -1040,10 +1040,10 @@ MAX_NOTE_SIZE = 100_000
 @app.post("/document-text")
 async def read_document_text(request: Request, name: str):
     """Return the text of a PDF or document image sent as the raw request
-    body, given its file name."""
+    body, given its file name, and whether it was read with OCR."""
     try:
-        text = await asyncio.to_thread(document_text, await request.body(),
-                                       name)
+        text, ocr = await asyncio.to_thread(document_text,
+                                            await request.body(), name)
     except ValueError:
         raise HTTPException(status_code=400, detail="Unsupported file type")
     except OcrUnavailable as e:
@@ -1053,7 +1053,7 @@ async def read_document_text(request: Request, name: str):
         raise HTTPException(status_code=400, detail="Unreadable document")
     if not text.strip():
         raise HTTPException(status_code=422, detail="No text found")
-    return {"text": text}
+    return {"text": text, "ocr": ocr}
 
 
 async def _store_note_inference(

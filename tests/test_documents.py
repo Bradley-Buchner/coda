@@ -24,19 +24,20 @@ def ocr(monkeypatch):
 
 
 def test_scanned_pdf_pages_are_read_with_ocr(ocr):
-    text = documents.document_text(blank_pdf(2), "scan.PDF")
-    assert text == "Hb 4.8 g/dL\n\nHb 4.8 g/dL"
+    text, read_with_ocr = documents.document_text(blank_pdf(2), "scan.PDF")
+    assert text == "Hb 4.8 g/dL\n\nHb 4.8 g/dL" and read_with_ocr
     assert all(page.startswith(b"\x89PNG") for page in ocr)
 
 
 def test_images_are_read_with_ocr(ocr):
-    assert documents.document_text(b"jpeg", "photo.jpg") == "Hb 4.8 g/dL"
+    assert documents.document_text(b"jpeg", "photo.jpg") == \
+        ("Hb 4.8 g/dL", True)
     assert ocr == [b"jpeg"]
 
 
 def test_no_ocr_without_a_model(ocr, monkeypatch):
     monkeypatch.setattr(documents, "ocr_model", lambda: "")
-    assert documents.document_text(blank_pdf(), "scan.pdf") == ""
+    assert documents.document_text(blank_pdf(), "scan.pdf") == ("", False)
     with pytest.raises(ValueError):
         documents.document_text(b"jpeg", "photo.jpg")
     assert ocr == []
