@@ -1,7 +1,12 @@
 import pandas as pd
 
 from coda.kg import query
-from coda.kg.check import check_top_causes, render_context
+from coda.kg.check import (
+    check_mccd_chain,
+    check_top_causes,
+    render_context,
+    render_mccd_check,
+)
 from coda.kg.query import KGQuery, verdict
 from coda.kg.sources import write_tsv_gz
 
@@ -19,6 +24,8 @@ EDGES = [
     ["icd10:B24", "acme:table_A", "in_code_list", "", "", "", ""],
     ["icd10:C80", "acme:table_A", "in_code_list", "", "", "", ""],
     ["icd10:E14.9", "acme:table_A", "in_code_list", "", "", "", ""],
+    ["icd10:I10", "acme:table_A", "in_code_list", "", "", "", ""],
+    ["icd10:I50.9", "acme:table_A", "in_code_list", "", "", "", ""],
     ["icd10:J18.9", "acme:table_A", "in_code_list", "", "", "", ""],
     ["icd10:T14.9", "acme:table_B", "in_code_list", "", "", "", ""],
 ]
@@ -81,4 +88,27 @@ def test_check_top_causes(tmp_path):
         "- Other chromosome abnormalities (Q99) is not in the ACME tables.\n"
         "- Injury (T14.9) can only be a contributing cause, not the "
         "underlying cause."
+    )
+
+
+def test_check_mccd_chain(tmp_path):
+    kg = make_kg(tmp_path)
+    check = check_mccd_chain(kg, ["J18.9", "B24", "", ""])
+    assert [link["verdict"] for link in check["links"]] == ["accepted"]
+    assert (check["underlying"], check["steps"]) == \
+        ("B24", ["General Principle selects B24"])
+    # Rule 2 selects pneumonia, which combines with HIV on a lower line
+    check = check_mccd_chain(kg, ["J18.9", "C80.1", "B24"])
+    assert [link["verdict"] for link in check["links"]] == \
+        ["not_listed", "not_listed"]
+    assert check["steps"] == ["Rule 2 selects J18.9",
+                              "Table E DSC selects B20.8"]
+    # Rules marked "maybe" are not applied but listed for review
+    check = check_mccd_chain(kg, ["I50.9", "I10"])
+    assert render_mccd_check(check) == (
+        "- (a) I50.9 due to (b) I10: accepted only in some cases.\n"
+        "Suggested underlying cause: I10 (General Principle selects I10). "
+        "A suggestion, not official coding.\n"
+        "Needs review: Table E LDC would select I11.0 only if: Must be "
+        "hypertensive heart disease."
     )
