@@ -41,16 +41,22 @@ EXPORTERS: list[KGSourceExporter] = [
     who_mortality.WhoMortalityExporter(),
 ]
 
+def dump_kg(only: list[str] | None = None):
+    """Dump the knowledge graph to file.
 
-def dump_kg():
-    """Dump the knowledge graph to file."""
+    Parameters
+    ----------
+    only : list[str] | None
+        Names of the exporters to run. The files of the other exporters are
+        used as they are by the checks and reports. Default: None (run all)
+    """
     # Make folders if needed
     KG_BASE.mkdir(exist_ok=True)
     REPORTS_BASE.mkdir(parents=True, exist_ok=True)
 
     start = time.time()
     for exporter in tqdm(
-        EXPORTERS,
+        [e for e in EXPORTERS if only is None or e.name in only],
         desc="Exporting KG sources",
         unit="source",
     ):
@@ -61,4 +67,11 @@ def dump_kg():
 
 
 if __name__ == "__main__":
-    dump_kg()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Build the CODA KG files.")
+    parser.add_argument("--only", nargs="+", metavar="NAME",
+                        choices=[exporter.name for exporter in EXPORTERS],
+                        help="Names of the exporters to run (default: all)")
+    args = parser.parse_args()
+    dump_kg(only=args.only)
