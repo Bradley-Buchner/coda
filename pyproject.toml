@@ -61,7 +61,7 @@ kg_build = [
     "openpyxl",
     "xlrd",
     "indra @ git+https://github.com/gyorilab/indra.git",
-    "openacme[embeddings] @ git+https://github.com/gyorilab/openacme.git",
+    "openacme[embeddings] @ git+https://github.com/Bradley-Buchner/openacme.git@f11f317e514d7c49889c65e35d02563909f11186",
 ]
 benchmark = [
     "kagglehub",
