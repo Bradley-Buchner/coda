@@ -118,6 +118,10 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
             logger.warning("Final ranking named no allowed cause; keeping "
                            "the first opinion")
             return {**first_opinion, "kg_evidence": evidence}
-        evidence["cited"] = response.get("cited", [])
+        # Keep only citations copied from the evidence, not from the case
+        items = {item for c in candidates for item in c["triples"]
+                 + [f["finding"] for f in c["findings"] or []]}
+        evidence["cited"] = [item for item in response.get("cited", [])
+                             if item in items]
         return {**first_opinion, "causes": ranked["causes"],
                 "reasoning": ranked["reasoning"], "kg_evidence": evidence}

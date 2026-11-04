@@ -113,7 +113,8 @@ FIRST_OPINION = {"reasoning": "Fever.", "questions": ["q1", "q2", "q3"],
                      {"cause_name": "Sepsis", "probability": 0.7},
                      {"cause_name": "Lower respiratory infections",
                       "probability": 0.3}]}
-FINAL_RANKING = {"reasoning": "Fever fits sepsis.", "cited": ["fever"],
+FINAL_RANKING = {"reasoning": "Fever fits sepsis.",
+                 "cited": ["fever", "hot to the touch"],
                  "top_causes": [
                      {"cause_name": "Sepsis", "probability": 0.9},
                      {"cause_name": "Lower respiratory infections",
