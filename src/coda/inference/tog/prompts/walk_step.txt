@@ -6,4 +6,4 @@ You see the case, the candidate cause, the knowledge-graph facts collected so fa
 
 Pick up to {max_choices} numbered facts worth following: facts that help confirm or rule out the candidate for this case, or show what may have led to it or followed from it. In the reason, say what each pick tells you about this case.
 
-Pick no facts when nothing in them relates to the case, or when they don't help the cause of death reasoning process. Stopping early is expected and costs nothing.
+Pick no facts when they only place a code in the ICD-10 hierarchy, such as its parent block or chapter, when nothing in them relates to the case, or when they don't help the cause of death reasoning process. An is_a fact is worth following when the other code's name adds something the case speaks to, such as a sibling "Measles complicated by pneumonia". Stopping early is expected and costs nothing.
