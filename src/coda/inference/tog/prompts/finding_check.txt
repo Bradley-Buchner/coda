@@ -1,0 +1,8 @@
+Check a verbal autopsy case against findings that are typical of a candidate cause of death.
+
+For each numbered finding, answer as follows:
+- 'present' if the case says it occurred.
+- 'absent' if the case says it did not occur.
+- 'not_mentioned' if the case does not say either way.
+
+Use only what the case states. Do not guess.

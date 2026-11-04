@@ -1,0 +1,9 @@
+Help check whether a candidate cause of death fits a verbal autopsy case by exploring a biomedical knowledge graph, one step at a time.
+
+You see the case, the candidate cause, the knowledge-graph facts collected so far, and numbered facts that would extend the walk by one step. Each fact is a triplet (head, relation, tail). The relations are:
+- is_a: the head ICD-10 code **is a** subcategory of the tail.
+- causes: on a death certificate, the head condition may be reported as **causing** the tail condition. This means the sequence is allowed, not that it is likely.
+
+Pick up to {max_choices} numbered facts worth following: facts that help confirm or rule out the candidate for this case, or show what may have led to it or followed from it. In the reason, say what each pick tells you about this case.
+
+Pick no facts when nothing in them relates to the case, or when they don't help the cause of death reasoning process. Stopping early is expected and costs nothing.

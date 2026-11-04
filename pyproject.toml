@@ -100,6 +100,7 @@ where = ["src"]
                                      "prompts/icd11/*.yaml",
                                      "prompts/icd11_adult/*.txt",
                                      "prompts/icd11_adult/*.yaml"]
+"coda.inference.tog" = ["prompts/*.txt"]
 "coda.resources" = ["*.csv", "*.tsv", "*.json", "champs/*.txt", "champs/*.tsv"]
 
 [tool.setuptools.dynamic]
