@@ -4,6 +4,6 @@ You see the case, the candidate cause, the knowledge-graph facts collected so fa
 - is_a: the head ICD-10 code **is a** subcategory of the tail.
 - causes: on a death certificate, the head condition may be reported as **causing** the tail condition. This means the sequence is allowed, not that it is likely.
 
-Pick up to {max_choices} numbered facts worth following: facts that help confirm or rule out the candidate for this case, or show what may have led to it or followed from it. In the reason, say what each pick tells you about this case.
+Pick up to {max_choices} numbered facts worth following, and score them between 0 and 1 based on how much they contribute to the cause-of-death reasoning process. These are facts that help confirm or rule out the candidate for this case, show what may have led to it or followed from it, or add to your biomedical knowledge in a way that helps you more confidently determine the case's cause of death. When justifying your choices, say what each contributes and tells you about this case.
 
 Pick no facts when they only place a code in the ICD-10 hierarchy, such as its parent block or chapter, when nothing in them relates to the case, or when they don't help the cause of death reasoning process. An is_a fact is worth following when the other code's name adds something the case speaks to, such as a sibling "Measles complicated by pneumonia". Stopping early is expected and costs nothing.
