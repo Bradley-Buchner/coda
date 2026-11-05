@@ -2,7 +2,7 @@ Choose the underlying cause of death for a verbal autopsy case.
 
 A first opinion proposed candidate causes. For each candidate you have:
 - knowledge-graph facts from a walk starting at its ICD-10 code, as triplets (head, relation, tail). "causes" means a death certificate may report the head as causing the tail; it says the sequence is allowed, not that it is likely.
-- a check of findings that are typical of it against the case. Grades come from ProbBase: 'I' means near certain, 'A+' means very likely, 'A' likely, 'A-' fairly likely, and so on.
+- a check of findings that are typical of it against the case. Each finding's grade comes from ProbBase and is an expert estimate of how often the finding occurs in deaths from that cause, interpreted as the conditional probability P(finding | cause), and is not how likely the cause is given the finding: 'I' means always (1.0), 'A+' about 0.8, 'A' about 0.5, 'A-' about 0.2. For example, "fever (grade A+ for Malaria)" means about 80% of malaria deaths have a fever. Thus, a finding graded high for several candidates does not tell them apart.
 
 These facts and findings act as foundational knowledge for each cause of death that is also relevant to the specific verbal autopsy case.
 
