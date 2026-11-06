@@ -7,6 +7,9 @@ to results/<case_id>.json. The ToG agent's first opinion is the prompted
 ICD-10 agent's answer, so the closing table compares the two on the same
 call. These seven cases serve as a smoke test, not an evaluation.
 
+--hw runs the ten unlabeled narratives of ../hw_benchmark instead, with ids
+case_01 to case_10 and draft labels, so its top-1 counts are only a sanity check.
+
 --cited prints the facts and findings each saved result cited, and the
 table, without running anything.
 
@@ -14,6 +17,7 @@ Usage
 -----
     python benchmarks/tog_trial/run_trial.py --cases lri_1,malaria_1
     python benchmarks/tog_trial/run_trial.py
+    python benchmarks/tog_trial/run_trial.py --hw --out results/hw
     python benchmarks/tog_trial/run_trial.py --cited
 """
 import argparse
@@ -33,6 +37,22 @@ from coda.llm_api import create_llm_client
 
 CASES = (HERE.parent / "lang_support" / "data" / "bn" / "references"
          / "cases_bn_filtered.json")
+HW_NARRATIVES = HERE.parent / "hw_benchmark" / "narratives.json"
+# Draft labels for the unlabeled hw_benchmark narratives, in order, assigned by
+# reading them, so only a sanity check
+HW_LABELS = ["Lower respiratory infections", "Diarrheal Diseases",
+             "Neonatal sepsis", "Malaria", "Upper respiratory infections",
+             "Measles", "Meningitis/Encephalitis", "Malnutrition",
+             "Congenital birth defects or Heart Diseases", "Injury"]
+
+
+def load_cases(hw):
+    """Return the cases to run, each with a case_id, narrative and cause_name."""
+    if not hw:
+        return json.loads(CASES.read_text())
+    return [{"case_id": f"case_{i:02}", "narrative": narrative,
+             "cause_name": label} for i, (narrative, label) in enumerate(
+                 zip(json.loads(HW_NARRATIVES.read_text()), HW_LABELS), 1)]
 
 
 def ranking(causes):
@@ -49,11 +69,11 @@ def compare(rows):
     print(f"\n{'case':12} {'label':30} {'prompted agent':30} {'ToG':30} calls")
     for case_id, label, base, tog, calls in rows:
         print(f"{case_id:12} {label[:30]:30} "
-              + " ".join(f"{name[:28]:28}{' ✓' if name == label else '  '}"
+              + " ".join(f"{name[:28]:28}{' ✓' if name in label else '  '}"
                          for name in (base, tog)) + f" {calls:5}")
     print(f"top-1 correct: prompted agent "
-          f"{sum(r[2] == r[1] for r in rows)}/{len(rows)}, ToG "
-          f"{sum(r[3] == r[1] for r in rows)}/{len(rows)}, "
+          f"{sum(r[2] in r[1] for r in rows)}/{len(rows)}, ToG "
+          f"{sum(r[3] in r[1] for r in rows)}/{len(rows)}, "
           f"{sum(r[4] for r in rows)} calls in all")
 
 
@@ -67,7 +87,8 @@ def cited(evidence):
             if item in candidate["triples"]:
                 sources.append(f"fact for {candidate['cause']}")
             sources += [f"{f['status']} finding, grade {f['grade']} for "
-                        f"{candidate['cause']}"
+                        f"{candidate['cause']} on answer "
+                        f"{f.get('graded_answer', 'yes')}"
                         for f in candidate["findings"] or []
                         if f["finding"] == item]
         print(f"    * {item}\n      ({'; '.join(sources)})")
@@ -82,7 +103,7 @@ def report(case_id, label, result, trace):
         findings = candidate["findings"]
         checked = "check failed" if findings is None else ", ".join(
             f"{sum(f['status'] == s for f in findings)} {s}"
-            for s in ("present", "absent", "not_mentioned"))
+            for s in ("yes", "no", "not_mentioned"))
         print(f"  {candidate['cause']}: findings {checked}")
         for triple in candidate["triples"]:
             print(f"    + {triple}")
@@ -95,6 +116,8 @@ async def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--cases", help="Comma-separated case ids, such as "
                         "lri_1; default all")
+    parser.add_argument("--hw", action="store_true",
+                        help="Use the narratives of ../hw_benchmark")
     parser.add_argument("--provider", default=settings.inference.llm.provider)
     parser.add_argument("--model", default=settings.inference.llm.model)
     parser.add_argument("--out", default=str(HERE / "results"))
@@ -102,7 +125,7 @@ async def main():
                         help="Show what the saved results in --out cited")
     args = parser.parse_args()
 
-    cases = json.loads(CASES.read_text())
+    cases = load_cases(args.hw)
     if args.cases:
         cases = [c for c in cases if c["case_id"] in args.cases.split(",")]
     out = Path(args.out)

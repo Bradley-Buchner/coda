@@ -27,19 +27,21 @@ from coda.kg.graph import KGView
 
 logger = logging.getLogger(__name__)
 
-MAX_CITED = 5  # Facts or findings the final ranking may cite
+MAX_CITED = 5  # Facts, and separately findings, the final ranking may cite
 RANKING_PROMPT = read_prompt("final_ranking.txt").format(
     allowed_causes=", ".join(CHAMPS_GROUP_CAUSES), max_cited=MAX_CITED)
 COD_PROPERTIES = build_cod_output_schema()["properties"]
+CITED_SCHEMA = {"type": "array", "items": {"type": "string"},
+                "maxItems": MAX_CITED}
 RANKING_SCHEMA = {
     "type": "object",
     "properties": {
         "reasoning": COD_PROPERTIES["reasoning"],
         "top_causes": COD_PROPERTIES["top_causes"],
-        "cited": {"type": "array", "items": {"type": "string"},
-                  "maxItems": MAX_CITED},
+        "cited_facts": CITED_SCHEMA,
+        "cited_findings": CITED_SCHEMA,
     },
-    "required": ["reasoning", "top_causes", "cited"],
+    "required": ["reasoning", "top_causes", "cited_facts", "cited_findings"],
     "additionalProperties": False,
 }
 
@@ -124,7 +126,8 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
         items = {item for c in candidates for item in c["triples"]
                  + [f["finding"] for f in c["findings"] or []]}
         cited = []
-        for text in response.get("cited", []):
+        for text in (response.get("cited_facts", [])
+                     + response.get("cited_findings", [])):
             found = [item for item in items if item in text]
             if found:
                 cited.append(max(found, key=len))

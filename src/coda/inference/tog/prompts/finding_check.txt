@@ -1,8 +1,8 @@
 Check a verbal autopsy case against findings that are typical of a candidate cause of death.
 
-For each numbered finding, answer as follows:
-- 'present' if the case says it occurred.
-- 'absent' if the case says it did not occur.
-- 'not_mentioned' if the case does not say either way.
+Each numbered finding is a question. Answer it as written:
+- 'yes' if the case says the answer is yes.
+- 'no' if the case says the answer is no.
+- 'not_mentioned' if the case does not say either way. Also use this for a follow-up question about something that did not occur, such as how long a fever lasted when the child had no fever.
 
 Use only what the case states. Do not guess.
