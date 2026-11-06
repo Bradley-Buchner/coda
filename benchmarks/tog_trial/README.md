@@ -28,3 +28,46 @@ python benchmarks/tog_trial/run_trial.py
 `--provider` and `--model` override the configured inference LLM. Each case is
 summarized on screen and saved to `results/<case_id>.json`, with the result
 and the prompt and response of every LLM call. `results/` is gitignored.
+
+## Adoption benchmark
+
+Tests whether ToG is worth adopting on `cases.json`, 80 synthetic narratives
+across 16 causes. Seven of them were used to tune the prompts, so they are only
+a pilot; `chain_cases.json` lists them, the cases where a terminal illness follows
+an underlying one, labels awaiting a check, and close causes for lenient scoring.
+`cases_sparse.json` holds the other 73 with half of their sentences removed, and
+`make_sparse.py` recreates it.
+
+Commit your changes first, then run the pilot, score it, and run the rest:
+
+```bash
+python benchmarks/tog_trial/run_benchmark.py --sets pilot
+python benchmarks/tog_trial/score_benchmark.py
+python benchmarks/tog_trial/run_benchmark.py --sets original,sparse
+python benchmarks/tog_trial/make_review_packet.py
+```
+
+The pilot makes about 140 LLM calls and the rest about 2,600. Rerunning skips
+saved results and retries failed ones. Results go to `results/benchmark/`, and a
+run with other code or another model needs a new `--out`.
+
+The arms share each case's first opinion and differ only in the evidence given to
+the final call: none, findings only, facts only, all of it, or a placebo where the
+candidates' evidence is swapped. The placebo's facts and findings can still name
+their original cause, and the second look's prompt reads as though the KG had
+nothing to offer.
+
+Fill in the CSV files in `results/benchmark/review/`, then run
+`make_review_packet.py --score`. Do the blinded comparison first. It is only
+partly blind, since ToG's reasoning often mentions the knowledge graph.
+
+| Sheet | Column | Values |
+|---|---|---|
+| `1_ratings.csv` | `more_useful` | A, B or same |
+| `1_ratings.csv` | `wrong_or_unsupported_in_A`, `_in_B` | yes or no |
+| `2_evidence_check.csv` | `rating` (cited items) | useful, filler or misleading |
+| `2_evidence_check.csv` | `adds_beyond_narrative` (reasoning) | yes or no |
+| `3_finding_checks.csv` | `correct_answer` | yes, no, not mentioned or unclear |
+
+Answer the finding checks from the narrative alone. Blank cells count as unrated,
+and other values stop the scoring so you can correct them.

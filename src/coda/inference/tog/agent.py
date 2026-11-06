@@ -164,15 +164,22 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
                 "findings": await check_findings(self.graph, call,
                                                  case_input, name, code),
             })
-        evidence = {"candidates": candidates, "cited": []}
         if not candidates:
-            return {**first_opinion, "kg_evidence": evidence}
+            return {**first_opinion,
+                    "kg_evidence": {"candidates": [], "cited": []}}
+        return await self.rank(chunk_id, first_opinion, case_input, candidates)
 
+    async def rank(self, chunk_id, first_opinion, case_input, candidates):
+        """Rank the causes with the candidates' evidence, keeping the first
+        opinion if the ranking fails.
+        """
+        evidence = {"candidates": candidates, "cited": []}
         user_prompt = (f"{case_input}\n\n## CANDIDATES\n"
                        + "\n\n".join(format_evidence(c) for c in candidates))
         try:
-            response = await call("final_ranking", RANKING_PROMPT,
-                                  user_prompt, RANKING_SCHEMA)
+            response = await self.call_step(chunk_id, "final_ranking",
+                                            RANKING_PROMPT, user_prompt,
+                                            RANKING_SCHEMA)
         except LLMCallFailed:
             return {**first_opinion, "kg_evidence": evidence}
         ranked = self._parse_response(response)
