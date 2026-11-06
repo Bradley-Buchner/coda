@@ -20,6 +20,9 @@ class FakeGraph:
                                   ("who.va.q:cough", "A-"),
                                   ("who.va.q:W610022-e", "A")]}
 
+    def same_as(self, code):
+        return "ICD-11 1G40 Sepsis" if code == "A41.9" else ""
+
     def resolve(self, code):
         node = f"icd10:{code}"
         return node if node in self.parents else None
@@ -103,7 +106,7 @@ async def test_failed_finding_check_is_not_evidence():
     findings = await check_findings(FakeGraph(), call, "", "Sepsis", "A41.9")
     assert findings is None
     text = format_evidence({"cause": "Sepsis", "code": "A41.9",
-                            "score": 0.5, "triples": [],
+                            "score": 0.5, "same_as": "", "triples": [],
                             "findings": findings})
     assert "(finding check failed)" in text
 
@@ -163,6 +166,7 @@ async def test_ranks_candidates_with_kg_evidence():
         "final_ranking"]
     assert "[present] fever (grade A+ for sepsis)" in \
         client.calls[-1]["user_prompt"]
+    assert "Same as: ICD-11 1G40 Sepsis" in client.calls[-1]["user_prompt"]
     assert result["questions"] == ["q1", "q2", "q3"]
     assert result["chunk_id"] == "c1" and "timings" in result
 

@@ -96,6 +96,9 @@ async def walk_back(graph: KGView, call, case_input, cause, code):
     if start is None:
         return []
     frontier, visited, triples = [start], {start}, []
+    header = graph.name(start)
+    if graph.same_as(start):
+        header += f"; same as: {graph.same_as(start)}"
     for hop in range(1, MAX_HOPS + 1):
         options, omitted = step_options(graph, frontier, visited)
         if not options:
@@ -103,7 +106,7 @@ async def walk_back(graph: KGView, call, case_input, cause, code):
         facts = [format_triple(graph, *fact) for fact, _ in options]
         user_prompt = (
             f"{case_input}\n\n"
-            f"## CANDIDATE CAUSE\n{cause} ({graph.name(start)})\n\n"
+            f"## CANDIDATE CAUSE\n{cause} ({header})\n\n"
             "## FACTS SO FAR\n" + ("\n".join(triples) or "(none)") + "\n\n"
             "## NEXT FACTS\n"
             + "\n".join(f"{i}. {fact}" for i, fact in enumerate(facts, 1)))
@@ -162,8 +165,10 @@ async def check_findings(graph: KGView, call, case_input, cause, code):
 def format_evidence(candidate):
     """Render a candidate's walk facts and finding checks for a prompt."""
     lines = [f"### {candidate['cause']} (ICD-10 {candidate['code']}, "
-             f"first-opinion probability {candidate['score']:.2f})",
-             "Walk facts:"]
+             f"first-opinion probability {candidate['score']:.2f})"]
+    if candidate["same_as"]:
+        lines.append(f"Same as: {candidate['same_as']}")
+    lines.append("Walk facts:")
     lines += [f"- {triple}" for triple in candidate["triples"]] \
         or ["- (none)"]
     lines.append("Typical findings:")

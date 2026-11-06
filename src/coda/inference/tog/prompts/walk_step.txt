@@ -2,7 +2,7 @@ Help check whether a candidate cause of death fits a verbal autopsy case by expl
 
 You see the case, the candidate cause, the knowledge-graph facts collected so far, and numbered facts that would extend the walk by one step. Each fact is a triplet (head, relation, tail). The relations are:
 - is_a: the head ICD-10 code **is a** subcategory of the tail.
-- causes: on a death certificate, the head condition may be reported as **causing** the tail condition. This means the sequence is allowed, not that it is likely.
+- causes: on a death certificate, the head condition may be reported as **causing** the tail condition. This means the sequence is allowed, not that it is likely. A head written as a range, such as "B20.0–B24 Human immunodeficiency virus [HIV] disease", stands for any code in that range.
 
 Pick up to {max_choices} numbered facts worth following, and score them between 0 and 1 based on how much they contribute to the cause-of-death reasoning process. These are facts that help confirm or rule out the candidate for this case, show what may have led to it or followed from it, or add to your biomedical knowledge in a way that helps you more confidently determine the case's cause of death. When justifying your choices, say what each contributes and tells you about this case.
 
