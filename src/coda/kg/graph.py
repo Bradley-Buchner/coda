@@ -76,6 +76,10 @@ class KGView:
                                           probbase[":END_ID"],
                                           probbase["value"]):
             self.grades[cause][question] = grade
+        questions = read_tsv(kg_base / "probbase_nodes.tsv.gz",
+                             ["id:ID", "subst"])
+        self.graded_no = set(
+            questions.loc[questions["subst"] == "N", "id:ID"])
 
         cutoff = GRADES.index(STRONG_GRADE)
         self.strong_questions = {
@@ -237,6 +241,10 @@ class KGView:
             parents = self.adjacency["is_a"]["out"].get(node)
             node = min(parents) if parents else None
         return []
+
+    def graded_answer(self, question):
+        """Return the answer a question's grades are for, from ProbBase's subst."""
+        return "no" if question in self.graded_no else "yes"
 
     def strong_findings(self, cause):
         """Return (question, grade) for a cause's informative strong links."""

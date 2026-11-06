@@ -47,6 +47,9 @@ class FakeGraph:
     def strong_findings(self, cause):
         return self.findings[cause]
 
+    def graded_answer(self, question):
+        return "yes"
+
 
 class FakeCall:
     """Returns scripted responses and records each call."""
@@ -92,11 +95,11 @@ async def test_walk_stops_after_max_hops_and_skips_bad_numbers():
 
 @pytest.mark.asyncio
 async def test_finding_check_maps_statuses_and_skips_age_brackets():
-    call = FakeCall([{"findings": [{"number": 2, "status": "present"}]}])
+    call = FakeCall([{"findings": [{"number": 2, "status": "yes"}]}])
     findings = await check_findings(FakeGraph(), call, "Fever.", "Sepsis",
                                     "A41.9")
     assert [(f["finding"], f["status"]) for f in findings] == \
-        [("cough", "not_mentioned"), ("fever", "present")]
+        [("cough", "not_mentioned"), ("fever", "yes")]
     assert "W610022" not in call.calls[0]["user_prompt"]
 
 
@@ -117,8 +120,9 @@ FIRST_OPINION = {"reasoning": "Fever.", "questions": ["q1", "q2", "q3"],
                      {"cause_name": "Lower respiratory infections",
                       "probability": 0.3}]}
 FINAL_RANKING = {"reasoning": "Fever fits sepsis.",
-                 "cited": ["[present] fever (grade A+ for sepsis)",
-                           "hot to the touch"],
+                 "cited_facts": [],
+                 "cited_findings": ["[yes] fever (grade A+ for sepsis)",
+                                    "hot to the touch"],
                  "top_causes": [
                      {"cause_name": "Sepsis", "probability": 0.9},
                      {"cause_name": "Lower respiratory infections",
@@ -133,7 +137,7 @@ class FakeLLMClient:
             "champs_cod_classification": [FIRST_OPINION],
             "walk_step": [{"chosen": [], "reason": ""}] * 2,
             "finding_check": [{"findings": [{"number": 2,
-                                             "status": "present"}]}],
+                                             "status": "yes"}]}],
             "final_ranking": [final_ranking],
         }
         self.calls = []
@@ -164,11 +168,23 @@ async def test_ranks_candidates_with_kg_evidence():
     assert [t["step"] for t in agent.trace] == [
         "first_opinion", "walk_step", "finding_check", "walk_step",
         "final_ranking"]
-    assert "[present] fever (grade A+ for sepsis)" in \
+    assert "[yes] fever (grade A+ for sepsis on answer yes)" in \
         client.calls[-1]["user_prompt"]
     assert "Same as: ICD-11 1G40 Sepsis" in client.calls[-1]["user_prompt"]
     assert result["questions"] == ["q1", "q2", "q3"]
     assert result["chunk_id"] == "c1" and "timings" in result
+
+
+@pytest.mark.asyncio
+async def test_keeps_cited_facts_and_findings_from_separate_lists():
+    client = FakeLLMClient({**FINAL_RANKING,
+                            "cited_facts": ["(A41.9, is_a, A41)"]})
+    client.responses["walk_step"] = [{"chosen": [1], "reason": ""},
+                                     {"chosen": [], "reason": ""},
+                                     {"chosen": [], "reason": ""}]
+    agent = ToGBackwardIcd10Agent(client, graph=FakeGraph())
+    result = await agent.process_chunk("c1", "Fever.", [])
+    assert result["kg_evidence"]["cited"] == ["(A41.9, is_a, A41)", "fever"]
 
 
 @pytest.mark.asyncio

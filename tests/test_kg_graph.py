@@ -76,10 +76,10 @@ def graph(tmp_path):
         ("icd10:J18.9", "who.va:VAs-01.02", "maps_to"),
     ], [":START_ID", ":END_ID", ":TYPE"])
     write(tmp_path / "probbase_nodes.tsv.gz", [
-        ("who.va.q:diarrhea", "Did (s)he have diarrhea?"),
-        ("who.va.q:cough", "Did (s)he have a cough?"),
-        ("who.va.q:female", "Was she female?"),
-    ], ["id:ID", "name"])
+        ("who.va.q:diarrhea", "Did (s)he have diarrhea?", "Y"),
+        ("who.va.q:cough", "Did (s)he have a cough?", "Y"),
+        ("who.va.q:female", "Was she female?", "Y"),
+    ], ["id:ID", "name", "subst"])
     write(tmp_path / "probbase_edges.tsv.gz", [
         ("who.va.q:diarrhea", "who.va:VAs-01.04", "A+", "probbase_rel"),
         ("who.va.q:cough", "who.va:VAs-01.04", "C", "probbase_rel"),

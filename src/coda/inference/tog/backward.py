@@ -55,7 +55,7 @@ FINDING_CHECK_SCHEMA = {
                 "properties": {
                     "number": {"type": "integer"},
                     "status": {"type": "string", "enum": [
-                        "present", "absent", "not_mentioned"]},
+                        "yes", "no", "not_mentioned"]},
                 },
                 "required": ["number", "status"],
                 "additionalProperties": False,
@@ -132,8 +132,8 @@ async def walk_back(graph: KGView, call, case_input, cause, code):
 async def check_findings(graph: KGView, call, case_input, cause, code):
     """Check a candidate's typical ProbBase findings against the case.
 
-    Return dicts with each finding, its grade, WHO VA cause and status, or
-    None if the call failed. A finding shared by several WHO VA causes of
+    Return dicts with each finding, its grade, the answer the grade is for, its
+    WHO VA cause and the case's answer as status, or None if the call failed. A finding shared by several WHO VA causes of
     the code is listed once, with its best grade.
     """
     links = sorted(((q, g, who_va) for who_va in graph.who_va_causes(code)
@@ -157,6 +157,7 @@ async def check_findings(graph: KGView, call, case_input, cause, code):
     statuses = {item["number"]: item["status"]
                 for item in response.get("findings", [])}
     return [{"finding": graph.name(question), "grade": grade,
+             "graded_answer": graph.graded_answer(question),
              "who_va_cause": graph.name(who_va),
              "status": statuses.get(i, "not_mentioned")}
             for i, (question, (grade, who_va)) in enumerate(findings, 1)]
@@ -177,6 +178,7 @@ def format_evidence(candidate):
         lines.append("- (finding check failed)")
     else:
         lines += [f"- [{f['status']}] {f['finding']} (grade {f['grade']} "
-                  f"for {f['who_va_cause']})" for f in findings] \
+                  f"for {f['who_va_cause']} on answer {f['graded_answer']})"
+                  for f in findings] \
             or ["- (none in the KG)"]
     return "\n".join(lines)
