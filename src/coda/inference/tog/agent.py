@@ -97,6 +97,7 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
             code = cause["identifiers"][self.coding_system]
             candidates.append({
                 "cause": name, "code": code, "score": cause["score"],
+                "same_as": self.graph.same_as(code),
                 "triples": await walk_back(self.graph, call, case_input,
                                            name, code),
                 "findings": await check_findings(self.graph, call,
