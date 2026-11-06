@@ -1,0 +1,562 @@
+[
+  {
+    "case_id": "lri_1",
+    "cause_name": "Lower respiratory infections",
+    "icd10": "J18.9",
+    "age_group": "infant",
+    "narrative": "My son was one year old. About a week before he died he caught a cold with a runny nose and a mild cough. After three or four days the cough became much worse and he started breathing very fast. When he breathed in, the skin below his ribs and between his ribs sucked in, and his nostrils flared. He made a grunting sound with each breath and had a fever that would not come down. He became too breathless to feed and his lips turned a little blue. He did not have diarrhoea and there was no rash. On the last night his breathing was very fast and shallow, he became drowsy, and he died at home before we could reach the health centre."
+  },
+  {
+    "case_id": "lri_2",
+    "cause_name": "Lower respiratory infections",
+    "icd10": "J18.9",
+    "age_group": "infant",
+    "narrative": "My daughter was six months old. She suddenly came down with a high fever and started coughing. Within two days her breathing became very fast and noisy, and I could see the skin pulling in under her ribs each time she breathed. Her nose flared and she made small grunting sounds. She would not take the breast because she was too breathless. When I put my ear to her chest it sounded crackly. She had no rash and her stools were normal. She became limp and her colour turned dusky, and she died on the fourth day of the illness."
+  },
+  {
+    "case_id": "lri_3",
+    "cause_name": "Lower respiratory infections",
+    "icd10": "J18.9",
+    "age_group": "child",
+    "narrative": "My son was two years old. He had a cough and fever for about five days that kept getting worse instead of better. He started breathing fast and complained that his chest hurt when he breathed. He brought up thick phlegm when he coughed. He had no appetite and only wanted to lie down. His breathing became laboured with the lower chest drawing in, and he grew hot and drowsy. There was no rash and no diarrhoea, and his neck was not stiff. He stopped responding to us and died at the clinic shortly after we arrived."
+  },
+  {
+    "case_id": "lri_4",
+    "cause_name": "Lower respiratory infections",
+    "icd10": "J18.9",
+    "age_group": "child",
+    "narrative": "My daughter was three years old. It began like an ordinary cold, but after a few days she developed a high fever and a deep, harsh cough. She began breathing very quickly and shallowly, and the spaces between her ribs sucked in with every breath. She refused all food and water and her lips and fingertips looked dusky. She was hot to the touch the whole time. She did not have a rash, her bowels were normal, and her neck moved freely. She became very weak and difficult to wake, and she died two days after the fever started."
+  },
+  {
+    "case_id": "lri_5",
+    "cause_name": "Lower respiratory infections",
+    "icd10": "J18.9",
+    "age_group": "infant",
+    "narrative": "My son was ten months old. He had a cough for several days and then became very hot. His breathing turned fast and difficult, and his head seemed to nod with each breath. The skin under his ribs pulled in and his nostrils opened wide as he struggled to breathe. He could not feed and became weak and sleepy. His lips had a bluish tinge. He had no rash, no loose stools, and he did not vomit much. His fast breathing continued until he became unresponsive, and he died at home."
+  },
+  {
+    "case_id": "malaria_1",
+    "cause_name": "Malaria",
+    "icd10": "B54",
+    "age_group": "child",
+    "narrative": "My daughter was three years old. We live in a rural area near the river where there are many mosquitoes and people often get fever in the rainy season. She became ill with a high fever that came with shaking chills and then heavy sweating, and it kept coming back every day or two. She complained of headache and body pains and vomited a few times. After a few days she became very pale, her palms and eyes looked white, and she was weak and sleepy. She did not have a cough or a runny nose. On the third day she had several convulsions, became unconscious, and did not wake up. She died the next morning."
+  },
+  {
+    "case_id": "malaria_2",
+    "cause_name": "Malaria",
+    "icd10": "B54",
+    "age_group": "child",
+    "narrative": "My son was two years old. It was the rainy season in our village and there were mosquitoes everywhere. He developed a high fever and vomited several times, and he became very weak. After two days his eyes turned yellow and his urine became dark like cola. He was very pale and breathing fast, and he refused to eat or drink. He had no cough and no rash. On the third day he had a fit, his body shook, and he became deeply unconscious. He did not wake again and died that night."
+  },
+  {
+    "case_id": "malaria_3",
+    "cause_name": "Malaria",
+    "icd10": "B54",
+    "age_group": "child",
+    "narrative": "My daughter was four years old. We live where fever is common, especially after the rains. Over about a week she had repeated bouts of fever with chills and then sweating. She lost her appetite and became increasingly pale, with white palms and the inside of her eyelids very pale. Her belly was swollen and tender on the left side. She had no cough, no rash, and her neck was not stiff. She grew weaker and more drowsy, then had convulsions and slipped into a coma. She died at home before we could get her treatment."
+  },
+  {
+    "case_id": "malaria_4",
+    "cause_name": "Malaria",
+    "icd10": "B54",
+    "age_group": "infant",
+    "narrative": "My son was about eighteen months old. He lived with us in a malarious area. He became very hot with fever and then started breathing fast and deeply, though he did not have a cough. He was extremely weak and could not sit or feed, just lay limp. He was pale and his hands felt cold while his body was hot. He had no rash and his neck was not stiff. He had two convulsions and then would not wake. His fast breathing and unconsciousness continued until he died on the second day."
+  },
+  {
+    "case_id": "malaria_5",
+    "cause_name": "Malaria",
+    "icd10": "B54",
+    "age_group": "child",
+    "narrative": "My son was three years old. He had travelled with me to stay near a lake where there are many mosquitoes. A few days after we returned he developed high fever with shaking chills. He vomited and complained of headache, and soon his eyes and skin looked yellow. He passed very little urine and what came was very dark. He became very pale and weak. He had no cough and no rash. He grew confused and then unconscious, and he died after a convulsion on the third day of fever."
+  },
+  {
+    "case_id": "diarrhea_1",
+    "cause_name": "Diarrheal Diseases",
+    "icd10": "A09",
+    "age_group": "infant",
+    "narrative": "My son was about a year and a half old. It started suddenly with watery stools, many times a day, almost like rice water, and he vomited whatever we gave him. This went on for two days. He became very thirsty at first and then stopped drinking. His eyes looked sunken, his mouth was dry, and when I pinched the skin on his belly it stayed up and was slow to go back. He passed very little urine and cried without tears. He had a slight fever but no cough and no rash. He became weak, floppy and drowsy, and he died at home."
+  },
+  {
+    "case_id": "diarrhea_2",
+    "cause_name": "Diarrheal Diseases",
+    "icd10": "A09",
+    "age_group": "infant",
+    "narrative": "My daughter was nine months old. For three days she had frequent watery stools and vomiting. At first she was very thirsty and drank eagerly, but later she became too weak to drink. The soft spot on her head and her eyes both looked sunken, her mouth was dry, and her skin was slow to spring back when pinched. She passed almost no urine. She had no cough and no rash. She became cold to the touch in her hands and feet, then very drowsy and floppy, and she died."
+  },
+  {
+    "case_id": "diarrhea_3",
+    "cause_name": "Diarrheal Diseases",
+    "icd10": "A09",
+    "age_group": "child",
+    "narrative": "My son was two years old. He suddenly began passing large amounts of watery stool over and over, and he vomited several times. Within a single day he became very weak and his eyes sank into his face. His lips and mouth were dry and he stopped passing urine. When I pinched his skin it stood up like a tent. He had no cough and no rash, and his neck was not stiff. His pulse felt weak and fast and his breathing was deep. He became drowsy and unresponsive and died the same day."
+  },
+  {
+    "case_id": "diarrhea_4",
+    "cause_name": "Diarrheal Diseases",
+    "icd10": "A09",
+    "age_group": "infant",
+    "narrative": "My daughter was about fourteen months old. She had loose, frequent stools for several days, sometimes with a little mucus, along with a mild fever and vomiting. She became very thirsty and then refused to drink. Her eyes were sunken, her mouth dry, and she passed little urine. Her skin was slow to return when pinched. She had no cough and no rash on her body. She grew weaker and more drowsy each day until she became limp and unresponsive, and she died at home."
+  },
+  {
+    "case_id": "diarrhea_5",
+    "cause_name": "Diarrheal Diseases",
+    "icd10": "A09",
+    "age_group": "infant",
+    "narrative": "My son was one year old. He had watery diarrhoea that went on for about a week and would not stop, with some vomiting. Over those days he steadily lost weight and dried out. His eyes became deeply sunken, his mouth stayed dry, and he hardly passed any urine. He was too weak to cry properly and made no tears. He had no cough and no rash, and his neck was not stiff. He became very lethargic and floppy, stopped responding, and died."
+  },
+  {
+    "case_id": "preterm_1",
+    "cause_name": "Neonatal preterm birth complications",
+    "icd10": "P07.3",
+    "age_group": "neonate",
+    "narrative": "My baby was born too early, after about seven months of pregnancy. He was very small and thin and weighed very little, and his skin was reddish and looked thin and transparent. From the moment he was born he had trouble breathing, his chest pulled in and he breathed fast and grunted. He was too weak to suckle and we had to give drops of milk. He could not keep himself warm and felt cold to touch even when wrapped. There was no rash, no diarrhoea, and he did not have a fever. He grew weaker over the first two days, had long pauses in his breathing, and died on the third day of life."
+  },
+  {
+    "case_id": "preterm_2",
+    "cause_name": "Neonatal preterm birth complications",
+    "icd10": "P07.3",
+    "age_group": "neonate",
+    "narrative": "My daughter was born about two months before she was due. She was tiny and her skin was thin and red. From birth she grunted and the skin between her ribs pulled in as she breathed. She was too weak to suck at the breast, so we dripped milk into her mouth. Her body went yellow after a couple of days and she stayed very cold no matter how we wrapped her. She had no fever and no rash. She had spells where her breathing stopped for a while, and she died on the fifth day of life."
+  },
+  {
+    "case_id": "preterm_3",
+    "cause_name": "Neonatal preterm birth complications",
+    "icd10": "P07.3",
+    "age_group": "neonate",
+    "narrative": "I gave birth to twins early, and this was the smaller one. She weighed almost nothing and her skin was fragile and thin. She breathed fast and then would pause for long moments before starting again. She could not keep warm and her hands and feet were always cold. She had no strength to feed. There was no rash and she never had a fever. She became weaker over two days and her breathing pauses grew longer until she stopped breathing and died."
+  },
+  {
+    "case_id": "preterm_4",
+    "cause_name": "Neonatal preterm birth complications",
+    "icd10": "P07.3",
+    "age_group": "neonate",
+    "narrative": "My baby came early because I had heavy bleeding in pregnancy. He was very small and immediately had difficulty breathing, working hard with grunting and indrawing of the chest. At the clinic they gave him oxygen. He was too weak to feed and could not maintain his temperature. He had no fever and no rash and his cord was clean. He kept having episodes where he stopped breathing and turned blue, and despite their efforts he died in the first week of life."
+  },
+  {
+    "case_id": "preterm_5",
+    "cause_name": "Neonatal preterm birth complications",
+    "icd10": "P07.3",
+    "age_group": "neonate",
+    "narrative": "My son was born when I was about eight months pregnant. He was small and light with a weak, thin cry. He fed poorly and tired quickly at the breast. His breathing was fast with the chest pulling in, and several times a day he would stop breathing and his colour would change to blue until we rubbed him. He stayed cold and we struggled to keep him warm. He had no fever and no rash. He weakened steadily and died on the fourth day."
+  },
+  {
+    "case_id": "asphyxia_1",
+    "cause_name": "Perinatal asphyxia/hypoxia",
+    "icd10": "P21.9",
+    "age_group": "neonate",
+    "narrative": "My baby was born at full term but the labour was very long and difficult and lasted more than a day at home before we reached the clinic. When she was finally born she was limp and blue and did not cry for a long time. The birth attendant rubbed her and she eventually gasped, but she never became active or fed well. She did not open her eyes or move much, her body was floppy, and she had twitching of her arms. She did not have a fever and there was no rash. She never suckled properly and her breathing was irregular. She died on the first day of life."
+  },
+  {
+    "case_id": "asphyxia_2",
+    "cause_name": "Perinatal asphyxia/hypoxia",
+    "icd10": "P21.9",
+    "age_group": "neonate",
+    "narrative": "My labour was obstructed and went on for a very long time. When my son was finally born he was not breathing at all and was blue and limp. The midwife worked on him until he started to gasp. After that he never woke up properly, did not cry normally, and could not suck. He lay stiff at times and then floppy, and he had jerking movements of his limbs. He had no fever and no rash. He never fed and his breathing stayed irregular, and he died on the second day."
+  },
+  {
+    "case_id": "asphyxia_3",
+    "cause_name": "Perinatal asphyxia/hypoxia",
+    "icd10": "P21.9",
+    "age_group": "neonate",
+    "narrative": "When my daughter was born the cord was wrapped tightly around her neck. She came out blue and floppy and did not cry for several minutes. Once she finally breathed she remained weak with poor muscle tone and would not feed. She did not respond to us and made abnormal jerking movements. She had no fever and no rash, and her cord stump was clean. Her breathing was irregular and she became less responsive over the day, and she died on the first day of life."
+  },
+  {
+    "case_id": "asphyxia_4",
+    "cause_name": "Perinatal asphyxia/hypoxia",
+    "icd10": "P21.9",
+    "age_group": "neonate",
+    "narrative": "I delivered at home and the baby was stuck for a long time during the birth. He came out limp and pale and did not cry, only gasping weakly. He never became alert, did not open his eyes, and could not suckle at all. At times his body went stiff and then floppy again. He had no fever and there was no rash. His breathing was irregular and he had episodes of jerking, and he weakened and died on the third day of life."
+  },
+  {
+    "case_id": "asphyxia_5",
+    "cause_name": "Perinatal asphyxia/hypoxia",
+    "icd10": "P21.9",
+    "age_group": "neonate",
+    "narrative": "My baby came feet first and the delivery was very difficult and slow. When she was born she did not cry for a long time and was floppy and blue. She remained weak and unresponsive, never opened her eyes properly, and could not feed. She had episodes of twitching and her muscle tone was abnormal. She had no fever and no rash. Her breathing stayed irregular and she did not improve, and she died early in the first days of life."
+  },
+  {
+    "case_id": "measles_1",
+    "cause_name": "Measles",
+    "icd10": "B05.9",
+    "age_group": "child",
+    "narrative": "My daughter was two years old and had not received her childhood vaccinations. She first had a high fever, red watery eyes, a runny nose and a harsh cough for a few days. Then a red blotchy rash appeared, starting on her face and behind the ears and spreading down over her whole body. Her mouth was sore and she stopped eating. After the rash she became more ill, her breathing became fast and difficult, and she had loose stools. Several other children in our village had the same rash illness around that time. She grew weaker and died about ten days after the fever began."
+  },
+  {
+    "case_id": "measles_2",
+    "cause_name": "Measles",
+    "icd10": "B05.9",
+    "age_group": "child",
+    "narrative": "My son was three years old and never got his vaccines. He started with fever, red sore eyes and a cough. A blotchy red rash then came out on his face and spread down his body. Tiny white spots were seen inside his mouth. After the rash he developed severe watery diarrhoea and vomiting and could not keep anything down. He became very dehydrated and weak. Other children nearby had the same rash sickness. He died about a week and a half after the illness began."
+  },
+  {
+    "case_id": "measles_3",
+    "cause_name": "Measles",
+    "icd10": "B05.9",
+    "age_group": "infant",
+    "narrative": "My daughter was about eighteen months old. There was a rash illness going around our community at the time. She developed a high fever with red watery eyes and a barking cough, and then a red rash spread over her body starting from the face. A few days after the rash she began breathing fast and with difficulty, working hard to breathe. She stopped feeding and became drowsy. She had not been immunised. She weakened and died roughly two weeks after the first fever."
+  },
+  {
+    "case_id": "measles_4",
+    "cause_name": "Measles",
+    "icd10": "B05.9",
+    "age_group": "child",
+    "narrative": "My son was four years old and unvaccinated. He had several days of fever, red inflamed eyes and a cough, followed by a blotchy rash that began on his face and neck and spread downward. As the illness went on he became confused and unusually sleepy, and then he had repeated convulsions. He had no stiff neck at first but his mind was clearly affected. Other children in the area had had the same rash. He never recovered his senses and died a few days after the seizures began."
+  },
+  {
+    "case_id": "measles_5",
+    "cause_name": "Measles",
+    "icd10": "B05.9",
+    "age_group": "child",
+    "narrative": "My daughter was two years old and had missed her vaccines. She had a fever, runny nose, cough and red eyes, then a red rash appeared on her face and spread down. Her mouth became full of ulcers so she could not eat. After the rash faded she remained weak, had ongoing diarrhoea, and steadily lost weight and strength over the following weeks. Several children around us had the same rash illness. She wasted away and died some weeks after the rash."
+  },
+  {
+    "case_id": "meningitis_1",
+    "cause_name": "Meningitis/Encephalitis",
+    "icd10": "G03.9",
+    "age_group": "infant",
+    "narrative": "My son was one year old. He became ill quickly with a very high fever and a lot of crying, and he refused to feed. He vomited several times. His neck became stiff and he cried and arched his back when we tried to bend his head forward, and the soft spot on top of his head was bulging. He did not like the light and kept his eyes shut. He became very drowsy and then had repeated convulsions where his whole body shook. There was no diarrhoea. He slipped into unconsciousness and died within two days of becoming sick."
+  },
+  {
+    "case_id": "meningitis_2",
+    "cause_name": "Meningitis/Encephalitis",
+    "icd10": "G03.9",
+    "age_group": "child",
+    "narrative": "My daughter was three years old. She suddenly developed a very high fever and a severe headache, and she vomited again and again. Her neck became so stiff she could not lower her chin to her chest, and she could not bear bright light. Small dark purple spots that did not fade when pressed appeared on her skin. She quickly became drowsy and confused, then had a convulsion and lost consciousness. She had no cough and her breathing was not fast at first. She died within a day of becoming ill."
+  },
+  {
+    "case_id": "meningitis_3",
+    "cause_name": "Meningitis/Encephalitis",
+    "icd10": "G03.9",
+    "age_group": "infant",
+    "narrative": "My son was eight months old. He became feverish and gave a strange high-pitched cry that was different from his normal crying. He refused the breast and vomited. The soft spot on top of his head was tense and bulging, and he did not want to be moved or have light near him. He grew very drowsy and floppy, and then his body began to jerk in convulsions. He had no diarrhoea and no rash. He became unresponsive and died within about two days."
+  },
+  {
+    "case_id": "meningitis_4",
+    "cause_name": "Meningitis/Encephalitis",
+    "icd10": "G03.9",
+    "age_group": "child",
+    "narrative": "My daughter was two years old. She had a fever and then began behaving strangely, not recognising us and saying confused things. She became very drowsy and then had repeated fits where her whole body shook. Her neck felt stiff when we tried to move her head. She had no cough and no diarrhoea. Over a day she sank into deep unconsciousness from which she could not be woken, and she died shortly after."
+  },
+  {
+    "case_id": "meningitis_5",
+    "cause_name": "Meningitis/Encephalitis",
+    "icd10": "G03.9",
+    "age_group": "child",
+    "narrative": "My son was four years old. He suddenly had a high fever, a pounding headache and repeated vomiting. His neck became stiff and painful and he could not stand the light, keeping his eyes covered. He grew confused and then very drowsy. Within a day he had a convulsion and became unconscious. He had no cough, no rash, and his bowels were normal. He deteriorated very fast and died less than a day after he first fell ill."
+  },
+  {
+    "case_id": "malnutrition_1",
+    "cause_name": "Malnutrition",
+    "icd10": "E46",
+    "age_group": "child",
+    "narrative": "My daughter was about two years old. Over several months she became thinner and thinner and stopped growing, even though the other children were well. Her arms and legs were very thin and you could see her ribs, but her feet and lower legs became swollen and puffy. Her hair turned a lighter colour and was easy to pull out, and her skin had peeling patches. She had a poor appetite, was often unhappy and listless, and had episodes of diarrhoea. We did not have enough food at home and she ate very little. She became very weak and died slowly at home."
+  },
+  {
+    "case_id": "malnutrition_2",
+    "cause_name": "Malnutrition",
+    "icd10": "E46",
+    "age_group": "infant",
+    "narrative": "My son was about eighteen months old. I had stopped breastfeeding early and there was little food for him. Over time he became extremely thin, with loose folds of skin, a wasted face and visible ribs and joints. He had no fat left on his body. He was weak, irritable and listless, caught one infection after another, and had bouts of diarrhoea. He was not feverish most of the time and had no rash. He grew steadily weaker over weeks and months and finally died quietly at home."
+  },
+  {
+    "case_id": "malnutrition_3",
+    "cause_name": "Malnutrition",
+    "icd10": "E46",
+    "age_group": "child",
+    "narrative": "My daughter was three years old. Her face, hands and legs became swollen and puffy, and her belly was large, though the rest of her looked wasted. Her hair changed to a reddish, pale colour and fell out easily, and her skin developed dark peeling patches and sores. She had no appetite and was apathetic, barely reacting to anything. Our family had very little food after a poor harvest. She had occasional loose stools and no fever. She weakened over weeks and died."
+  },
+  {
+    "case_id": "malnutrition_4",
+    "cause_name": "Malnutrition",
+    "icd10": "E46",
+    "age_group": "child",
+    "narrative": "My son was two years old. He had failed to grow for many months while other children his age thrived. He became severely wasted, with thin limbs and a shrunken face, and you could count his ribs. He suffered constant diarrhoea and frequent infections, and he was weak and miserable. There had been a long drought and food was very scarce. He had no rash and was not usually feverish. He continued to waste away and eventually died at home."
+  },
+  {
+    "case_id": "malnutrition_5",
+    "cause_name": "Malnutrition",
+    "icd10": "E46",
+    "age_group": "infant",
+    "narrative": "My daughter was about fifteen months old. After an illness she stopped feeding well and never recovered her weight, becoming thinner and thinner over the following months. She was weak and had no appetite, and later her legs and feet became swollen and puffy. Her hair was sparse and pale and her skin was dry and flaky. We were very poor and could not feed her properly. She had no rash and only mild fevers. She grew too weak to sit or cry and died."
+  },
+  {
+    "case_id": "neonatal_sepsis_1",
+    "cause_name": "Neonatal sepsis",
+    "icd10": "P36.9",
+    "age_group": "neonate",
+    "narrative": "My baby was born at home at the normal time and seemed well at first. On about the fifth day of life she stopped suckling and became less active. She felt hot at times and at other times her body felt cold, and her hands and feet were cold. She breathed fast, and there were pauses in her breathing. Her skin looked yellow and a little mottled, and the stump of the cord looked red and smelled bad. She became floppy and difficult to wake, and her cry became weak. She did not have a rash. She died on the seventh day of life."
+  },
+  {
+    "case_id": "neonatal_sepsis_2",
+    "cause_name": "Neonatal sepsis",
+    "icd10": "P36.9",
+    "age_group": "neonate",
+    "narrative": "My son was born at home and was healthy for the first days. On the third day he became dull and stopped feeding well. He felt hot and his skin turned yellow. He breathed fast and grunted, and he was limp when I picked him up. His cry grew weak and his hands and feet were cold. The cord area looked a little red. He had no rash. He became harder and harder to wake and died on the sixth day of life."
+  },
+  {
+    "case_id": "neonatal_sepsis_3",
+    "cause_name": "Neonatal sepsis",
+    "icd10": "P36.9",
+    "age_group": "neonate",
+    "narrative": "My waters broke a long time before my daughter was born. On the second day of her life she became hot and then cold by turns, stopped sucking, and was very sleepy and floppy. Her skin looked mottled and her hands and feet were cold. She breathed fast with pauses. Later she had some jerking movements. She had no rash. She would not wake to feed and her cry faded, and she died within the first week of life."
+  },
+  {
+    "case_id": "neonatal_sepsis_4",
+    "cause_name": "Neonatal sepsis",
+    "icd10": "P36.9",
+    "age_group": "neonate",
+    "narrative": "My son seemed fine when he was born but on about the sixth day he became irritable and then very lethargic. He vomited his feeds and his belly looked swollen. His temperature was unstable, sometimes hot and sometimes too cold, and his hands and feet were cold. He breathed quickly and his colour was poor and mottled. There was no rash on his skin. He weakened, stopped feeding entirely, and died soon after."
+  },
+  {
+    "case_id": "neonatal_sepsis_5",
+    "cause_name": "Neonatal sepsis",
+    "icd10": "P36.9",
+    "age_group": "neonate",
+    "narrative": "My daughter was delivered in unclean conditions and her cord was cut with a dirty blade. By the fourth day the cord stump was red, swollen and oozing with a bad smell. She became floppy and refused to feed, breathed fast, and her body temperature was low and unstable. Her skin looked mottled and her cry was feeble. She had no rash elsewhere. She became unresponsive and died on the seventh day of life."
+  },
+  {
+    "case_id": "congenital_1",
+    "cause_name": "Congenital birth defects",
+    "icd10": "Q89.9",
+    "age_group": "infant",
+    "narrative": "My son looked different from birth and the midwife said his heart did not form properly. From his first days he would turn blue around the lips and tongue, especially when he cried or tried to feed, and he tired very quickly and sweated while feeding. He breathed fast and never gained weight well, staying small and weak. Sometimes he had spells where he became deeply blue and limp. He did not have a fever and there was no rash or diarrhoea. He had these problems his whole short life. He became more blue and breathless over time and died at a few months of age."
+  },
+  {
+    "case_id": "congenital_2",
+    "cause_name": "Congenital birth defects",
+    "icd10": "Q89.9",
+    "age_group": "neonate",
+    "narrative": "My daughter was born with an open swelling on her lower back that was covered only by a thin membrane and leaked fluid. Her legs were weak and she did not move them, and she could not pass urine or stool normally. The opening kept getting infected. She had been like this since birth and it was clearly something that had not formed properly while I carried her. She had no rash elsewhere. She became increasingly unwell from the infections and died in early infancy."
+  },
+  {
+    "case_id": "congenital_3",
+    "cause_name": "Congenital birth defects",
+    "icd10": "Q89.9",
+    "age_group": "infant",
+    "narrative": "My son was born with his lip and the roof of his mouth split open. Because of this he could never feed properly, milk would come back through his nose and he often choked. He failed to gain weight and stayed small. He caught chest infections again and again from the milk going the wrong way. This was how he was made from birth. He grew weaker with each illness and died in his first months of life."
+  },
+  {
+    "case_id": "congenital_4",
+    "cause_name": "Congenital birth defects",
+    "icd10": "Q89.9",
+    "age_group": "infant",
+    "narrative": "My daughter's head was unusually large at birth and grew bigger and bigger over the following weeks while the rest of her stayed small. The soft spot was wide and tense and her eyes seemed pushed downward. She fed poorly, vomited often, and was very irritable, and she did not develop or respond like other babies. She had been this way from birth, with the head problem worsening. She had no fever or rash. She weakened and died in infancy."
+  },
+  {
+    "case_id": "congenital_5",
+    "cause_name": "Congenital birth defects",
+    "icd10": "Q89.9",
+    "age_group": "infant",
+    "narrative": "My son was born with something wrong with his heart, the clinic said, and from birth he was often breathless and turned bluish, especially when feeding or crying. He could only feed a little at a time before tiring and sweating, and he hardly grew. He caught frequent chest infections. These troubles were present from his very first days. He had no rash and no diarrhoea. Over a few months he became more and more breathless and blue, and he died."
+  },
+  {
+    "case_id": "sepsis_1",
+    "cause_name": "Sepsis",
+    "icd10": "A41.9",
+    "age_group": "child",
+    "narrative": "My son was two years old. He had a boil on his leg that became red and swollen and the redness spread. Then he developed a high fever and quickly became very ill, much sicker than an ordinary fever. He breathed fast, his hands and feet turned cold and mottled even though his body was hot, and he passed very little urine. He had no cough, no rash elsewhere, and his neck was not stiff. He became drowsy and unresponsive and his colour was grey. He died within two days of the fever starting."
+  },
+  {
+    "case_id": "sepsis_2",
+    "cause_name": "Sepsis",
+    "icd10": "A41.9",
+    "age_group": "child",
+    "narrative": "My daughter was three years old. She had been recovering from a bout of dysentery when she suddenly became very ill again with a high fever. She turned weak and lethargic, breathing rapidly, and her arms and legs felt cold and looked blotchy while her trunk was hot. She made very little urine. She had no stiff neck and no real cough. She grew confused and then unresponsive, her pulse fast and weak, and she died quickly over about a day."
+  },
+  {
+    "case_id": "sepsis_3",
+    "cause_name": "Sepsis",
+    "icd10": "A41.9",
+    "age_group": "infant",
+    "narrative": "My son was about eighteen months old. He developed a fever and refused his feeds, and within a day he became floppy and very ill. He was breathing fast and his hands and feet were cold and mottled even though he felt hot. He hardly passed any urine. He had no rash on his body and his neck moved freely, and he did not have much of a cough. He became grey and unresponsive and his breathing was laboured, and he died rapidly."
+  },
+  {
+    "case_id": "sepsis_4",
+    "cause_name": "Sepsis",
+    "icd10": "A41.9",
+    "age_group": "child",
+    "narrative": "My daughter was four years old. She had spilled hot water and burned her arm and chest, and after a few days the wound became red, swollen and foul. She then spiked a high fever and became confused and very weak. Her hands and feet were cold and her skin was mottled, while her body burned hot. Her breathing and heartbeat were very fast and she passed little urine. She had no stiff neck. She slipped into unconsciousness and died."
+  },
+  {
+    "case_id": "sepsis_5",
+    "cause_name": "Sepsis",
+    "icd10": "A41.9",
+    "age_group": "infant",
+    "narrative": "My son was one year old. He had a high fever for two days and grew weaker and weaker. He stopped feeding and became very drowsy. His breathing was fast, his hands and feet were cold and his skin looked blotchy and grey even though he was hot. He passed almost no urine. He had no cough, no rash and no stiff neck. He became limp and unresponsive, with a fast weak pulse, and he died at the clinic."
+  },
+  {
+    "case_id": "hiv_1",
+    "cause_name": "HIV",
+    "icd10": "B24",
+    "age_group": "infant",
+    "narrative": "My daughter was about eighteen months old. I had been unwell for a long time myself. From early in her life she failed to grow and was always sick. She had white patches in her mouth that would not go away, long-lasting diarrhoea, and one chest infection after another. The glands in her neck and groin were swollen, and she had a constant skin rash. She slowly wasted despite our feeding her. In the end she developed a severe pneumonia and died after months of poor health."
+  },
+  {
+    "case_id": "hiv_2",
+    "cause_name": "HIV",
+    "icd10": "B24",
+    "age_group": "child",
+    "narrative": "My son was two years old. For most of his life he was a sickly child who never thrived. He had a cough that lasted for months and steadily lost weight. There were white curd-like patches in his mouth, and he had a long-running discharge from his ears. He caught infections constantly and recovered poorly. His mother had died of a long illness. He grew weaker over many months and finally died after a chest infection he could not fight off."
+  },
+  {
+    "case_id": "hiv_3",
+    "cause_name": "HIV",
+    "icd10": "B24",
+    "age_group": "infant",
+    "narrative": "My son was about one year old, born to a mother who was chronically ill. From infancy he had repeated chest infections and persistent diarrhoea that never fully cleared. His belly was swollen with an enlarged liver and spleen, and the glands around his body were swollen. He had stopped reaching the milestones he had earlier achieved and was wasting. He had no single sudden illness but a long downhill course, and he died after another severe infection."
+  },
+  {
+    "case_id": "hiv_4",
+    "cause_name": "HIV",
+    "icd10": "B24",
+    "age_group": "child",
+    "narrative": "My daughter was three years old and had been in poor health since she was a baby. She was severely thin and wasted, had episodes of fever that came and went for weeks, and suffered persistent skin rashes and sores. White patches coated her mouth and she had widespread swollen glands. She caught pneumonia repeatedly. Neither she nor her mother had been tested or treated for any chronic infection. After a long decline she developed another severe pneumonia and died."
+  },
+  {
+    "case_id": "hiv_5",
+    "cause_name": "HIV",
+    "icd10": "B24",
+    "age_group": "infant",
+    "narrative": "My baby was breastfed by me, and I had been sick for years without treatment. He never grew properly and was always ill. He had thick white patches in his mouth that made feeding painful, chronic loose stools, and recurring fevers and chest infections. His weight kept falling and his glands were swollen. He had a slow, downhill course over many months rather than one sudden illness, and at the end a severe pneumonia took his life."
+  },
+  {
+    "case_id": "tb_1",
+    "cause_name": "Tuberculosis",
+    "icd10": "A16.9",
+    "age_group": "child",
+    "narrative": "My son was four years old. His grandfather, who lived with us, had a long cough for many months. My son then developed a cough that went on for more than three weeks and would not clear. He slowly lost weight and his appetite faded. He had low fevers in the evenings and would sweat through the night, soaking his clothes. There was no sudden high fever or fast breathing at first. Over a couple of months he wasted away and grew very weak, and he died at home."
+  },
+  {
+    "case_id": "tb_2",
+    "cause_name": "Tuberculosis",
+    "icd10": "A16.9",
+    "age_group": "child",
+    "narrative": "My daughter was three years old. Over a long period she failed to gain weight and instead became thinner. She had a persistent cough lasting many weeks and recurring low fevers, with sweating at night. The glands in her neck became swollen and firm, forming a lump that did not go away. A relative we visited often had a chronic productive cough. She declined slowly over months rather than suddenly, and she eventually died."
+  },
+  {
+    "case_id": "tb_3",
+    "cause_name": "Tuberculosis",
+    "icd10": "A16.9",
+    "age_group": "child",
+    "narrative": "My son was about two years old. For a couple of months he was unwell with a cough that never resolved, poor appetite and steady weight loss. His belly became swollen and full of fluid, and the glands in his neck were enlarged. He had a mild fever on and off and sweated at night. There was a person with a long-standing cough in our household. He did not have a sudden severe illness but a slow wasting decline, and he died at home."
+  },
+  {
+    "case_id": "tb_4",
+    "cause_name": "Tuberculosis",
+    "icd10": "A16.9",
+    "age_group": "child",
+    "narrative": "My daughter was four years old. She had a cough that lasted for over a month and kept getting slowly worse, together with weight loss and tiredness. She ran low fevers, especially in the evening, and had drenching night sweats. She had been in close contact with an uncle who coughed for a long time and was very thin. She was never suddenly very hot or fast-breathing; instead she faded over weeks. She became too weak to walk and died."
+  },
+  {
+    "case_id": "tb_5",
+    "cause_name": "Tuberculosis",
+    "icd10": "A16.9",
+    "age_group": "child",
+    "narrative": "My son was three years old. Over several months he had a long cough, gradually lost weight and energy, and stopped growing. He had low-grade fevers and sweated heavily at night. Firm swollen glands appeared in his neck. A member of our household had had a chronic cough and weight loss for a long time. His illness was slow and drawn out rather than a sudden fever. He became severely wasted and weak and finally died."
+  },
+  {
+    "case_id": "injury_1",
+    "cause_name": "Injury",
+    "icd10": "T14.9",
+    "age_group": "child",
+    "narrative": "My son was three years old. He was playing outside while I was busy, and he wandered to the pond near our home. When we found him he was face down in the water and not breathing. We pulled him out and tried to revive him, pressing on his chest and turning him over to let water out, but he never breathed again. He had been completely well and healthy that morning, with no illness, no fever and no cough beforehand. He died right there by the water."
+  },
+  {
+    "case_id": "injury_2",
+    "cause_name": "Injury",
+    "icd10": "T14.9",
+    "age_group": "infant",
+    "narrative": "My daughter was about two years old. She reached up and pulled a pot of boiling water from the fire onto herself. She was scalded badly across her chest, arm and face, and the skin came away in sheets. She was in terrible pain and the burns were extensive. She had been perfectly healthy before the accident with no illness at all. Despite our care the injury was too severe, and she died a couple of days after the burns."
+  },
+  {
+    "case_id": "injury_3",
+    "cause_name": "Injury",
+    "icd10": "T14.9",
+    "age_group": "child",
+    "narrative": "My son was four years old. He was crossing the road near the market when a motorbike struck him at speed. He was thrown and hit his head hard on the ground, and he lost consciousness immediately. He had a wound on his head and was bleeding. He never woke up and did not respond to us. He had been a healthy boy with no sickness before this happened. He died on the way to the hospital."
+  },
+  {
+    "case_id": "injury_4",
+    "cause_name": "Injury",
+    "icd10": "T14.9",
+    "age_group": "infant",
+    "narrative": "My son was about eighteen months old. He climbed and then fell from a high platform in our compound, landing on his head. He vomited several times afterwards, became very drowsy, and then could not be woken. One side of his body seemed weak. He had been a completely healthy child before the fall, with no fever, cough or illness of any kind. He slipped into unconsciousness and died within a day of the fall."
+  },
+  {
+    "case_id": "injury_5",
+    "cause_name": "Injury",
+    "icd10": "T14.9",
+    "age_group": "infant",
+    "narrative": "My daughter was about one year old. I left her for a short while near a large bucket of water that I had filled for washing. When I came back she had toppled into it head first and was not breathing. We lifted her out and tried to revive her but it was too late. She had been a healthy, lively baby that day with no illness, fever or breathing trouble beforehand. She drowned in the bucket and died."
+  },
+  {
+    "case_id": "rabies_1",
+    "cause_name": "Rabies",
+    "icd10": "A82.9",
+    "age_group": "child",
+    "narrative": "My son was four years old. About a month earlier he had been bitten on the leg by a stray dog, and the wound had healed, so we did not seek treatment. Then he suddenly became restless, frightened and irritable. He could not drink, even though he was thirsty, because his throat would go into painful spasms and he panicked at the sight of water. He drooled a great deal and could not swallow his saliva. He had spasms and then became paralysed, and he died a few days after the strange symptoms began."
+  },
+  {
+    "case_id": "rabies_2",
+    "cause_name": "Rabies",
+    "icd10": "A82.9",
+    "age_group": "child",
+    "narrative": "My daughter was three years old. Weeks before, she had been bitten by a neighbour's dog that later disappeared. The bite healed and we forgot about it. Then she became agitated and fearful and behaved strangely. Whenever we offered her water she would jerk and choke and become terrified, so she refused to drink at all. She produced a lot of saliva and could not swallow it. She had convulsive spasms and then grew limp, and she died within a few days."
+  },
+  {
+    "case_id": "rabies_3",
+    "cause_name": "Rabies",
+    "icd10": "A82.9",
+    "age_group": "child",
+    "narrative": "My son was four years old. He had been scratched and bitten by a dog that died soon afterwards, but his wound healed and he received no injections. About a month later he developed a fever and then began acting oddly, very restless and easily startled. He was terrified of water and of drafts of air, and his throat spasmed when he tried to drink. He salivated heavily. He became wildly agitated, then slipped into a coma, and he died."
+  },
+  {
+    "case_id": "rabies_4",
+    "cause_name": "Rabies",
+    "icd10": "A82.9",
+    "age_group": "child",
+    "narrative": "My daughter was about four years old. A puppy had bitten her hand some weeks earlier and the small wound healed without treatment. Then she suddenly could not swallow and would choke and panic when she tried to drink, so she avoided all water. She drooled constantly and could not manage her own saliva. She had painful muscle spasms in her throat and became very frightened and confused. Within a few days she became paralysed and died."
+  },
+  {
+    "case_id": "rabies_5",
+    "cause_name": "Rabies",
+    "icd10": "A82.9",
+    "age_group": "child",
+    "narrative": "My son was four years old and had been bitten on the hand by a dog more than three weeks before, but we did not get him any vaccine. He first complained of tingling and odd sensations at the old bite site. Then he became anxious and restless, and he developed a great fear of water, with his throat tightening and choking whenever he tried to drink. He had heavy drooling and muscle spasms, and then weakness spread through his body until he died."
+  },
+  {
+    "case_id": "sickle_cell_1",
+    "cause_name": "Sickle cell disorders",
+    "icd10": "D57.1",
+    "age_group": "child",
+    "narrative": "My son was three years old. He had a known blood problem and had been pale and yellow-eyed on and off since he was a baby. He suffered repeated episodes of severe pain with swelling of his hands and feet, and at times needed blood given to him. Other relatives had the same blood condition. During his last illness he had a fever and then suddenly became extremely pale and breathless, his heart racing. He collapsed from the severe anaemia and died."
+  },
+  {
+    "case_id": "sickle_cell_2",
+    "cause_name": "Sickle cell disorders",
+    "icd10": "D57.1",
+    "age_group": "infant",
+    "narrative": "My daughter was about two years old. Since infancy she had been anaemic and her eyes were often yellow, and she had needed blood transfusions more than once. She had bouts of crying with painful swollen joints. One day she suddenly became very pale and weak, her belly swelled up on the left side, and she gasped for breath. Her paleness worsened rapidly. She had this inherited blood condition that ran in our family, and during this sudden severe episode she collapsed and died."
+  },
+  {
+    "case_id": "sickle_cell_3",
+    "cause_name": "Sickle cell disorders",
+    "icd10": "D57.1",
+    "age_group": "infant",
+    "narrative": "My son was about eighteen months old. He had been chronically pale with yellow eyes for most of his life and had episodes where his fingers and toes became painfully swollen. He caught infections often. During his final illness he developed a fever and then became severely pale and listless very quickly, breathing fast with a racing heart. The known blood disorder in our family had been passed to him. He weakened suddenly from the deep anaemia and died."
+  },
+  {
+    "case_id": "sickle_cell_4",
+    "cause_name": "Sickle cell disorders",
+    "icd10": "D57.1",
+    "age_group": "child",
+    "narrative": "My daughter was four years old. An older sibling had died of the same inherited blood disease. She had lifelong anaemia with pale, yellow-tinged eyes and recurring crises of severe bone and joint pain. During her last illness she had a fever and cough, then became acutely breathless with chest pain and went very pale. The paleness and breathlessness came on fast. Despite reaching the clinic she could not be saved and died during this severe episode."
+  },
+  {
+    "case_id": "sickle_cell_5",
+    "cause_name": "Sickle cell disorders",
+    "icd10": "D57.1",
+    "age_group": "child",
+    "narrative": "My son was three years old. From early infancy he had been anaemic and jaundiced, and his hands and feet had once swelled painfully when he was a baby. He had repeated painful crises over the years and was known to carry the family blood disorder. In his final illness he suffered a severe attack of pain and then turned extremely pale and weak, his breathing fast and his heartbeat pounding. The anaemia overwhelmed him and he died at home."
+  }
+]

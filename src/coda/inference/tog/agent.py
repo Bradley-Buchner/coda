@@ -11,7 +11,10 @@ from typing import List
 
 from gilda import Annotation
 
-from coda.inference.champs_prompted.base_agent import LLMCallFailed
+from coda.inference.champs_prompted.base_agent import (
+    LLMCallFailed,
+    normalize_scores,
+)
 from coda.inference.champs_prompted.icd10_agent import (
     CHAMPS_GROUP_CAUSES,
     ChampsPromptedIcd10Agent,
@@ -28,6 +31,7 @@ from coda.kg.graph import KGView
 logger = logging.getLogger(__name__)
 
 MAX_CITED = 5  # Facts, and separately findings, the final ranking may cite
+MAX_CAUSES = 3  # Causes in a ranking, as in the first opinion's schema
 RANKING_PROMPT = read_prompt("final_ranking.txt").format(
     allowed_causes=", ".join(CHAMPS_GROUP_CAUSES), max_cited=MAX_CITED)
 COD_PROPERTIES = build_cod_output_schema()["properties"]
@@ -36,14 +40,69 @@ CITED_SCHEMA = {"type": "array", "items": {"type": "string"},
 RANKING_SCHEMA = {
     "type": "object",
     "properties": {
+        # First, so that each direction is decided before the probabilities
+        "candidate_updates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "cause_name": {"type": "string"},
+                    "direction": {"type": "string",
+                                  "enum": ["up", "down", "no_change"]},
+                    "evidence": {"type": "string"},
+                },
+                "required": ["cause_name", "direction", "evidence"],
+                "additionalProperties": False,
+            },
+        },
         "reasoning": COD_PROPERTIES["reasoning"],
         "top_causes": COD_PROPERTIES["top_causes"],
         "cited_facts": CITED_SCHEMA,
         "cited_findings": CITED_SCHEMA,
     },
-    "required": ["reasoning", "top_causes", "cited_facts", "cited_findings"],
+    "required": ["candidate_updates", "reasoning", "top_causes", "cited_facts",
+                 "cited_findings"],
     "additionalProperties": False,
 }
+
+
+def apply_updates(first_causes, final_causes, updates):
+    """Return the final causes, with no_change causes at their first-opinion
+    probabilities and the others rescaled to fill what is left.
+    """
+    kept = {key: {**cause} for key, cause in first_causes.items()
+            if updates.get(cause["name"], {}).get("direction") == "no_change"}
+    moved = {key: cause for key, cause in final_causes.items()
+             if key not in kept}
+    total = sum(cause["score"] for cause in moved.values())
+    if total > 0:
+        room = 1 - sum(cause["score"] for cause in kept.values())
+        for cause in moved.values():
+            cause["score"] = cause["score"] * room / total
+    causes = sorted({**kept, **moved}.items(),
+                    key=lambda item: item[1]["score"], reverse=True)
+    return normalize_scores(dict(causes[:MAX_CAUSES]))
+
+
+def explain_changes(first_causes, final_causes, updates):
+    """Return a sentence per cause whose probability differs from the first
+    opinion, flagging a stated direction that the numbers contradict.
+    """
+    sentences = []
+    for key in dict.fromkeys([*final_causes, *first_causes]):
+        name = (final_causes.get(key) or first_causes[key])["name"]
+        old = first_causes.get(key, {}).get("score", 0)
+        new = final_causes.get(key, {}).get("score", 0)
+        if f"{old:.2f}" == f"{new:.2f}":
+            continue
+        update = updates.get(name, {})
+        evidence = update.get("evidence", "no reason given").rstrip(".")
+        sentence = f"{name} moved from {old:.2f} to {new:.2f}: {evidence}."
+        if "direction" in update \
+                and update["direction"] != ("up" if new > old else "down"):
+            sentence += f" (Stated direction: {update['direction']}.)"
+        sentences.append(sentence)
+    return sentences
 
 
 class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
@@ -132,5 +191,11 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
             if found:
                 cited.append(max(found, key=len))
         evidence["cited"] = list(dict.fromkeys(cited))
-        return {**first_opinion, "causes": ranked["causes"],
-                "reasoning": ranked["reasoning"], "kg_evidence": evidence}
+        updates = {self._match_cause(update["cause_name"]): update
+                   for update in response.get("candidate_updates", [])}
+        causes = apply_updates(first_opinion["causes"], ranked["causes"],
+                               updates)
+        reasoning = " ".join([ranked["reasoning"], *explain_changes(
+            first_opinion["causes"], causes, updates)])
+        return {**first_opinion, "causes": causes, "reasoning": reasoning,
+                "kg_evidence": evidence}
