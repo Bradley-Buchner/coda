@@ -1,0 +1,22 @@
+{
+  "pilot": ["lri_1", "lri_2", "lri_3", "malaria_1", "malaria_2", "diarrhea_1",
+            "diarrhea_2"],
+  "chain": ["measles_1", "measles_2", "measles_3", "measles_4", "measles_5",
+            "hiv_1", "hiv_2", "hiv_3", "hiv_4", "hiv_5",
+            "sickle_cell_1", "sickle_cell_2", "sickle_cell_3", "sickle_cell_4",
+            "sickle_cell_5",
+            "malnutrition_2", "malnutrition_4",
+            "congenital_2", "congenital_3", "congenital_5"],
+  "label_to_check": {
+    "sepsis_1": "Boil led to sepsis; the underlying cause could be the skin infection",
+    "sepsis_2": "Dysentery led to sepsis; the underlying cause could be Diarrheal Diseases",
+    "sepsis_4": "Burn led to sepsis; the underlying cause could be Injury"
+  },
+  "lenient": {
+    "Perinatal asphyxia/hypoxia": ["Neonatal encephalopathy"],
+    "HIV": ["HIV exposure"],
+    "Sickle cell disorders": ["Anemias"],
+    "Malnutrition": ["Other nutritional disorders"],
+    "Congenital birth defects": ["Heart Diseases"]
+  }
+}

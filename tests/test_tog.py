@@ -120,6 +120,9 @@ FIRST_OPINION = {"reasoning": "Fever.", "questions": ["q1", "q2", "q3"],
                      {"cause_name": "Lower respiratory infections",
                       "probability": 0.3}]}
 FINAL_RANKING = {"reasoning": "Fever fits sepsis.",
+                 "candidate_updates": [
+                     {"cause_name": "Sepsis", "direction": "up",
+                      "evidence": "Fever was present."}],
                  "cited_facts": [],
                  "cited_findings": ["[yes] fever (grade A+ for sepsis)",
                                     "hot to the touch"],
@@ -160,7 +163,9 @@ async def test_ranks_candidates_with_kg_evidence():
 
     assert list(result["causes"]) == ["icd10:A41.9", "icd10:J18.9"]
     assert result["causes"]["icd10:A41.9"]["score"] == pytest.approx(0.9)
-    assert result["reasoning"] == "Fever fits sepsis."
+    assert result["reasoning"] == (
+        "Fever fits sepsis. Sepsis moved from 0.70 to 0.90: Fever was present. "
+        "Lower respiratory infections moved from 0.30 to 0.10: no reason given.")
     evidence = result["kg_evidence"]
     assert evidence["cited"] == ["fever"]
     assert [c["cause"] for c in evidence["candidates"]] == \
@@ -173,6 +178,24 @@ async def test_ranks_candidates_with_kg_evidence():
     assert "Same as: ICD-11 1G40 Sepsis" in client.calls[-1]["user_prompt"]
     assert result["questions"] == ["q1", "q2", "q3"]
     assert result["chunk_id"] == "c1" and "timings" in result
+
+
+@pytest.mark.asyncio
+async def test_no_change_keeps_the_first_opinion_probability():
+    result, _, _ = await run({**FINAL_RANKING, "candidate_updates": [
+        {"cause_name": "Sepsis", "direction": "no_change", "evidence": "None."},
+        {"cause_name": "Lower respiratory infections", "direction": "no_change",
+         "evidence": "None."}]})
+    assert result["causes"]["icd10:A41.9"]["score"] == pytest.approx(0.7)
+    assert result["reasoning"] == "Fever fits sepsis."
+
+
+@pytest.mark.asyncio
+async def test_flags_a_direction_the_numbers_contradict():
+    result, _, _ = await run({**FINAL_RANKING, "candidate_updates": [
+        {"cause_name": "Sepsis", "direction": "down", "evidence": "Why."}]})
+    assert "Sepsis moved from 0.70 to 0.90: Why. (Stated direction: down.)" \
+        in result["reasoning"]
 
 
 @pytest.mark.asyncio
