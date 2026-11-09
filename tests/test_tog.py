@@ -118,9 +118,7 @@ async def test_candidates_share_one_finding_check():
         findings = {"who.va:sepsis": [("who.va.q:fever", "A+")],
                     "who.va:lri": [("who.va.q:cough", "A"),
                                    ("who.va.q:fever", "A-"),
-                                   ("who.va.q:W610310-o", "A+"),
-                                   ("who.va.q:days-a", "I"),
-                                   ("who.va.q:days-b", "I")]}
+                                   ("who.va.q:W610310-o", "A+")]}
 
     call = FakeCall([{"findings": [{"number": 2, "status": "yes",
                                     "quote": "Fever"}]}])
@@ -128,7 +126,6 @@ async def test_candidates_share_one_finding_check():
                                        ["A41.9", "J18.9"])
     assert len(call.calls) == 1
     assert "W610310" not in call.calls[0]["user_prompt"]
-    assert "days-" not in call.calls[0]["user_prompt"]
     assert [(f["finding"], f["grade"], f["status"]) for f in sepsis] == \
         [("fever", "A+", "yes")]
     assert [(f["finding"], f["grade"], f["status"]) for f in lri] == \
@@ -206,6 +203,9 @@ async def test_ranks_candidates_with_kg_evidence():
         "first_opinion", "walk_step", "walk_step", "finding_check",
         "final_ranking"]
     assert "[yes] fever (grade A+ for sepsis on answer yes)" in \
+        client.calls[-1]["user_prompt"]
+    assert "cough" not in client.calls[-1]["user_prompt"]
+    assert "(1 other typical findings were answered otherwise" in \
         client.calls[-1]["user_prompt"]
     assert "Same as: ICD-11 1G40 Sepsis" in client.calls[-1]["user_prompt"]
     assert result["questions"] == ["q1", "q2", "q3"]

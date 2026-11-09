@@ -44,25 +44,22 @@ def scores(causes):
 
 
 def support(finding):
-    """Return how much a checked finding supports its cause: its grade's value,
-    positive if the case gives the graded answer, negative if the opposite, and
-    0 if the case doesn't say.
+    """Return how much a checked finding supports its cause: its grade's value
+    if the case gives the graded answer, and otherwise 0, since InterVA ignores
+    the other answers.
     """
-    if finding["status"] == "not_mentioned":
+    if finding["status"] != finding["graded_answer"]:
         return 0
-    value = GRADE_VALUES[finding["grade"]]
-    return value if finding["status"] == finding["graded_answer"] else -value
+    return GRADE_VALUES[finding["grade"]]
 
 
 def calculator(candidates):
-    """Rank the candidates by mean support per finding; ties keep their order.
+    """Rank the candidates by the total support of their findings, so that, as
+    in InterVA, other answers don't count against them; ties keep their order.
     The values returned only give that order, and aren't probabilities.
     """
-    def mean_support(candidate):
-        findings = candidate["findings"] or []
-        return sum(map(support, findings)) / len(findings) if findings else 0
-
-    ranked = sorted(candidates, key=mean_support, reverse=True)
+    ranked = sorted(candidates, reverse=True, key=lambda candidate: sum(
+        map(support, candidate["findings"] or [])))
     return {c["cause"]: len(ranked) - i for i, c in enumerate(ranked)}
 
 
