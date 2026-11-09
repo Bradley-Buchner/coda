@@ -118,7 +118,9 @@ async def test_candidates_share_one_finding_check():
         findings = {"who.va:sepsis": [("who.va.q:fever", "A+")],
                     "who.va:lri": [("who.va.q:cough", "A"),
                                    ("who.va.q:fever", "A-"),
-                                   ("who.va.q:W610310-o", "A+")]}
+                                   ("who.va.q:W610310-o", "A+"),
+                                   ("who.va.q:days-a", "I"),
+                                   ("who.va.q:days-b", "I")]}
 
     call = FakeCall([{"findings": [{"number": 2, "status": "yes",
                                     "quote": "Fever"}]}])
@@ -126,6 +128,7 @@ async def test_candidates_share_one_finding_check():
                                        ["A41.9", "J18.9"])
     assert len(call.calls) == 1
     assert "W610310" not in call.calls[0]["user_prompt"]
+    assert "days-" not in call.calls[0]["user_prompt"]
     assert [(f["finding"], f["grade"], f["status"]) for f in sepsis] == \
         [("fever", "A+", "yes")]
     assert [(f["finding"], f["grade"], f["status"]) for f in lri] == \

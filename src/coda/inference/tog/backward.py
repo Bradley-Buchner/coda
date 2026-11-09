@@ -9,6 +9,7 @@ structured LLM call and raises LLMCallFailed if it fails.
 
 import logging
 import re
+from collections import defaultdict
 from pathlib import Path
 
 from coda.inference.champs_prompted.base_agent import LLMCallFailed
@@ -132,15 +133,30 @@ async def walk_back(graph: KGView, call, case_input, cause, code):
     return triples
 
 
+def contradictory(graph: KGView, who_va):
+    """Return a WHO VA cause's grade I questions that share an answer family,
+    such as three diarrhoea durations, since they can't all always be true.
+    """
+    families = defaultdict(list)
+    for question, grade in graph.strong_findings(who_va):
+        if grade == "I":
+            families[question.rsplit("-", 1)[0]].append(question)
+    return {q for questions in families.values() if len(questions) > 1
+            for q in questions}
+
+
 def typical_findings(graph: KGView, code):
     """Return {question: (grade, WHO VA cause)} for a code's strong ProbBase
     findings. A finding shared by several WHO VA causes of the code keeps its
     best grade.
     """
+    skipped = {who_va: contradictory(graph, who_va)
+               for who_va in graph.who_va_causes(code)}
     links = sorted(((q, g, who_va) for who_va in graph.who_va_causes(code)
                     for q, g in graph.strong_findings(who_va)
                     if not q.startswith(AGE_QUESTION_PREFIX)
-                    and q != PREGNANCY_QUESTION),
+                    and q != PREGNANCY_QUESTION
+                    and q not in skipped[who_va]),
                    key=lambda link: GRADES.index(link[1]), reverse=True)
     return {q: (g, who_va) for q, g, who_va in links}
 
