@@ -1,7 +1,7 @@
 """Prompted ICD-10 agent that re-ranks its causes with backward Think-on-Graph
 (ToG) walks.
 
-The current prototype reads the KG from the exported TSV files and makes up to 14
+The current prototype reads the KG from the exported TSV files and makes up to 12
 LLM calls per inference.
 """
 
@@ -109,9 +109,9 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
     """Prompted ICD-10 agent re-ranking its causes with KG evidence.
 
     For each cause of the first opinion, a backward walk collects KG facts
-    from its ICD-10 code and its typical findings (in the form of ProbBase
-    items) are checked against the case; a final call ranks the causes with
-    that evidence. The result adds a kg_evidence entry, and keeps the first
+    from its ICD-10 code; one call then checks all the causes' typical findings
+    (in the form of ProbBase items) against the case, and a final call ranks
+    the causes with that evidence. The result adds a kg_evidence entry, and keeps the first
     opinion if the ranking fails. The calls of the last inference are kept
     in self.trace.
     """
@@ -161,9 +161,11 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
                 "same_as": self.graph.same_as(code),
                 "triples": await walk_back(self.graph, call, case_input,
                                            name, code),
-                "findings": await check_findings(self.graph, call,
-                                                 case_input, name, code),
             })
+        checked = await check_findings(self.graph, call, case_input,
+                                       [c["code"] for c in candidates])
+        for candidate, findings in zip(candidates, checked):
+            candidate["findings"] = findings
         if not candidates:
             return {**first_opinion,
                     "kg_evidence": {"candidates": [], "cited": []}}

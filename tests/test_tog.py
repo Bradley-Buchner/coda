@@ -5,7 +5,9 @@ from coda.inference.tog import ToGBackwardIcd10Agent
 from coda.inference.tog.backward import (
     MAX_HOPS,
     check_findings,
+    checked_status,
     format_evidence,
+    normalized,
     walk_back,
 )
 
@@ -95,18 +97,45 @@ async def test_walk_stops_after_max_hops_and_skips_bad_numbers():
 
 @pytest.mark.asyncio
 async def test_finding_check_maps_statuses_and_skips_age_brackets():
-    call = FakeCall([{"findings": [{"number": 2, "status": "yes"}]}])
-    findings = await check_findings(FakeGraph(), call, "Fever.", "Sepsis",
-                                    "A41.9")
+    call = FakeCall([{"findings": [
+        {"number": 1, "status": "no", "quote": "no cough"},
+        {"number": 2, "status": "yes", "quote": " FEVER. "}]}])
+    [findings] = await check_findings(FakeGraph(), call, "Fever.", ["A41.9"])
     assert [(f["finding"], f["status"]) for f in findings] == \
         [("cough", "not_mentioned"), ("fever", "yes")]
     assert "W610022" not in call.calls[0]["user_prompt"]
+    case_text = normalized("Fever, and vomited twice. Then she died.")
+    assert checked_status({"status": "yes", "quote": "she vomited twice ... "
+                           "she died"}, case_text) == "yes"
+    assert checked_status({"status": "no", "quote": "she vomited ... no rash"},
+                          case_text) == "not_mentioned"
+
+
+@pytest.mark.asyncio
+async def test_candidates_share_one_finding_check():
+    class TwoCauses(FakeGraph):
+        who_va = {"A41.9": ["who.va:sepsis"], "J18.9": ["who.va:lri"]}
+        findings = {"who.va:sepsis": [("who.va.q:fever", "A+")],
+                    "who.va:lri": [("who.va.q:cough", "A"),
+                                   ("who.va.q:fever", "A-"),
+                                   ("who.va.q:W610310-o", "A+")]}
+
+    call = FakeCall([{"findings": [{"number": 2, "status": "yes",
+                                    "quote": "Fever"}]}])
+    sepsis, lri = await check_findings(TwoCauses(), call, "Fever.",
+                                       ["A41.9", "J18.9"])
+    assert len(call.calls) == 1
+    assert "W610310" not in call.calls[0]["user_prompt"]
+    assert [(f["finding"], f["grade"], f["status"]) for f in sepsis] == \
+        [("fever", "A+", "yes")]
+    assert [(f["finding"], f["grade"], f["status"]) for f in lri] == \
+        [("cough", "A", "not_mentioned"), ("fever", "A-", "yes")]
 
 
 @pytest.mark.asyncio
 async def test_failed_finding_check_is_not_evidence():
     call = FakeCall([None])
-    findings = await check_findings(FakeGraph(), call, "", "Sepsis", "A41.9")
+    [findings] = await check_findings(FakeGraph(), call, "", ["A41.9"])
     assert findings is None
     text = format_evidence({"cause": "Sepsis", "code": "A41.9",
                             "score": 0.5, "same_as": "", "triples": [],
@@ -139,8 +168,8 @@ class FakeLLMClient:
         self.responses = {
             "champs_cod_classification": [FIRST_OPINION],
             "walk_step": [{"chosen": [], "reason": ""}] * 2,
-            "finding_check": [{"findings": [{"number": 2,
-                                             "status": "yes"}]}],
+            "finding_check": [{"findings": [{"number": 2, "status": "yes",
+                                             "quote": "Fever"}]}],
             "final_ranking": [final_ranking],
         }
         self.calls = []
@@ -171,7 +200,7 @@ async def test_ranks_candidates_with_kg_evidence():
     assert [c["cause"] for c in evidence["candidates"]] == \
         ["Sepsis", "Lower respiratory infections"]
     assert [t["step"] for t in agent.trace] == [
-        "first_opinion", "walk_step", "finding_check", "walk_step",
+        "first_opinion", "walk_step", "walk_step", "finding_check",
         "final_ranking"]
     assert "[yes] fever (grade A+ for sepsis on answer yes)" in \
         client.calls[-1]["user_prompt"]

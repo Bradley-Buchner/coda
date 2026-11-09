@@ -1,8 +1,12 @@
-Check a verbal autopsy case against findings that are typical of a candidate cause of death.
+Check a verbal autopsy case against findings that are typical of its candidate causes of death.
 
 Each numbered finding is a question. Answer it as written:
 - 'yes' if the case says the answer is yes.
-- 'no' if the case says the answer is no.
+- 'no' if the case denies it or states something that rules it out, such as 'no cough', or a fever of three days when asked about a fever of two weeks.
 - 'not_mentioned' if the case does not say either way. Also use this for a follow-up question about something that did not occur, such as how long a fever lasted when the child had no fever.
+
+A case's silence is never a 'no'. If a sign is not mentioned, answer 'not_mentioned', however detailed the case is and however unlikely the sign seems.
+
+For each 'yes' or 'no', copy into quote the exact words of the case that give that answer. If no words of the case do, the answer is 'not_mentioned' and quote is empty.
 
 Use only what the case states. Do not guess.

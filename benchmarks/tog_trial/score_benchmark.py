@@ -195,11 +195,18 @@ def evidence_measures(full):
     """Return how the full arm's evidence was found, used and cited."""
     answers, kept_facts = Counter(), []
     fact_relations, directions = Counter(), Counter()
-    made, kept, flags, rule_changed_top = 0, 0, 0, 0
+    made, kept, flags, rule_changed_top, unquoted = 0, 0, 0, 0, 0
     separating, findings_cited, unique_facts, facts_cited = 0, 0, 0, 0
     for saved in full.values():
         evidence = saved["result"]["kg_evidence"]
         candidates = evidence["candidates"]
+        check = next((e for e in saved["trace"]
+                      if e["step"] == "finding_check"), None)
+        if check:
+            unquoted += sum(item["status"] != "not_mentioned"
+                            for item in check["response"]["findings"]) - len(
+                {f["finding"] for c in candidates for f in c["findings"] or []
+                 if f["status"] != "not_mentioned"})
         final = next(e for e in saved["trace"]
                      if e["step"] == "final_ranking")["response"]
         asked = max(final["top_causes"], key=lambda c: c["probability"])
@@ -230,6 +237,7 @@ def evidence_measures(full):
         "mean_facts_kept_per_candidate": statistics.mean(kept_facts)
         if kept_facts else 0,
         "answers": dict(answers),
+        "answers_rejected_for_their_quote": unquoted,
         "citations_made": made,
         "citations_kept": kept,
         "cited_facts": dict(fact_relations),

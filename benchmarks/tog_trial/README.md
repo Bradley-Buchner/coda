@@ -7,8 +7,8 @@ each labelled with a CHAMPS cause. For each case, the prompted ICD-10 agent
 proposes up to three CHAMPS causes, an LLM walks the KG from each cause's ICD-10 
 code and checks the cause's typical ProbBase findings, and a final call ranks the 
 causes with that evidence. With 3 candidate causes, at most 3 hops per walk and 
-one finding check per candidate, plus the first opinion and the final ranking, 
-this comes to at most 14 LLM calls per case (1 + 3 × (3 + 1) + 1).
+one finding check per case, plus the first opinion and the final ranking, 
+this comes to at most 12 LLM calls per case (1 + 3 × 3 + 1 + 1).
 
 The ToG agent's first opinion is the prompted agent's answer, so a closing
 table lists both top causes against the label from the same run. Seven
@@ -47,7 +47,7 @@ python benchmarks/tog_trial/run_benchmark.py --sets original,sparse
 python benchmarks/tog_trial/make_review_packet.py
 ```
 
-The pilot makes about 140 LLM calls and the rest about 2,600. Rerunning skips
+The pilot makes about 120 LLM calls and the rest about 2,200. Rerunning skips
 saved results and retries failed ones. Results go to `results/benchmark/`, and a
 run with other code or another model needs a new `--out`.
 

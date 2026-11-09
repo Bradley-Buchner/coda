@@ -8,6 +8,7 @@ structured LLM call and raises LLMCallFailed if it fails.
 """
 
 import logging
+import re
 from pathlib import Path
 
 from coda.inference.champs_prompted.base_agent import LLMCallFailed
@@ -20,6 +21,7 @@ MAX_HOPS = 3
 MAX_CHOICES = 3  # Facts the LLM may pick per hop
 MAX_SHOWN = 30  # Facts shown per node, relation and direction at each hop
 AGE_QUESTION_PREFIX = "who.va.q:W610022-"  # ProbBase age-bracket questions to skip
+PREGNANCY_QUESTION = "who.va.q:W610310-o"  # "NEITHER pregnant...", to skip for children
 
 
 def read_prompt(filename):
@@ -56,8 +58,9 @@ FINDING_CHECK_SCHEMA = {
                     "number": {"type": "integer"},
                     "status": {"type": "string", "enum": [
                         "yes", "no", "not_mentioned"]},
+                    "quote": {"type": "string"},
                 },
-                "required": ["number", "status"],
+                "required": ["number", "status", "quote"],
                 "additionalProperties": False,
             },
         },
@@ -129,38 +132,72 @@ async def walk_back(graph: KGView, call, case_input, cause, code):
     return triples
 
 
-async def check_findings(graph: KGView, call, case_input, cause, code):
-    """Check a candidate's typical ProbBase findings against the case.
-
-    Return dicts with each finding, its grade, the answer the grade is for, its
-    WHO VA cause and the case's answer as status, or None if the call failed. A finding shared by several WHO VA causes of
-    the code is listed once, with its best grade.
+def typical_findings(graph: KGView, code):
+    """Return {question: (grade, WHO VA cause)} for a code's strong ProbBase
+    findings. A finding shared by several WHO VA causes of the code keeps its
+    best grade.
     """
     links = sorted(((q, g, who_va) for who_va in graph.who_va_causes(code)
                     for q, g in graph.strong_findings(who_va)
-                    if not q.startswith(AGE_QUESTION_PREFIX)),
+                    if not q.startswith(AGE_QUESTION_PREFIX)
+                    and q != PREGNANCY_QUESTION),
                    key=lambda link: GRADES.index(link[1]), reverse=True)
-    findings = sorted({q: (g, who_va) for q, g, who_va in links}.items())
-    if not findings:
-        return []
+    return {q: (g, who_va) for q, g, who_va in links}
+
+
+def normalized(text):
+    return " ".join(text.lower().split())
+
+
+def checked_status(item, case_text):
+    """Return a finding's answer, or not_mentioned unless every part of its
+    quote, split at an ellipsis, is from the case. A part may start with one
+    added word, such as "she" in "she vomited" for "...and vomited".
+    """
+    def found(part):
+        rest = part.partition(" ")[2]
+        return part in case_text or (rest and rest in case_text)
+
+    parts = [normalized(part).strip(" \"'.,")
+             for part in re.split(r"\.\.\.|…", item.get("quote", ""))]
+    parts = [part for part in parts if part]
+    return item["status"] if parts and all(map(found, parts)) \
+        else "not_mentioned"
+
+
+async def check_findings(graph: KGView, call, case_input, codes):
+    """Check the candidates' typical ProbBase findings against the case in one
+    call, so that each question gets one answer. An answer counts only if it
+    quotes the case.
+
+    Return a list per code of dicts with each finding, its grade, the answer the
+    grade is for, its WHO VA cause and the case's answer as status, or None for
+    every code if the call failed.
+    """
+    findings = [typical_findings(graph, code) for code in codes]
+    questions = sorted({q for typical in findings for q in typical})
+    if not questions:
+        return [[] for _ in codes]
     user_prompt = (
-        f"{case_input}\n\n## CANDIDATE CAUSE\n{cause}\n\n## FINDINGS\n"
+        f"{case_input}\n\n## FINDINGS\n"
         + "\n".join(f"{i}. {graph.name(question)}"
-                    for i, (question, _) in enumerate(findings, 1)))
+                    for i, question in enumerate(questions, 1)))
     try:
         response = await call("finding_check", FINDING_CHECK_PROMPT,
-                              user_prompt, FINDING_CHECK_SCHEMA,
-                              candidate=cause)
+                              user_prompt, FINDING_CHECK_SCHEMA)
     except LLMCallFailed:
-        logger.warning("Finding check for %s failed", code)
-        return None
-    statuses = {item["number"]: item["status"]
+        logger.warning("Finding check for %s failed", codes)
+        return [None for _ in codes]
+    case_text = normalized(case_input)
+    statuses = {item["number"]: checked_status(item, case_text)
                 for item in response.get("findings", [])}
-    return [{"finding": graph.name(question), "grade": grade,
-             "graded_answer": graph.graded_answer(question),
-             "who_va_cause": graph.name(who_va),
-             "status": statuses.get(i, "not_mentioned")}
-            for i, (question, (grade, who_va)) in enumerate(findings, 1)]
+    numbers = {question: i for i, question in enumerate(questions, 1)}
+    return [[{"finding": graph.name(question), "grade": grade,
+              "graded_answer": graph.graded_answer(question),
+              "who_va_cause": graph.name(who_va),
+              "status": statuses.get(numbers[question], "not_mentioned")}
+             for question, (grade, who_va) in sorted(typical.items())]
+            for typical in findings]
 
 
 def format_evidence(candidate):
