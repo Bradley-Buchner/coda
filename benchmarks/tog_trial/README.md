@@ -58,8 +58,10 @@ their original cause, and the second look's prompt reads as though the KG had
 nothing to offer.
 
 Fill in the CSV files in `results/benchmark/review/`, then run
-`make_review_packet.py --score`. Do the blinded comparison first. It is only
-partly blind, since ToG's reasoning often mentions the knowledge graph.
+`make_review_packet.py --score`, or rate them in the terminal with
+`rate_packet.py compare`, `evidence` and `findings`. The comparison isn't blind:
+each output is labeled, and ToG's reasoning leaves out the sentences code adds
+about probability changes.
 
 | Sheet | Column | Values |
 |---|---|---|

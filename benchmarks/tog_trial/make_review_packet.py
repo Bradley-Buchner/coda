@@ -2,16 +2,17 @@
 
 Writes these files to <out>/review, without any LLM calls:
 
-    1_blinded_comparison.md and 1_ratings.csv
+    1_comparison.md and 1_ratings.csv
         30 cases, plus 5 hidden repeats, with the prompted agent and ToG shown
-        as A and B in random order. Do this part first.
+        as A and B in random order, each labeled. ToG's reasoning leaves out
+        the sentences code adds about probability changes.
     2_evidence_check.csv
-        The same 30 cases, unblinded: rate each cited item and each reasoning.
+        The same 30 cases: rate each of ToG's cited items and its reasoning.
     3_finding_checks.csv
         60 sampled findings, to answer from the narrative alone.
     key.json
-        Which output is which, and the LLM's answers. Don't open it before
-        rating.
+        Which output is which, and the LLM's answers to the finding checks.
+        Don't open it before rating.
 
 --score reads the filled CSV files and prints the results. Blank cells count as
 unrated, and any value outside those listed in the README stops the scoring.
@@ -26,7 +27,6 @@ import csv
 import io
 import json
 import random
-import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -45,14 +45,7 @@ YES_NO = {"yes": "yes", "y": "yes", "no": "no", "n": "no"}
 EVIDENCE = {"useful": "useful", "filler": "filler", "misleading": "misleading"}
 CORRECT_ANSWER = {**YES_NO, "not_mentioned": "not_mentioned",
                   "unclear": "unclear"}
-KG = (r"knowledge[- ]graph|\bKG\b|\bwalk (?:facts|evidence)|\bfacts?\b|"
-      r"\bfindings?\b|\blinks?\b|\blisted\b|ProbBase|InterVA|\bgrade [A-EIN]")
-KG_WORDS = re.compile(KG, re.I)
-# The clause after the last conjunction before a KG word, to the sentence end,
-# with a short clause it splits, as in ", but the overall pattern and the KG..."
-CONJ = r"\b(?:and|but|while|so|with|which|because)\b"
-KG_CLAUSE = re.compile(rf"(?:, (?:and|but|while|so)(?: [\w/-]+){{1,3}} |,? )"
-                       rf"{CONJ}(?:(?!{CONJ})[^.;,])*?(?:{KG})[^.;]*", re.I)
+AGENT_NAMES = {"baseline": "Prompted agent", "tog": "ToG"}
 
 
 def top(causes):
@@ -98,19 +91,9 @@ def tog_reasoning(saved):
         saved["result"]["reasoning"]
 
 
-def blinded(reasoning):
-    """Remove the clauses and sentences that name ToG's evidence, which the
-    prompted agent never mentions, so that A and B can't be told apart by it.
-    """
-    parts = re.split(r"(?<=[.;])\s+", KG_CLAUSE.sub("", reasoning))
-    kept = " ".join(p for p in parts if p and not KG_WORDS.search(p))
-    kept = re.sub(r"(^|\. )([a-z])", lambda m: m[1] + m[2].upper(), kept)
-    return re.sub(r";$", ".", kept)
-
-
-def show_output(name, causes, reasoning):
+def show_output(name, agent, causes, reasoning):
     ranked = sorted(causes.values(), key=lambda c: c["score"], reverse=True)
-    lines = [f"**Output {name}**", ""]
+    lines = [f"**Output {name}: {AGENT_NAMES[agent]}**", ""]
     lines += [f"- {c['name']}: {c['score']:.2f}" for c in ranked]
     return lines + ["", reasoning, ""]
 
@@ -152,7 +135,7 @@ def write_packet(results, review):
     items = chosen + repeats
     rng.shuffle(items)
 
-    lines = ["# Blinded comparison", "",
+    lines = ["# Comparison", "",
              "For each item, read the narrative and both outputs. Then fill in "
              "`1_ratings.csv`: `more_useful` is A, B or same; the next two "
              "columns are yes or no. Rate each item on its own.", ""]
@@ -162,18 +145,17 @@ def write_packet(results, review):
         saved = results[set_name][case]
         baseline = saved["trace"][0]["response"]
         outputs = [("baseline", baseline["causes"], baseline["reasoning"]),
-                   ("tog", saved["result"]["causes"],
-                    blinded(tog_reasoning(saved)))]
+                   ("tog", saved["result"]["causes"], tog_reasoning(saved))]
         rng.shuffle(outputs)
         lines += [f"## Item {number}", "", saved["narrative"], ""]
-        for name, (_, causes, reasoning) in zip("AB", outputs):
-            lines += show_output(name, causes, reasoning)
+        for name, output in zip("AB", outputs):
+            lines += show_output(name, *output)
         key["items"][str(number)] = {
             "set": set_name, "case": case, "A": outputs[0][0],
             "B": outputs[1][0],
             "flip": top(baseline["causes"]) != top(saved["result"]["causes"])}
         ratings.append({"item": number})
-    (review / "1_blinded_comparison.md").write_text("\n".join(lines))
+    (review / "1_comparison.md").write_text("\n".join(lines))
     write_csv(review / "1_ratings.csv", RATING_COLUMNS, ratings)
 
     rows = []
