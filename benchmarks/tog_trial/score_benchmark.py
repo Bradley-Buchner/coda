@@ -3,7 +3,8 @@
 Prints the tables and writes them to <out>/summary.json. In the comparisons, a
 negative log-loss difference means the first arm is better. The calculator arm
 ranks the candidates by the ProbBase grades and the saved answers alone, so it
-has no probabilities to score. Pilot results are for debugging only.
+has no probabilities to score. The findings_look arm, the findings-only agent, is
+scored when its results exist. Pilot results are for debugging only.
 
 Cases in chain_cases.json's label_to_check are left out unless
 --include-label-check is given.
@@ -25,11 +26,14 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 SETS = ("pilot", "original", "sparse")
-ARMS = ("baseline", "second_look", "findings_only", "facts_only", "full",
-        "placebo", "calculator")
+ARMS = ("baseline", "second_look", "findings_only", "findings_look",
+        "facts_only", "full", "placebo", "calculator")
 COMPARISONS = (("full", "baseline"), ("full", "second_look"),
                ("full", "placebo"), ("findings_only", "full"),
-               ("facts_only", "full"), ("second_look", "baseline"))
+               ("facts_only", "full"), ("second_look", "baseline"),
+               ("findings_look", "baseline"), ("findings_look", "second_look"),
+               ("findings_look", "findings_only"), ("findings_look", "placebo"),
+               ("findings_look", "full"))
 FLOOR = 0.01  # Probability given to a true cause an arm left out, for log loss
 BOOTSTRAPS = 10000
 SEED = 0
@@ -209,7 +213,7 @@ def evidence_measures(full):
         asked = max(final["top_causes"], key=lambda c: c["probability"])
         rule_changed_top += asked["cause_name"] \
             != top(scores(saved["result"]["causes"]))
-        made += len(final["cited_facts"]) + len(final["cited_findings"])
+        made += len(final.get("cited_facts", [])) + len(final["cited_findings"])
         kept += len(evidence["cited"])
         flags += saved["result"]["reasoning"].count("(Stated direction:")
         directions.update(u["direction"] for u in final["candidate_updates"])
@@ -267,10 +271,11 @@ def coverage_by_cause(full):
     return dict(sorted(rows.items()))
 
 
-def cost_measures(full):
-    """Return the full arm's mean cost per case: the calls, characters and tokens
-    it adds to the first opinion's one call, and the seconds of the whole run.
-    Tokens are estimated at four characters each.
+def cost_measures(full, seconds_key="total_seconds"):
+    """Return an arm's mean cost per case: the calls, characters and tokens it
+    adds to the first opinion's one call, and its timed seconds: the whole run
+    for the full arm, only the added calls for findings_look. Tokens are
+    estimated at four characters each.
     """
     if not full:
         return None
@@ -284,7 +289,7 @@ def cost_measures(full):
     return {"added_calls": statistics.mean(calls),
             "added_characters": statistics.mean(characters),
             "added_estimated_tokens": statistics.mean(characters) / 4,
-            "total_seconds": statistics.mean(seconds)}
+            seconds_key: statistics.mean(seconds)}
 
 
 def show_table(rows):
@@ -321,8 +326,8 @@ def score_set(out, set_name, labels, groups, lenient):
     predictions = {"baseline": baseline, "calculator": {
         c: calculator(s["result"]["kg_evidence"]["candidates"])
         for c, s in full.items()}}
-    for arm in ("second_look", "findings_only", "facts_only", "full",
-                "placebo"):
+    for arm in ("second_look", "findings_only", "findings_look", "facts_only",
+                "full", "placebo"):
         predictions[arm] = {
             c: scores(s["result"]["causes"])
             for c, s in load_arm(folder / arm).items() if c in labels}
@@ -332,6 +337,11 @@ def score_set(out, set_name, labels, groups, lenient):
     final_runs = [{c: scores(s["result"]["causes"])
                    for c, s in load_arm(folder / f"full_rep{i}").items()}
                   for i in (1, 2)]
+    findings_runs = [{c: scores(s["result"]["causes"]) for c, s in
+                      load_arm(folder / f"findings_look_rep{i}").items()}
+                     for i in (1, 2)]
+    findings_look = {c: s for c, s in load_arm(folder / "findings_look").items()
+                     if c in labels}
 
     def table(subset):
         chosen = {c: labels[c] for c in subset}
@@ -357,6 +367,12 @@ def score_set(out, set_name, labels, groups, lenient):
         "evidence": evidence_measures(full),
         "coverage": coverage_by_cause(full),
         "cost": cost_measures(full),
+        "findings_look": {
+            "noise": noise_measures(first_runs, findings_runs, baseline,
+                                    predictions["findings_look"]),
+            "evidence": evidence_measures(findings_look),
+            "cost": cost_measures(findings_look, "added_seconds"),
+        } if findings_look else None,
     }
 
 
@@ -374,7 +390,7 @@ def show_set(set_name, results):
           + f"\n{'=' * 60}")
     print("\nArms")
     show_arms(results["all"], main_columns)
-    counts = {arm: m["n"] if m else 0 for arm, m in results["all"].items()}
+    counts = {arm: m["n"] for arm, m in results["all"].items() if m}
     if len(set(counts.values())) > 1:
         print(f"  WARNING: arms cover different cases, so compare them only in "
               f"the differences below: {counts}")
@@ -383,11 +399,11 @@ def show_set(set_name, results):
                 for name, values in results["comparisons"].items() if values])
     print("\nTop-cause flips, Full ToG vs baseline")
     show_table(results["flips"])
-    print("\nBy group, baseline and Full ToG")
+    print("\nBy group, baseline, Full ToG and findings_look")
     show_table([{"group": name, "arm": arm, **{k: arms[arm].get(k) for k in
                                                ("n", "top1", "log_loss")}}
                 for name, arms in results["groups"].items()
-                for arm in ("baseline", "full") if arms[arm]])
+                for arm in ("baseline", "full", "findings_look") if arms[arm]])
     print("\nRun-to-run noise")
     show_table([results["noise"]] if results["noise"] else [])
     print("\nEvidence")
@@ -397,6 +413,15 @@ def show_set(set_name, results):
                 for cause, row in results["coverage"].items()])
     print("\nFull ToG cost per case")
     show_table([results["cost"]] if results["cost"] else [])
+    look = results["findings_look"]
+    if look:
+        print("\nfindings_look: run-to-run noise (its repeats rerun the finding "
+              "check too, while Full ToG's rerun only the final call)")
+        show_table([look["noise"]] if look["noise"] else [])
+        print("\nfindings_look: evidence")
+        print(json.dumps(look["evidence"], indent=2))
+        print("\nfindings_look: cost per case")
+        show_table([look["cost"]] if look["cost"] else [])
 
 
 def main():
@@ -420,11 +445,15 @@ def main():
     info_path = out / "run_info.json"
     info = json.loads(info_path.read_text()) if info_path.exists() else {}
     print(f"Run: {info}")
-    if info.get("dirty"):
+    runs_path = out / "arm_runs.json"
+    arm_runs = json.loads(runs_path.read_text()) if runs_path.exists() else {}
+    for arm, arm_info in arm_runs.items():
+        print(f"Arm {arm}: {arm_info}")
+    if info.get("dirty") or any(i["dirty"] for i in arm_runs.values()):
         print("WARNING: these results came from uncommitted code.")
     print(f"Left out, awaiting a label check: {excluded or 'none'}")
 
-    summary = {"run": info, "excluded": excluded}
+    summary = {"run": info, "arm_runs": arm_runs, "excluded": excluded}
     for set_name in SETS:
         labels = {c["case_id"]: c["cause_name"] for c in sets[set_name]}
         groups = {"chain": [c for c in plan["chain"] if c in labels]}

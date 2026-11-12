@@ -200,18 +200,20 @@ async def check_findings(graph: KGView, call, case_input, codes):
             for typical in findings]
 
 
-def format_evidence(candidate):
-    """Render a candidate's walk facts and the typical findings the case shows,
-    which are those answered the way their grade describes. As in InterVA, the
-    other answers are not evidence, so they are only counted.
+def format_evidence(candidate, facts=True):
+    """Render a candidate's walk facts, unless facts is False, and the typical
+    findings the case shows, which are those answered the way their grade
+    describes. As in InterVA, the other answers are not evidence, so they are
+    only counted.
     """
     lines = [f"### {candidate['cause']} (ICD-10 {candidate['code']}, "
              f"first-opinion probability {candidate['score']:.2f})"]
-    if candidate["same_as"]:
-        lines.append(f"Same as: {candidate['same_as']}")
-    lines.append("Walk facts:")
-    lines += [f"- {triple}" for triple in candidate["triples"]] \
-        or ["- (none)"]
+    if facts:
+        if candidate["same_as"]:
+            lines.append(f"Same as: {candidate['same_as']}")
+        lines.append("Walk facts:")
+        lines += [f"- {triple}" for triple in candidate["triples"]] \
+            or ["- (none)"]
     lines.append("Typical findings the case shows:")
     findings = candidate["findings"]
     if findings is None:

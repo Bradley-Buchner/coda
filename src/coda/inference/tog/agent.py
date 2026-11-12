@@ -1,8 +1,8 @@
-"""Prompted ICD-10 agent that re-ranks its causes with backward Think-on-Graph
-(ToG) walks.
+"""Prompted ICD-10 agents that re-rank their causes with KG evidence: backward
+Think-on-Graph (ToG) walks and typical findings, or the findings alone.
 
-The current prototype reads the KG from the exported TSV files and makes up to 12
-LLM calls per inference.
+The current prototype reads the KG from the exported TSV files. The full agent
+makes up to 12 LLM calls per inference, the findings-only agent 3.
 """
 
 import logging
@@ -32,8 +32,10 @@ logger = logging.getLogger(__name__)
 
 MAX_CITED = 5  # Facts, and separately findings, the final ranking may cite
 MAX_CAUSES = 3  # Causes in a ranking, as in the first opinion's schema
-RANKING_PROMPT = read_prompt("final_ranking.txt").format(
-    allowed_causes=", ".join(CHAMPS_GROUP_CAUSES), max_cited=MAX_CITED)
+RANKING_PROMPT, FINDINGS_RANKING_PROMPT = (
+    read_prompt(name).format(allowed_causes=", ".join(CHAMPS_GROUP_CAUSES),
+                             max_cited=MAX_CITED)
+    for name in ("final_ranking.txt", "findings_ranking.txt"))
 COD_PROPERTIES = build_cod_output_schema()["properties"]
 CITED_SCHEMA = {"type": "array", "items": {"type": "string"},
                 "maxItems": MAX_CITED}
@@ -63,6 +65,13 @@ RANKING_SCHEMA = {
     "required": ["candidate_updates", "reasoning", "top_causes", "cited_facts",
                  "cited_findings"],
     "additionalProperties": False,
+}
+FINDINGS_RANKING_SCHEMA = {
+    **RANKING_SCHEMA,
+    "properties": {key: value for key, value in RANKING_SCHEMA["properties"]
+                   .items() if key != "cited_facts"},
+    "required": [key for key in RANKING_SCHEMA["required"]
+                 if key != "cited_facts"],
 }
 
 
@@ -116,6 +125,10 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
     in self.trace.
     """
 
+    walks = True
+    ranking_prompt = RANKING_PROMPT
+    ranking_schema = RANKING_SCHEMA
+
     def __init__(self, llm_client, graph: KGView, **kwargs):
         super().__init__(llm_client, **kwargs)
         self.graph = graph
@@ -149,8 +162,11 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
         first_opinion = await super().infer(chunk_id, text, annotations)
         self.trace.append({"step": "first_opinion",
                            "response": first_opinion})
+        return await self.rerank(chunk_id, first_opinion,
+                                 self.build_user_prompt())
 
-        case_input = self.build_user_prompt()
+    async def rerank(self, chunk_id, first_opinion, case_input):
+        """Collect the first opinion's evidence and rank its causes with it."""
         call = partial(self.call_step, chunk_id)
         candidates = []
         for cause in first_opinion["causes"].values():
@@ -158,9 +174,9 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
             code = cause["identifiers"][self.coding_system]
             candidates.append({
                 "cause": name, "code": code, "score": cause["score"],
-                "same_as": self.graph.same_as(code),
+                "same_as": self.graph.same_as(code) if self.walks else "",
                 "triples": await walk_back(self.graph, call, case_input,
-                                           name, code),
+                                           name, code) if self.walks else [],
             })
         checked = await check_findings(self.graph, call, case_input,
                                        [c["code"] for c in candidates])
@@ -177,11 +193,12 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
         """
         evidence = {"candidates": candidates, "cited": []}
         user_prompt = (f"{case_input}\n\n## CANDIDATES\n"
-                       + "\n\n".join(format_evidence(c) for c in candidates))
+                       + "\n\n".join(format_evidence(c, self.walks)
+                                     for c in candidates))
         try:
             response = await self.call_step(chunk_id, "final_ranking",
-                                            RANKING_PROMPT, user_prompt,
-                                            RANKING_SCHEMA)
+                                            self.ranking_prompt, user_prompt,
+                                            self.ranking_schema)
         except LLMCallFailed:
             return {**first_opinion, "kg_evidence": evidence}
         ranked = self._parse_response(response)
@@ -208,3 +225,13 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
             first_opinion["causes"], causes, updates)])
         return {**first_opinion, "causes": causes, "reasoning": reasoning,
                 "kg_evidence": evidence}
+
+
+class ToGFindingsIcd10Agent(ToGBackwardIcd10Agent):
+    """ToGBackwardIcd10Agent without the walks: the final call ranks the causes
+    with their typical findings alone, after one call that checks them.
+    """
+
+    walks = False
+    ranking_prompt = FINDINGS_RANKING_PROMPT
+    ranking_schema = FINDINGS_RANKING_SCHEMA

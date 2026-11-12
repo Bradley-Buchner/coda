@@ -1,7 +1,7 @@
 import pytest
 
 from coda.inference.champs_prompted.base_agent import LLMCallFailed
-from coda.inference.tog import ToGBackwardIcd10Agent
+from coda.inference.tog import ToGBackwardIcd10Agent, ToGFindingsIcd10Agent
 from coda.inference.tog.backward import (
     MAX_HOPS,
     check_findings,
@@ -253,3 +253,17 @@ async def test_keeps_first_opinion_if_final_ranking_fails(final_ranking):
     assert result["causes"]["icd10:A41.9"]["score"] == pytest.approx(0.7)
     assert result["reasoning"] == "Fever."
     assert result["kg_evidence"]["cited"] == []
+
+
+@pytest.mark.asyncio
+async def test_findings_agent_ranks_with_findings_alone():
+    client = FakeLLMClient()
+    agent = ToGFindingsIcd10Agent(client, graph=FakeGraph())
+    result = await agent.process_chunk("c1", "Fever.", [])
+    assert [t["step"] for t in agent.trace] == [
+        "first_opinion", "finding_check", "final_ranking"]
+    final = client.calls[-1]
+    assert "Walk facts" not in final["user_prompt"]
+    assert "Same as" not in final["user_prompt"]
+    assert "cited_facts" not in final["schema"]["properties"]
+    assert result["kg_evidence"]["cited"] == ["fever"]

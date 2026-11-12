@@ -57,6 +57,19 @@ candidates' evidence is swapped. The placebo's facts and findings can still name
 their original cause, and the second look's prompt reads as though the KG had
 nothing to offer.
 
+The `findings_look` arm runs `ToGFindingsIcd10Agent`, which skips the walks: a
+new finding check and a final call with a findings-only prompt, 2 calls on top of
+the first opinion. To add it to a finished run, commit, then run:
+
+```bash
+python benchmarks/tog_trial/run_benchmark.py --sets pilot,original,sparse --arms findings_look
+```
+
+`--arms` runs only the arms named, with their repeats, on the saved full results,
+and records their code and model in `arm_runs.json`. The arm's repeats rerun its
+finding check as well as its final call, so its noise is not measured the same
+way as Full ToG's, and its timed seconds leave out the first opinion.
+
 Fill in the CSV files in `results/benchmark/review/`, then run
 `make_review_packet.py --score`, or rate them in the terminal with
 `rate_packet.py compare`, `evidence` and `findings`. The comparison isn't blind:
