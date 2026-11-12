@@ -26,6 +26,7 @@ import csv
 import io
 import json
 import random
+import re
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -44,6 +45,14 @@ YES_NO = {"yes": "yes", "y": "yes", "no": "no", "n": "no"}
 EVIDENCE = {"useful": "useful", "filler": "filler", "misleading": "misleading"}
 CORRECT_ANSWER = {**YES_NO, "not_mentioned": "not_mentioned",
                   "unclear": "unclear"}
+KG = (r"knowledge[- ]graph|\bKG\b|\bwalk (?:facts|evidence)|\bfacts?\b|"
+      r"\bfindings?\b|\blinks?\b|\blisted\b|ProbBase|InterVA|\bgrade [A-EIN]")
+KG_WORDS = re.compile(KG, re.I)
+# The clause after the last conjunction before a KG word, to the sentence end,
+# with a short clause it splits, as in ", but the overall pattern and the KG..."
+CONJ = r"\b(?:and|but|while|so|with|which|because)\b"
+KG_CLAUSE = re.compile(rf"(?:, (?:and|but|while|so)(?: [\w/-]+){{1,3}} |,? )"
+                       rf"{CONJ}(?:(?!{CONJ})[^.;,])*?(?:{KG})[^.;]*", re.I)
 
 
 def top(causes):
@@ -87,6 +96,16 @@ def tog_reasoning(saved):
                  None)
     return final["response"]["reasoning"] if final else \
         saved["result"]["reasoning"]
+
+
+def blinded(reasoning):
+    """Remove the clauses and sentences that name ToG's evidence, which the
+    prompted agent never mentions, so that A and B can't be told apart by it.
+    """
+    parts = re.split(r"(?<=[.;])\s+", KG_CLAUSE.sub("", reasoning))
+    kept = " ".join(p for p in parts if p and not KG_WORDS.search(p))
+    kept = re.sub(r"(^|\. )([a-z])", lambda m: m[1] + m[2].upper(), kept)
+    return re.sub(r";$", ".", kept)
 
 
 def show_output(name, causes, reasoning):
@@ -143,7 +162,8 @@ def write_packet(results, review):
         saved = results[set_name][case]
         baseline = saved["trace"][0]["response"]
         outputs = [("baseline", baseline["causes"], baseline["reasoning"]),
-                   ("tog", saved["result"]["causes"], tog_reasoning(saved))]
+                   ("tog", saved["result"]["causes"],
+                    blinded(tog_reasoning(saved)))]
         rng.shuffle(outputs)
         lines += [f"## Item {number}", "", saved["narrative"], ""]
         for name, (_, causes, reasoning) in zip("AB", outputs):
