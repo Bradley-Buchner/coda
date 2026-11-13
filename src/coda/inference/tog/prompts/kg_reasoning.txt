@@ -12,7 +12,7 @@ For each step:
 - claim: the step, in a sentence.
 - role: sequence (which condition led to which), coding_rule (an ACME rule on which cause is underlying or how a pair is coded), finding_fit (how findings fit a candidate), tells_apart (what separates candidates), not_applicable (why an item does not apply), or other.
 - favors and disfavors: the causes the step supports and argues against, from the allowed list.
-- underlying: the cause the step implies is underlying, or "" if it implies none.
+- underlying: the cause this step concludes is the underlying cause of this death, or "" if it concludes none. When a step states a rule, give what the rule means for this case, not what it gives in general.
 - basis: the ids of the items the step rests on, and "narrative" if it rests on the case. Cite only ids listed under KG EVIDENCE.
 - quote: if basis includes "narrative", the words of the case it rests on, copied exactly; else "".
 

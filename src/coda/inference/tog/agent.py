@@ -96,7 +96,9 @@ STEP_SCHEMA = {
         "role": {"type": "string", "enum": ROLES},
         "favors": NAMES_SCHEMA,
         "disfavors": NAMES_SCHEMA,
-        "underlying": {"type": "string"},
+        "underlying": {"type": "string", "description": (
+            "The cause this step concludes is the underlying cause of this "
+            "death, or empty.")},
         "basis": {"type": "array", "minItems": 1, "items": {
             "type": "string", "pattern": "^([RFW][0-9]+|narrative)$"}},
         "quote": {"type": "string"},

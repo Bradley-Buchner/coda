@@ -109,11 +109,9 @@ def item_verdict(item, step):
                 and names - {candidate} - disfavors)):
             return "inconsistent"
         return "consistent" if candidate in names else "unchecked"
-    # A one-way rule makes its cause the underlying cause when both are
-    # present, so a step stating the rule must not reverse it
+    # A one-way rule makes its cause the underlying cause when both are present
     if not item["both_ways"] and step["underlying"] == item["consequence"] \
-            and (step["role"] == "coding_rule" or (
-                item["cause"] in names and item["cause"] not in disfavors)):
+            and item["cause"] in names and item["cause"] not in disfavors:
         return "inconsistent"
     if {item["cause"], item["consequence"]} <= names and (
             item["both_ways"] or step["underlying"] in (item["cause"], "")):

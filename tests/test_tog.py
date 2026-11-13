@@ -370,8 +370,8 @@ def step(basis, favors=(), disfavors=(), underlying="", role="other",
     (step(["R1"], [LRI], [SEPSIS], LRI), "unchecked"),
     (step(["R1"], [SEPSIS]), "unchecked"),
     (step(["R1"], [LRI], [], LRI, role="not_applicable"), "rejected"),
-    # A coding rule stated backwards
-    (step(["R1"], [LRI], [SEPSIS], LRI, role="coding_rule"), "inconsistent"),
+    # A coding rule that doesn't apply because its cause is argued away
+    (step(["R1"], [LRI], [SEPSIS], LRI, role="coding_rule"), "unchecked"),
     (step(["R2"], [LRI], [SEPSIS], LRI), "consistent"),
     (step(["R3"], ["Injury"]), "inconsistent"),
     (step(["R3"], [SEPSIS], ["Injury"], SEPSIS), "consistent"),
