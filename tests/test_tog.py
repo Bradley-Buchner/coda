@@ -370,13 +370,16 @@ def step(basis, favors=(), disfavors=(), underlying="", role="other",
     (step(["R1"], [LRI], [SEPSIS], LRI), "unchecked"),
     (step(["R1"], [SEPSIS]), "unchecked"),
     (step(["R1"], [LRI], [], LRI, role="not_applicable"), "rejected"),
+    # A coding rule stated backwards
+    (step(["R1"], [LRI], [SEPSIS], LRI, role="coding_rule"), "inconsistent"),
     (step(["R2"], [LRI], [SEPSIS], LRI), "consistent"),
     (step(["R3"], ["Injury"]), "inconsistent"),
     (step(["R3"], [SEPSIS], ["Injury"], SEPSIS), "consistent"),
     (step(["F1"], [SEPSIS]), "consistent"),
     (step(["F1"], [LRI], [SEPSIS]), "inconsistent"),
-    # A finding typical of both doesn't tell them apart
-    (step(["F2"], [SEPSIS], [LRI]), "inconsistent"),
+    # A finding typical of both doesn't tell them apart, nor contradicts
+    (step(["F2"], [SEPSIS], [LRI]), "unchecked"),
+    (step(["F2", "F1"], [SEPSIS], [LRI]), "consistent"),
     (step(["F2"], [], [], role="tells_apart"), "unchecked"),
     (step(["F1"], [], [SEPSIS], role="not_applicable"), "rejected"),
     # A trivial condition is ruled out only by another condition in play

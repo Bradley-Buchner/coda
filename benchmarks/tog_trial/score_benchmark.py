@@ -30,6 +30,7 @@ HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE.parents[1] / "src"))
 
 from coda.inference.tog.reasoning import (
+    check_step,
     diff_steps,
     item_verdict,
     stable_changes,
@@ -308,7 +309,12 @@ def cost_measures(full, seconds_key="total_seconds"):
 
 
 def steps_of(saved):
-    return saved["result"]["kg_evidence"].get("steps", [])
+    """Return a result's reasoning steps, checked again against its items, so
+    that a change to the checks needs no new LLM calls.
+    """
+    evidence = saved["result"]["kg_evidence"]
+    return [{**step, "check": check_step(step, evidence["items"])}
+            for step in evidence.get("steps", [])]
 
 
 def items_of(saved):

@@ -92,9 +92,10 @@ def item_verdict(item, step):
         return "consistent" if item["candidate"] in names else "unchecked"
     if item["kind"] == "F":
         typical = set(item["typical"])
-        # A typical finding used against a cause it is typical of
+        # A typical finding used only against causes it is typical of; one
+        # also typical of a favored cause can't tell them apart
         if disfavors & typical:
-            return "inconsistent"
+            return "unchecked" if favors & typical else "inconsistent"
         if favors & typical or (step["role"] == "tells_apart"
                                 and len(names & typical) >= 2):
             return "consistent"
@@ -108,9 +109,11 @@ def item_verdict(item, step):
                 and names - {candidate} - disfavors)):
             return "inconsistent"
         return "consistent" if candidate in names else "unchecked"
-    # A one-way rule makes its cause the underlying cause when both are present
+    # A one-way rule makes its cause the underlying cause when both are
+    # present, so a step stating the rule must not reverse it
     if not item["both_ways"] and step["underlying"] == item["consequence"] \
-            and item["cause"] in names and item["cause"] not in disfavors:
+            and (step["role"] == "coding_rule" or (
+                item["cause"] in names and item["cause"] not in disfavors)):
         return "inconsistent"
     if {item["cause"], item["consequence"]} <= names and (
             item["both_ways"] or step["underlying"] in (item["cause"], "")):
