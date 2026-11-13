@@ -4,7 +4,8 @@ Prints the tables and writes them to <out>/summary.json. In the comparisons, a
 negative log-loss difference means the first arm is better. The calculator arm
 ranks the candidates by the ProbBase grades and the saved answers alone, so it
 has no probabilities to score. The findings_look arm, the findings-only agent, is
-scored when its results exist. Pilot results are for debugging only.
+scored when its results exist, and so are the reasoning arms, whose steps are
+also compared with those of reason_none. Pilot results are for debugging only.
 
 Cases in chain_cases.json's label_to_check are left out unless
 --include-label-check is given.
@@ -20,20 +21,34 @@ import math
 import random
 import re
 import statistics
+import sys
 from collections import Counter, defaultdict
 from math import comb
 from pathlib import Path
 
 HERE = Path(__file__).parent
+sys.path.insert(0, str(HERE.parents[1] / "src"))
+
+from coda.inference.tog.reasoning import (
+    diff_steps,
+    item_verdict,
+    stable_changes,
+)
+
 SETS = ("pilot", "original", "sparse")
+REASON_ARMS = ("reason_none", "reason_kg", "reason_kg_walks", "reason_placebo")
 ARMS = ("baseline", "second_look", "findings_only", "findings_look",
-        "facts_only", "full", "placebo", "calculator")
+        "facts_only", "full", "placebo", *REASON_ARMS, "calculator")
 COMPARISONS = (("full", "baseline"), ("full", "second_look"),
                ("full", "placebo"), ("findings_only", "full"),
                ("facts_only", "full"), ("second_look", "baseline"),
                ("findings_look", "baseline"), ("findings_look", "second_look"),
                ("findings_look", "findings_only"), ("findings_look", "placebo"),
-               ("findings_look", "full"))
+               ("findings_look", "full"), ("reason_kg", "reason_none"),
+               ("reason_kg", "second_look"), ("reason_kg", "full"),
+               ("reason_kg", "reason_placebo"),
+               ("reason_kg_walks", "reason_kg"))
+CHANGES = ("added", "omitted", "changed")
 FLOOR = 0.01  # Probability given to a true cause an arm left out, for log loss
 BOOTSTRAPS = 10000
 SEED = 0
@@ -292,6 +307,167 @@ def cost_measures(full, seconds_key="total_seconds"):
             seconds_key: statistics.mean(seconds)}
 
 
+def steps_of(saved):
+    return saved["result"]["kg_evidence"].get("steps", [])
+
+
+def items_of(saved):
+    return saved["result"]["kg_evidence"].get("items", [])
+
+
+def grounding_measures(runs, labels, chain):
+    """Return how an arm's reasoning steps use the KG items shown."""
+    steps = [s for saved in runs.values() for s in steps_of(saved)]
+    if not steps:
+        return None
+    grounded = [s for s in steps if s["valid"]]
+    narrative = [s for s in steps if s["quote_ok"] is not None]
+    shown_rules = [i["id"] for saved in runs.values() for i in items_of(saved)
+                   if i["kind"] == "R"]
+    cited_rules = sum(len({i for s in steps_of(saved) for i in s["valid"]
+                           if i.startswith("R")}) for saved in runs.values())
+    underlying = {case: {s["underlying"] for s in steps_of(runs[case])
+                         if s["role"] in ("sequence", "coding_rule")}
+                  - {""} for case in chain if case in runs}
+    return {
+        "cases": len(runs),
+        "steps_per_case": len(steps) / len(runs),
+        "grounded": len(grounded) / len(steps),
+        "with_invalid_id": sum(bool(s["invalid"]) for s in steps) / len(steps),
+        "quote_ok": sum(s["quote_ok"] for s in narrative) / len(narrative)
+        if narrative else None,
+        "consistent": sum(s["check"] == "consistent" for s in grounded)
+        / len(grounded) if grounded else None,
+        "inconsistent": sum(s["check"] == "inconsistent" for s in grounded)
+        / len(grounded) if grounded else None,
+        "rejected": sum(s["check"] == "rejected" for s in grounded)
+        / len(grounded) if grounded else None,
+        "rules_cited": cited_rules / len(shown_rules) if shown_rules else None,
+        "chain_underlying_right": sum(labels[c] in u
+                                      for c, u in underlying.items()),
+        "chain_underlying_wrong": sum(bool(u) and labels[c] not in u
+                                      for c, u in underlying.items()),
+        "chain_cases": len(underlying),
+    }
+
+
+def change_counts(diffs):
+    """Return the share of cases with each kind of change and the mean number
+    of steps per case, over {case: diff_steps result}.
+    """
+    row = {"cases": len(diffs)}
+    for kind in (*CHANGES, "grounded"):
+        row[f"{kind}_cases"] = sum(bool(d[kind]) for d in diffs.values()) \
+            / len(diffs) if diffs else None
+        row[f"{kind}_steps"] = statistics.mean(len(d[kind])
+                                               for d in diffs.values()) \
+            if diffs else None
+    return row
+
+
+def change_summary(kg_runs, control_runs):
+    """Return how often an arm's reasoning changes from the control's: in the
+    main runs, between repeat runs of either arm (noise), and in every run
+    (stable), with the provable changes by the kinds of items they rest on.
+    """
+    kg, control = kg_runs[0], control_runs[0]
+    shared = [c for c in kg if c in control]
+    rows = {"raw": change_counts({c: diff_steps(steps_of(kg[c]),
+                                                steps_of(control[c]))
+                                  for c in shared})}
+    noise = defaultdict(list)
+    for runs in (kg_runs, control_runs):
+        for i, first in enumerate(runs):
+            for second in runs[i + 1:]:
+                for c in shared:
+                    if c in first and c in second:
+                        noise[c].append(diff_steps(steps_of(first[c]),
+                                                   steps_of(second[c])))
+    rows["noise"] = {"cases": len(noise), **{
+        f"{kind}_{unit}": statistics.mean(
+            statistics.mean((bool if unit == "cases" else len)(d[kind])
+                            for d in diffs) for diffs in noise.values())
+        if noise else None
+        for kind in CHANGES for unit in ("cases", "steps")}}
+    complete = [c for c in shared if len(kg_runs) == len(control_runs) > 1
+                and all(c in run for run in kg_runs + control_runs)]
+    stable = {c: stable_changes([steps_of(run[c]) for run in kg_runs],
+                                [steps_of(run[c]) for run in control_runs],
+                                items_of(kg[c])) for c in complete}
+    kinds = Counter()
+    for changes in stable.values():
+        for key in changes["provable_added"] + changes["provable_changed"]:
+            kinds["+".join(changes["kinds"][key]) or "none"] += 1
+    for name, prefix in (("stable", ""), ("provable", "provable_")):
+        rows[name] = {"cases": len(stable), **{
+            f"{kind}_{unit}": (statistics.mean(
+                (bool if unit == "cases" else len)(s[prefix + kind])
+                for s in stable.values()) if stable else None)
+            for kind in CHANGES for unit in ("cases", "steps")}}
+    return {"rows": rows, "provable_by_kind": dict(kinds)}
+
+
+def placebo_tracking(placebo, real):
+    """Return, for the placebo arm's steps citing a reversed rule or a moved
+    finding, how often they agree with the item shown and with the real item.
+    Links both ways aren't reversed, so they're left out.
+    """
+    def finding(item):
+        return item["text"].split(" Typical of")[0]
+
+    counts = Counter()
+    for case, saved in placebo.items():
+        if case not in real:
+            continue
+        shown = {i["id"]: i for i in items_of(saved)}
+        real_items = items_of(real[case])
+        by_id = {i["id"]: i for i in real_items}
+        by_finding = {finding(i): i for i in real_items if i["kind"] == "F"}
+        for step in steps_of(saved):
+            for item_id in step["valid"]:
+                item = shown[item_id]
+                if item.get("both_ways"):
+                    continue
+                twin = by_finding.get(finding(item)) if item["kind"] == "F" \
+                    else by_id.get(item_id)
+                if item["kind"] == "W" or twin is None:
+                    continue
+                counts[item["kind"], "cited"] += 1
+                counts[item["kind"], "follows_shown"] += \
+                    item_verdict(item, step) == "consistent"
+                counts[item["kind"], "follows_real"] += \
+                    item_verdict(twin, step) == "consistent"
+    return [{"kind": kind, "cited": counts[kind, "cited"],
+             "follows_shown": counts[kind, "follows_shown"],
+             "follows_real": counts[kind, "follows_real"]}
+            for kind in ("R", "F") if counts[kind, "cited"]]
+
+
+def reasoning_measures(folder, labels, chain):
+    """Return the reasoning arms' grounding, change summaries against the
+    control and placebo tracking, or None if they have no results.
+    """
+    def runs(arm):
+        return [{c: s for c, s in load_arm(folder / name).items()
+                 if c in labels}
+                for name in (arm, f"{arm}_rep1", f"{arm}_rep2")
+                if (folder / name).exists()]
+
+    arms = {arm: runs(arm) for arm in REASON_ARMS}
+    if not arms["reason_none"] or not arms["reason_kg"]:
+        return None
+    return {
+        "grounding": {arm: grounding_measures(r[0], labels, chain)
+                      for arm, r in arms.items() if r},
+        "changes": {f"{arm} vs reason_none": change_summary(
+            arms[arm], arms["reason_none"])
+            for arm in REASON_ARMS[1:] if arms[arm]},
+        "placebo_tracking": placebo_tracking(arms["reason_placebo"][0],
+                                             arms["reason_kg"][0])
+        if arms["reason_placebo"] else None,
+    }
+
+
 def show_table(rows):
     """Print dicts as columns, in the order of the first row's keys."""
     if not rows:
@@ -315,8 +491,10 @@ def load_arm(path):
             for file in sorted(path.glob("*.json"))}
 
 
-def score_set(out, set_name, labels, groups, lenient):
-    """Return all the measures of one set, or None if it has no results."""
+def score_set(out, set_name, labels, groups, lenient, reasoning=True):
+    """Return all the measures of one set, or None if it has no results. The
+    reasoning measures are left out if reasoning is False.
+    """
     folder = out / set_name
     full = {c: s for c, s in load_arm(folder / "full").items() if c in labels}
     if not full:
@@ -327,7 +505,7 @@ def score_set(out, set_name, labels, groups, lenient):
         c: calculator(s["result"]["kg_evidence"]["candidates"])
         for c, s in full.items()}}
     for arm in ("second_look", "findings_only", "findings_look", "facts_only",
-                "full", "placebo"):
+                "full", "placebo", *REASON_ARMS):
         predictions[arm] = {
             c: scores(s["result"]["causes"])
             for c, s in load_arm(folder / arm).items() if c in labels}
@@ -373,6 +551,8 @@ def score_set(out, set_name, labels, groups, lenient):
             "evidence": evidence_measures(findings_look),
             "cost": cost_measures(findings_look, "added_seconds"),
         } if findings_look else None,
+        "reasoning": reasoning_measures(folder, labels, groups["chain"])
+        if reasoning else None,
     }
 
 
@@ -422,6 +602,44 @@ def show_set(set_name, results):
         print(json.dumps(look["evidence"], indent=2))
         print("\nfindings_look: cost per case")
         show_table([look["cost"]] if look["cost"] else [])
+    reasoning = results["reasoning"]
+    if reasoning:
+        show_reasoning(results["all"], results["comparisons"], reasoning)
+
+
+def show_reasoning(arms, comparisons, reasoning):
+    print("\nReasoning arms: how the steps use the KG items shown (main runs)")
+    show_table([{"arm": arm, **row}
+                for arm, row in reasoning["grounding"].items() if row])
+    print("\nReasoning changes against reason_none, as the share of cases with"
+          " at least one change and the mean steps per case. Noise compares "
+          "repeat runs of the same arm; stable changes hold in every run of "
+          "both arms; provable ones are stable and rest on a shown item they "
+          "agree with or say doesn't apply, contradicting none (omissions: "
+          "one a shown rule contradicts). "
+          "Omissions involving findings can only be statistical.")
+    for name, summary in reasoning["changes"].items():
+        print(f"\n  {name}")
+        show_table([{"row": row, **values}
+                    for row, values in summary["rows"].items()
+                    if values["cases"]])
+        print(f"  Provable added or changed steps, by the kinds of items they "
+              f"rest on: {summary['provable_by_kind'] or 'none'}")
+    if reasoning["placebo_tracking"]:
+        print("\nPlacebo steps citing a reversed rule or a moved finding: how "
+              "many agree with the item shown and with the real one")
+        show_table(reasoning["placebo_tracking"])
+    difference = comparisons.get("reason_kg vs reason_none")
+    kg = arms.get("reason_kg")
+    if difference and kg:
+        fails = difference["low"] > 0 or (kg["harms"] > kg["rescues"]
+                                          and kg["mcnemar_p"] < 0.05)
+        print(f"\nAccuracy guardrail for reason_kg: "
+              f"{'FAILS' if fails else 'passes'} (log loss vs reason_none "
+              f"{difference['difference']:+.3f}, 95% range "
+              f"{difference['low']:+.3f} to {difference['high']:+.3f}; "
+              f"{kg['rescues']} rescues and {kg['harms']} harms vs baseline, "
+              f"p = {kg['mcnemar_p']:.3f})")
 
 
 def main():
@@ -452,6 +670,12 @@ def main():
     if info.get("dirty") or any(i["dirty"] for i in arm_runs.values()):
         print("WARNING: these results came from uncommitted code.")
     print(f"Left out, awaiting a label check: {excluded or 'none'}")
+    fingerprints = {json.dumps(arm_runs[arm].get("kg"), sort_keys=True)
+                    for arm in REASON_ARMS if arm in arm_runs}
+    reasoning = len(fingerprints) <= 1
+    if not reasoning:
+        print("WARNING: the reasoning arms used different KG files, so their "
+              "reasoning measures are left out.")
 
     summary = {"run": info, "arm_runs": arm_runs, "excluded": excluded}
     for set_name in SETS:
@@ -460,7 +684,8 @@ def main():
         for key in ("cause_name", "age_group"):
             for case in sets[set_name]:
                 groups.setdefault(case[key], []).append(case["case_id"])
-        results = score_set(out, set_name, labels, groups, plan["lenient"])
+        results = score_set(out, set_name, labels, groups, plan["lenient"],
+                            reasoning)
         if results:
             summary[set_name] = results
             show_set(set_name, results)

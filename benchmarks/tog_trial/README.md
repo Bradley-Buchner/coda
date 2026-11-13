@@ -86,3 +86,46 @@ about probability changes.
 
 Answer the finding checks from the narrative alone. Blank cells count as unrated,
 and other values stop the scoring so you can correct them.
+
+## Reasoning arms
+
+These test whether KG content shapes ToG's reasoning, not its probabilities.
+`ToGReasoningIcd10Agent` reasons in steps over numbered KG items: R items, the
+ACME rules on how the candidates relate (`coda.kg.check`), F items, the typical
+findings the case shows, and, with walks, W items, the walk facts. Each step
+names the causes it favors and disfavors, the underlying cause it implies and the
+items it rests on, which are checked against it (`coda.inference.tog.reasoning`).
+The arms reuse the full arm's first opinions, findings and walk facts, and make
+one call per case:
+
+| Arm | KG items |
+|---|---|
+| `reason_none` | none: the matched control, with the same prompt |
+| `reason_kg` | R and F |
+| `reason_kg_walks` | R, F and W |
+| `reason_placebo` | reversed one-way rules, flags on the next candidate, and the next candidate's findings |
+
+The first three are repeated twice on the original and sparse sets, about 1,490
+calls in all. Commit, then run the pilot, score it, and run the rest:
+
+```bash
+python benchmarks/tog_trial/run_benchmark.py --sets pilot --arms reason_none,reason_kg,reason_kg_walks,reason_placebo --out benchmarks/tog_trial/results/benchmark_final
+python benchmarks/tog_trial/score_benchmark.py --out benchmarks/tog_trial/results/benchmark_final
+python benchmarks/tog_trial/run_benchmark.py --sets original,sparse --arms reason_none,reason_kg,reason_kg_walks,reason_placebo --out benchmarks/tog_trial/results/benchmark_final
+```
+
+The scorer compares each arm's steps with the control's, keyed by role and the
+causes named. A step is added, omitted, or changed (the same key with no
+direction in common). Changes are stable if they hold in all three runs of both
+arms, and provable if they are stable and rest on a shown item they agree with,
+or say why it doesn't apply, and contradict none; an omission is provable only if
+a shown rule contradicts it, so omissions involving findings stay statistical.
+Flags on injury codes are left out, since ACME selects the external cause, which
+the Injury group includes. Noise compares repeat runs of the
+same arm. The placebo shows whether steps follow the item shown or the real one.
+
+`run_info.json` and `arm_runs.json` record a fingerprint of the KG files, so a
+run refuses to add an arm made with other KG files, and the scorer leaves out the
+reasoning measures if the reasoning arms' fingerprints differ. Results saved
+before the fingerprint was added, such as `findings_look` in `benchmark_final`,
+can't be extended into the same folder.

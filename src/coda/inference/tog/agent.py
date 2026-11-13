@@ -1,12 +1,14 @@
 """Prompted ICD-10 agents that re-rank their causes with KG evidence: backward
-Think-on-Graph (ToG) walks and typical findings, or the findings alone.
+Think-on-Graph (ToG) walks and typical findings, the findings alone, or
+reasoning steps over numbered ACME rules and findings, with or without walks.
 
 The current prototype reads the KG from the exported TSV files. The full agent
-makes up to 12 LLM calls per inference, the findings-only agent 3.
+makes up to 12 LLM calls per inference, the findings-only and reasoning agents
+3.
 """
 
 import logging
-from functools import partial
+from functools import cache, partial
 from typing import List
 
 from gilda import Annotation
@@ -22,20 +24,33 @@ from coda.inference.champs_prompted.icd10_agent import (
 )
 from coda.inference.tog.backward import (
     check_findings,
+    checked_status,
     format_evidence,
+    normalized,
     read_prompt,
     walk_back,
 )
+from coda.inference.tog.reasoning import (
+    ROLES,
+    check_step,
+    kg_items,
+    render_items,
+)
+from coda.kg.check import check_top_causes
 from coda.kg.graph import KGView
+from coda.kg.query import KGQuery
 
 logger = logging.getLogger(__name__)
 
 MAX_CITED = 5  # Facts, and separately findings, the final ranking may cite
 MAX_CAUSES = 3  # Causes in a ranking, as in the first opinion's schema
-RANKING_PROMPT, FINDINGS_RANKING_PROMPT = (
+MAX_STEPS = 8  # Reasoning steps of the reasoning agents
+RANKING_PROMPT, FINDINGS_RANKING_PROMPT, REASONING_PROMPT = (
     read_prompt(name).format(allowed_causes=", ".join(CHAMPS_GROUP_CAUSES),
                              max_cited=MAX_CITED)
-    for name in ("final_ranking.txt", "findings_ranking.txt"))
+    for name in ("final_ranking.txt", "findings_ranking.txt",
+                 "kg_reasoning.txt"))
+default_kg = cache(KGQuery)
 COD_PROPERTIES = build_cod_output_schema()["properties"]
 CITED_SCHEMA = {"type": "array", "items": {"type": "string"},
                 "maxItems": MAX_CITED}
@@ -72,6 +87,34 @@ FINDINGS_RANKING_SCHEMA = {
                    .items() if key != "cited_facts"},
     "required": [key for key in RANKING_SCHEMA["required"]
                  if key != "cited_facts"],
+}
+NAMES_SCHEMA = {"type": "array", "items": {"type": "string"}}
+STEP_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "claim": {"type": "string"},
+        "role": {"type": "string", "enum": ROLES},
+        "favors": NAMES_SCHEMA,
+        "disfavors": NAMES_SCHEMA,
+        "underlying": {"type": "string"},
+        "basis": {"type": "array", "minItems": 1, "items": {
+            "type": "string", "pattern": "^([RFW][0-9]+|narrative)$"}},
+        "quote": {"type": "string"},
+    },
+    "required": ["claim", "role", "favors", "disfavors", "underlying",
+                 "basis", "quote"],
+    "additionalProperties": False,
+}
+REASONING_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "reasoning_steps": {"type": "array", "items": STEP_SCHEMA,
+                            "minItems": 1, "maxItems": MAX_STEPS},
+        "candidate_updates": RANKING_SCHEMA["properties"]["candidate_updates"],
+        "top_causes": COD_PROPERTIES["top_causes"],
+    },
+    "required": ["reasoning_steps", "candidate_updates", "top_causes"],
+    "additionalProperties": False,
 }
 
 
@@ -187,14 +230,37 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
                     "kg_evidence": {"candidates": [], "cited": []}}
         return await self.rank(chunk_id, first_opinion, case_input, candidates)
 
-    async def rank(self, chunk_id, first_opinion, case_input, candidates):
+    def evidence_block(self, first_opinion, candidates, evidence):
+        """Return the part of the final ranking prompt after the case."""
+        return "## CANDIDATES\n" + "\n\n".join(
+            format_evidence(c, self.walks) for c in candidates)
+
+    def read_evidence(self, response, ranked, evidence, case_input):
+        """Record in evidence what the final ranking cited; return its
+        reasoning.
+        """
+        # Keep only citations of the evidence, not of the case, as the
+        # longest fact or finding each one contains
+        candidates = evidence["candidates"]
+        items = {item for c in candidates for item in c["triples"]
+                 + [f["finding"] for f in c["findings"] or []]}
+        cited = []
+        for text in (response.get("cited_facts", [])
+                     + response.get("cited_findings", [])):
+            found = [item for item in items if item in text]
+            if found:
+                cited.append(max(found, key=len))
+        evidence["cited"] = list(dict.fromkeys(cited))
+        return ranked["reasoning"]
+
+    async def rank(self, chunk_id, first_opinion, case_input, candidates,
+                   **kwargs):
         """Rank the causes with the candidates' evidence, keeping the first
-        opinion if the ranking fails.
+        opinion if the ranking fails. Keyword arguments go to evidence_block.
         """
         evidence = {"candidates": candidates, "cited": []}
-        user_prompt = (f"{case_input}\n\n## CANDIDATES\n"
-                       + "\n\n".join(format_evidence(c, self.walks)
-                                     for c in candidates))
+        user_prompt = f"{case_input}\n\n" + self.evidence_block(
+            first_opinion, candidates, evidence, **kwargs)
         try:
             response = await self.call_step(chunk_id, "final_ranking",
                                             self.ranking_prompt, user_prompt,
@@ -206,22 +272,12 @@ class ToGBackwardIcd10Agent(ChampsPromptedIcd10Agent):
             logger.warning("Final ranking named no allowed cause; keeping "
                            "the first opinion")
             return {**first_opinion, "kg_evidence": evidence}
-        # Keep only citations of the evidence, not of the case, as the
-        # longest fact or finding each one contains
-        items = {item for c in candidates for item in c["triples"]
-                 + [f["finding"] for f in c["findings"] or []]}
-        cited = []
-        for text in (response.get("cited_facts", [])
-                     + response.get("cited_findings", [])):
-            found = [item for item in items if item in text]
-            if found:
-                cited.append(max(found, key=len))
-        evidence["cited"] = list(dict.fromkeys(cited))
+        reasoning = self.read_evidence(response, ranked, evidence, case_input)
         updates = {self._match_cause(update["cause_name"]): update
                    for update in response.get("candidate_updates", [])}
         causes = apply_updates(first_opinion["causes"], ranked["causes"],
                                updates)
-        reasoning = " ".join([ranked["reasoning"], *explain_changes(
+        reasoning = " ".join([reasoning, *explain_changes(
             first_opinion["causes"], causes, updates)])
         return {**first_opinion, "causes": causes, "reasoning": reasoning,
                 "kg_evidence": evidence}
@@ -235,3 +291,75 @@ class ToGFindingsIcd10Agent(ToGBackwardIcd10Agent):
     walks = False
     ranking_prompt = FINDINGS_RANKING_PROMPT
     ranking_schema = FINDINGS_RANKING_SCHEMA
+
+
+class ToGReasoningIcd10Agent(ToGBackwardIcd10Agent):
+    """ToGFindingsIcd10Agent whose final call reasons step by step over
+    numbered KG items: ACME rules on how the candidates relate and the typical
+    findings the case shows. Each step names the items it rests on, which are
+    checked against it.
+    """
+
+    walks = False
+    ranking_prompt = REASONING_PROMPT
+    ranking_schema = REASONING_SCHEMA
+
+    def __init__(self, llm_client, graph: KGView, kg: KGQuery = None,
+                 **kwargs):
+        super().__init__(llm_client, graph=graph, **kwargs)
+        self.kg = kg or default_kg()
+
+    def create_session_agent(self):
+        agent = super().create_session_agent()
+        agent.kg = self.kg
+        return agent
+
+    def evidence_block(self, first_opinion, candidates, evidence, items=None):
+        """Return the candidates and the KG items, which are given, or else
+        built from the first opinion and the candidates' evidence.
+        """
+        if items is None:
+            causes = first_opinion["causes"]
+            items = kg_items(check_top_causes(self.kg, causes), causes,
+                             candidates, self.walks)
+        evidence["items"] = items
+        return "## CANDIDATES\n" + "\n".join(
+            f"- {c['cause']} (ICD-10 {c['code']}, first-opinion probability "
+            f"{c['score']:.2f})" for c in candidates) \
+            + "\n\n" + render_items(items)
+
+    def read_evidence(self, response, ranked, evidence, case_input):
+        """Record each reasoning step with its causes matched, the cited ids
+        that were and weren't shown, its check against the shown items and
+        whether its quote is from the case. Return the steps' claims.
+        """
+        def matched(names):
+            return [name for name in map(self._match_cause, names) if name]
+
+        shown = {item["id"]: item for item in evidence["items"]}
+        case_text = normalized(case_input)
+        steps = []
+        for step in response.get("reasoning_steps", []):
+            step = {**step, "favors": matched(step["favors"]),
+                    "disfavors": matched(step["disfavors"]),
+                    "underlying": self._match_cause(step["underlying"]) or ""}
+            step["valid"] = [i for i in step["basis"] if i in shown]
+            step["invalid"] = [i for i in step["basis"]
+                               if i not in shown and i != "narrative"]
+            step["check"] = check_step(step, evidence["items"])
+            step["quote_ok"] = checked_status(
+                {"status": "yes", "quote": step["quote"]}, case_text) == "yes" \
+                if "narrative" in step["basis"] else None
+            steps.append(step)
+        evidence["steps"] = steps
+        evidence["cited"] = list(dict.fromkeys(
+            shown[i]["text"] for step in steps for i in step["valid"]))
+        return " ".join(step["claim"] for step in steps)
+
+
+class ToGReasoningWalksIcd10Agent(ToGReasoningIcd10Agent):
+    """ToGReasoningIcd10Agent that also walks the KG and shows the walk facts
+    as W items.
+    """
+
+    walks = True

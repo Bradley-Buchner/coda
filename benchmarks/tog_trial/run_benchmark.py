@@ -12,9 +12,19 @@ repeat only its final call on the same first opinion, with the evidence changed:
 The findings_look arm runs ToGFindingsIcd10Agent's own calls on the same first
 opinion: a new finding check and a final call that sees only findings.
 
+The reasoning arms make ToGReasoningIcd10Agent's final call on the same first
+opinion, with the full arm's findings and walk facts as numbered KG items:
+
+    reason_none      no KG items, the matched control
+    reason_kg        ACME rules on how the candidates relate, and findings
+    reason_kg_walks  those and the walk facts
+    reason_placebo   reversed rules and the next candidate's findings
+
 The pilot and original sets also repeat the first opinion (first_rep*), the
 full arm's final call (full_rep*) and the findings_look arm (findings_look_rep*),
-to measure run-to-run noise.
+to measure run-to-run noise. The original and sparse sets repeat the first
+three reasoning arms (reason_*_rep*). run_info.json and arm_runs.json record a
+fingerprint of the KG files, so arms of different KG versions don't mix.
 
 A rerun skips saved results, so it can resume. Results with a failed LLM call are
 not saved: they are logged to <out>/failed_calls.jsonl and retried on a rerun. A
@@ -29,9 +39,12 @@ Usage
     python benchmarks/tog_trial/run_benchmark.py --sets original,sparse
     python benchmarks/tog_trial/run_benchmark.py --sets original,sparse \
         --arms findings_look
+    python benchmarks/tog_trial/run_benchmark.py --sets pilot \
+        --arms reason_none,reason_kg,reason_kg_walks,reason_placebo
 """
 import argparse
 import asyncio
+import hashlib
 import json
 import subprocess
 import sys
@@ -44,15 +57,32 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from coda.config import settings
 from coda.inference.champs_prompted.icd10_agent import ChampsPromptedIcd10Agent
-from coda.inference.tog import ToGBackwardIcd10Agent, ToGFindingsIcd10Agent
+from coda.inference.tog import (
+    ToGBackwardIcd10Agent,
+    ToGFindingsIcd10Agent,
+    ToGReasoningIcd10Agent,
+    ToGReasoningWalksIcd10Agent,
+)
+from coda.inference.tog.reasoning import kg_items
+from coda.kg.check import check_top_causes
 from coda.kg.graph import KGView
+from coda.kg.query import KGQuery, normalize_code
+from coda.kg.sources import KG_BASE
 from coda.llm_api import create_llm_client
 
 SETS = ("pilot", "original", "sparse")
+REASON_ARMS = ("reason_none", "reason_kg", "reason_kg_walks", "reason_placebo")
 ARMS = ("full", "second_look", "findings_only", "facts_only", "placebo",
-        "findings_look", "first")  # first: the first-opinion repeats
+        "findings_look", *REASON_ARMS, "first")  # first: the first-opinion repeats
 REPEATED_SETS = ("pilot", "original")
+# The reasoning arms with repeats, and the sets they are repeated on
+REPEATED_REASON_ARMS = ("reason_none", "reason_kg", "reason_kg_walks")
+REASON_REPEATED_SETS = ("original", "sparse")
 REPEATS = 2
+# The KG files that KGView and KGQuery read
+KG_FILES = ("acme_edges", "icd10_nodes", "icd10_edges", "icd11_nodes",
+            "icd11_edges", "who_va_nodes", "who_va_edges", "probbase_nodes",
+            "probbase_edges")
 RUN_FILES = ("run_benchmark.py", "cases.json", "cases_sparse.json",
              "chain_cases.json")
 
@@ -94,6 +124,41 @@ def rotated(graph, candidates):
                                       for f in findings],
         })
     return placebo
+
+
+def reversed_check(check, causes):
+    """Return check_top_causes's result with each one-way link reversed and
+    without the code it gives the pair, and each flag moved to the next cause.
+    Links both ways are kept as they are.
+    """
+    curies = list(causes)
+    links = [link if "reverse" in link else
+             {**link, "cause": link["consequence"],
+              "consequence": link["cause"], "result": "", "result_name": ""}
+             for link in check["links"]]
+    flags = []
+    for flag in check["flags"]:
+        curie = curies[(curies.index(flag["curie"]) + 1) % len(curies)]
+        flags.append({**flag, "curie": curie, "code": normalize_code(curie)})
+    return {"links": links, "flags": flags}
+
+
+def reason_arms(kg, graph, first_opinion, candidates):
+    """Return the candidates and KG items each reasoning arm sees: none, the
+    ACME rules and findings, those and the walk facts, or reversed rules and
+    rotated findings (left out if there is only one candidate).
+    """
+    causes = first_opinion["causes"]
+    check = check_top_causes(kg, causes)
+    arms = {"reason_none": (candidates, []),
+            "reason_kg": (candidates, kg_items(check, causes, candidates)),
+            "reason_kg_walks": (candidates, kg_items(check, causes, candidates,
+                                                     walks=True))}
+    placebo = rotated(graph, candidates)
+    if placebo is not None:
+        arms["reason_placebo"] = (placebo, kg_items(
+            reversed_check(check, causes), causes, placebo))
+    return arms
 
 
 def control_arms(graph, candidates):
@@ -138,8 +203,10 @@ def run_info(provider, model, allow_dirty):
     if dirty and not allow_dirty:
         sys.exit("Commit your changes first, so that the results record the "
                  "code that made them.")
+    kg = {name: hashlib.sha256((KG_BASE / f"{name}.tsv.gz").read_bytes())
+          .hexdigest()[:12] for name in KG_FILES}
     return {"commit": git("rev-parse", "HEAD"), "dirty": dirty,
-            "provider": provider, "model": model}
+            "provider": provider, "model": model, "kg": kg}
 
 
 async def main():
@@ -193,6 +260,11 @@ async def main():
     graph = KGView()
     agent = ToGBackwardIcd10Agent(client, graph=graph)
     findings_agent = ToGFindingsIcd10Agent(client, graph=graph)
+    kg = KGQuery()
+    reason_agents = {
+        arm: (ToGReasoningWalksIcd10Agent if arm == "reason_kg_walks"
+              else ToGReasoningIcd10Agent)(client, graph=graph, kg=kg)
+        for arm in REASON_ARMS}
     base = ChampsPromptedIcd10Agent(client)
     sets = load_sets()
 
@@ -253,6 +325,15 @@ async def main():
         result["timings"] = {"inference_s": time.perf_counter() - started}
         return result, findings_agent.trace
 
+    async def replay_reason(case, full, arm, candidates, items):
+        """Make a reasoning arm's final call on the full arm's first opinion."""
+        reason_agent = reason_agents[arm]
+        reason_agent.trace = []
+        result = await reason_agent.rank(
+            case["case_id"], full["trace"][0]["response"], case_input(full),
+            candidates, items=items)
+        return result, reason_agent.trace
+
     def wanted(arm):
         return not arms or any(arm == name or arm.startswith(f"{name}_rep")
                                for name in arms)
@@ -278,6 +359,16 @@ async def main():
                     in control_arms(graph, candidates).items()
                     if arm_candidates is not None}
             runs["findings_look"] = lambda: run_findings(case, full)
+            reasoning = reason_arms(kg, graph, full["trace"][0]["response"],
+                                    candidates)
+            for arm, (arm_candidates, items) in reasoning.items():
+                names = [arm] + [f"{arm}_rep{i}" for i in range(1, REPEATS + 1)
+                                 if arm in REPEATED_REASON_ARMS
+                                 and set_name in REASON_REPEATED_SETS]
+                for name in names:
+                    runs[name] = (lambda arm=arm, arm_candidates=arm_candidates,
+                                  items=items: replay_reason(
+                                      case, full, arm, arm_candidates, items))
             if set_name in REPEATED_SETS:
                 for i in range(1, REPEATS + 1):
                     runs[f"first_rep{i}"] = lambda: run_first(case)

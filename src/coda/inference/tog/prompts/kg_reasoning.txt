@@ -1,0 +1,22 @@
+Choose the underlying cause of death for a verbal autopsy case.
+
+A first opinion proposed candidate causes. Under KG EVIDENCE you may have numbered items from a knowledge graph (KG), of up to three kinds:
+- R items are ACME rules, used to code death certificates, on how the candidates relate. "X may be due to Y" means a certificate may report that sequence; it says the sequence is allowed, not that it is likely. "Only if" gives a condition the case must meet for the rule to apply. "Together they are coded as" names the code ACME gives the pair when one is reported due to the other. Some items say a candidate can only be a contributing cause, or is a trivial condition, so it is not selected as the underlying cause when a more serious one is reported.
+- F items are findings the case shows that are typical of some candidates. Each is a question that the case answers the way its grade describes, tagged with that answer. The grade comes from ProbBase, the knowledge base of the InterVA model, and is an expert rating, on a rough logarithmic scale, of how often deaths from that cause give that answer. Read it as the conditional probability P(answer | cause), not as how likely the cause is given the answer: 'I' means always (1.0), 'A+' about 0.8, 'A' about 0.5, 'A-' about 0.2. Findings that the case answers the other way, or does not mention, are not listed: as in InterVA, they are not evidence against a cause. A finding typical of several candidates does not tell them apart.
+- W items are facts from a walk of the KG, as triplets (head, relation, tail). "causes" means a death certificate may report the head as causing the tail.
+Some kinds, or all of them, may be missing. A missing kind says nothing about the case.
+
+Reason about the case in your own words and order, one claim per step in reasoning_steps. Let the KG shape your reasoning: use it to decide which condition started the chain of events, which candidate the rules allow as the underlying cause, and which findings tell the candidates apart. Where an item bears on the case, build a step on it; where an item looks relevant but does not fit this case, say why in a not_applicable step. Judge every item against the case: an item can be wrong for it.
+
+For each step:
+- claim: the step, in a sentence.
+- role: sequence (which condition led to which), coding_rule (an ACME rule on which cause is underlying or how a pair is coded), finding_fit (how findings fit a candidate), tells_apart (what separates candidates), not_applicable (why an item does not apply), or other.
+- favors and disfavors: the causes the step supports and argues against, from the allowed list.
+- underlying: the cause the step implies is underlying, or "" if it implies none.
+- basis: the ids of the items the step rests on, and "narrative" if it rests on the case. Cite only ids listed under KG EVIDENCE.
+- quote: if basis includes "narrative", the words of the case it rests on, copied exactly; else "".
+
+Rank up to 3 causes from this list: {allowed_causes}.
+The true cause will likely be among the first opinion's proposed candidates, especially if the narrative is detailed and descriptive; but you may choose another listed cause if the evidence points to it. In your final answer, give calibrated probabilities that sum to about 1.
+
+Before setting any probability, fill candidate_updates. Give an entry for every candidate and for any cause you add. Compare the evidence with the cause's first-opinion probability and choose a direction: 'up' if specific evidence should raise it, 'down' if specific evidence should lower it, and 'no_change' if nothing justifies moving it. In evidence, name what justifies that direction, or say that nothing does. A cause's overall strength is not a reason to move it: a likely cause can go down, and an unlikely cause can go up. Then set the probabilities in top_causes to match these directions. A no_change cause keeps its first-opinion probability.

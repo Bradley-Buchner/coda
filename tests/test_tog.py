@@ -1,7 +1,13 @@
+import pandas as pd
 import pytest
 
 from coda.inference.champs_prompted.base_agent import LLMCallFailed
-from coda.inference.tog import ToGBackwardIcd10Agent, ToGFindingsIcd10Agent
+from coda.inference.tog import (
+    ToGBackwardIcd10Agent,
+    ToGFindingsIcd10Agent,
+    ToGReasoningIcd10Agent,
+)
+from coda.inference.tog.agent import REASONING_SCHEMA
 from coda.inference.tog.backward import (
     MAX_HOPS,
     check_findings,
@@ -10,6 +16,17 @@ from coda.inference.tog.backward import (
     normalized,
     walk_back,
 )
+from coda.inference.tog.reasoning import (
+    NO_EVIDENCE,
+    check_step,
+    diff_steps,
+    kg_items,
+    render_items,
+    stable_changes,
+)
+from coda.kg.check import check_top_causes
+from coda.kg.query import KGQuery
+from coda.kg.sources import write_tsv_gz
 
 
 class FakeGraph:
@@ -267,3 +284,206 @@ async def test_findings_agent_ranks_with_findings_alone():
     assert "Same as" not in final["user_prompt"]
     assert "cited_facts" not in final["schema"]["properties"]
     assert result["kg_evidence"]["cited"] == ["fever"]
+
+
+EDGES = [
+    # :START_ID, :END_ID, :TYPE, maybe, rule_type, result, reason
+    ["icd10:A41.9", "icd10:J18.9", "causes", "False", "", "", ""],
+    ["icd10:A41.9", "acme:table_A", "in_code_list", "", "", "", ""],
+    ["icd10:J18.9", "acme:table_A", "in_code_list", "", "", "", ""],
+]
+SEPSIS, LRI = "Sepsis", "Lower respiratory infections"
+CAUSES = {"icd10:A41.9": {"name": SEPSIS}, "icd10:J18.9": {"name": LRI}}
+
+
+@pytest.fixture
+def kg(tmp_path):
+    columns = [":START_ID", ":END_ID", ":TYPE", "maybe:boolean", "rule_type",
+               "result", "reason"]
+    write_tsv_gz(pd.DataFrame(EDGES, columns=columns),
+                 tmp_path / "acme_edges.tsv.gz")
+    write_tsv_gz(pd.DataFrame([], columns=["id:ID", "name"]),
+                 tmp_path / "icd10_nodes.tsv.gz")
+    return KGQuery(kg_dir=tmp_path)
+
+
+def finding(name, grade, status, who_va="sepsis"):
+    return {"finding": name, "grade": grade, "graded_answer": "yes",
+            "who_va_cause": who_va, "status": status}
+
+
+def test_kg_items_number_rules_findings_and_walks(kg):
+    candidates = [
+        {"cause": SEPSIS, "triples": ["(A41.9, is_a, A41)"],
+         "findings": [finding("fever", "A+", "yes")]},
+        {"cause": LRI, "triples": ["(A41.9, is_a, A41)", "(J18.9, is_a, J18)"],
+         "findings": [finding("fever", "A-", "yes", "pneumonia"),
+                      finding("cough", "A", "not_mentioned", "pneumonia")]},
+    ]
+    items = kg_items(check_top_causes(kg, CAUSES), CAUSES, candidates,
+                     walks=True)
+    assert [(i["id"], i["text"]) for i in items] == [
+        ("R1", f"{LRI} may be due to {SEPSIS} (ACME Table D). If both are "
+               f"reported, {SEPSIS} is the underlying cause."),
+        ("F1", f"[yes] fever Typical of {SEPSIS} (grade A+ for sepsis on "
+               f"answer yes); {LRI} (grade A- for pneumonia on answer yes)"),
+        ("W1", "(A41.9, is_a, A41)"),
+        ("W2", "(J18.9, is_a, J18)")]
+    assert (items[0]["cause"], items[0]["consequence"]) == (SEPSIS, LRI)
+    assert items[1]["typical"] == [SEPSIS, LRI]
+    assert items[2]["candidate"] == SEPSIS
+    assert [i["id"] for i in kg_items(check_top_causes(kg, CAUSES), CAUSES,
+                                      candidates)] == ["R1", "F1"]
+    assert NO_EVIDENCE in render_items([])
+    injury = {"links": [], "flags": [
+        {"curie": "icd10:T14.9", "code": "icd10:T14.9", "table": "B",
+         "flag": "can only be a contributing cause, not the underlying cause"}]}
+    assert kg_items(injury, {"icd10:T14.9": {"name": "Injury"}}, []) == []
+
+
+ITEMS = [
+    {"id": "R1", "kind": "R", "cause": SEPSIS, "consequence": LRI,
+     "both_ways": False, "text": f"{LRI} may be due to {SEPSIS}."},
+    {"id": "R2", "kind": "R", "cause": SEPSIS, "consequence": LRI,
+     "both_ways": True},
+    {"id": "R3", "kind": "R", "candidate": "Injury", "table": "B"},
+    {"id": "F1", "kind": "F", "typical": [SEPSIS]},
+    {"id": "W1", "kind": "W", "candidate": SEPSIS},
+    {"id": "F2", "kind": "F", "typical": [SEPSIS, LRI]},
+    {"id": "R4", "kind": "R", "candidate": "Upper respiratory infections",
+     "table": "H"},
+]
+
+
+def step(basis, favors=(), disfavors=(), underlying="", role="other",
+         check="consistent", valid=()):
+    return {"claim": "", "role": role, "favors": list(favors),
+            "disfavors": list(disfavors), "underlying": underlying,
+            "basis": list(basis), "quote": "", "check": check,
+            "valid": list(valid or [i for i in basis if i != "narrative"])}
+
+
+@pytest.mark.parametrize("cited, expected", [
+    (step(["R1"], [SEPSIS], [LRI], SEPSIS), "consistent"),
+    (step(["R1"], [LRI, SEPSIS], [], LRI), "inconsistent"),
+    # The rule's cause is argued away, so the rule doesn't apply
+    (step(["R1"], [LRI], [SEPSIS], LRI), "unchecked"),
+    (step(["R1"], [SEPSIS]), "unchecked"),
+    (step(["R1"], [LRI], [], LRI, role="not_applicable"), "rejected"),
+    (step(["R2"], [LRI], [SEPSIS], LRI), "consistent"),
+    (step(["R3"], ["Injury"]), "inconsistent"),
+    (step(["R3"], [SEPSIS], ["Injury"], SEPSIS), "consistent"),
+    (step(["F1"], [SEPSIS]), "consistent"),
+    (step(["F1"], [LRI], [SEPSIS]), "inconsistent"),
+    # A finding typical of both doesn't tell them apart
+    (step(["F2"], [SEPSIS], [LRI]), "inconsistent"),
+    (step(["F2"], [], [], role="tells_apart"), "unchecked"),
+    (step(["F1"], [], [SEPSIS], role="not_applicable"), "rejected"),
+    # A trivial condition is ruled out only by another condition in play
+    (step(["R4"], ["Upper respiratory infections"]), "consistent"),
+    (step(["R4"], ["Upper respiratory infections"], [], LRI), "inconsistent"),
+    (step(["F1", "R1"], [], [SEPSIS], LRI), "inconsistent"),
+    (step(["W1"], [SEPSIS]), "consistent"),
+    (step(["R9", "narrative"], [SEPSIS]), "unchecked"),
+])
+def test_check_step(cited, expected):
+    assert check_step(cited, ITEMS) == expected
+
+
+def test_diff_and_stable_changes():
+    sequence = step(["R1"], [SEPSIS], [LRI], SEPSIS, role="sequence")
+    fits = step(["narrative"], [SEPSIS], role="finding_fit",
+                check="unchecked")
+    # Both present, yet the rule's consequence is taken as underlying
+    wrong = step(["narrative"], [LRI, SEPSIS], [], LRI, role="sequence",
+                 check="unchecked")
+    injury = step(["narrative"], ["Injury"], role="other", check="unchecked")
+    diff = diff_steps([sequence, {**fits, "basis": ["F1"], "valid": ["F1"],
+                                  "check": "consistent"}], [wrong, fits, injury])
+    assert diff["added"] == []
+    assert diff["changed"] == [("sequence", frozenset({SEPSIS, LRI}))]
+    assert diff["omitted"] == [("other", frozenset({"Injury"}))]
+    assert diff["grounded"] == [("finding_fit", frozenset({SEPSIS}))]
+    changes = stable_changes([[sequence], [sequence]], [[wrong], [wrong]],
+                             ITEMS)
+    assert changes["provable_changed"] == \
+        [("sequence", frozenset({SEPSIS, LRI}))]
+    assert changes["kinds"][("sequence", frozenset({SEPSIS, LRI}))] == ["R"]
+    # An omitted step must be in every control run, and is provable if a
+    # shown rule contradicts it
+    changes = stable_changes([[], []], [[wrong], []], ITEMS)
+    assert changes["omitted"] == []
+    changes = stable_changes([[], []], [[wrong], [wrong]], ITEMS)
+    assert changes["provable_omitted"] == \
+        [("sequence", frozenset({SEPSIS, LRI}))]
+    changes = stable_changes([[], []], [[sequence], [sequence]], ITEMS)
+    assert changes["omitted"] and not changes["provable_omitted"]
+    # An added step must be in every KG run
+    changes = stable_changes([[sequence], []], [[], []], ITEMS)
+    assert changes["added"] == []
+
+
+REASONING = {
+    "reasoning_steps": [
+        {"claim": "Sepsis led to the pneumonia.", "role": "sequence",
+         "favors": [SEPSIS], "disfavors": ["Lower respiratory infection"],
+         "underlying": SEPSIS, "basis": ["R1", "narrative"],
+         "quote": "fever"},
+        {"claim": "Fever fits sepsis.", "role": "finding_fit",
+         "favors": [SEPSIS], "disfavors": [], "underlying": "",
+         "basis": ["F1", "R7"], "quote": ""}],
+    "candidate_updates": [{"cause_name": SEPSIS, "direction": "no_change",
+                           "evidence": "None."},
+                          {"cause_name": LRI, "direction": "no_change",
+                           "evidence": "None."}],
+    "top_causes": FINAL_RANKING["top_causes"]}
+
+
+@pytest.mark.asyncio
+async def test_reasoning_agent_checks_steps_against_kg_items(kg):
+    client = FakeLLMClient(REASONING)
+    agent = ToGReasoningIcd10Agent(client, graph=FakeGraph(), kg=kg)
+    result = await agent.process_chunk("c1", "Fever.", [])
+    assert [t["step"] for t in agent.trace] == [
+        "first_opinion", "finding_check", "final_ranking"]
+    final = client.calls[-1]
+    assert final["schema"] == REASONING_SCHEMA
+    assert "R1. Lower respiratory infections may be due to Sepsis" in \
+        final["user_prompt"]
+    assert "F1. [yes] fever Typical of Sepsis" in final["user_prompt"]
+    assert "Walk facts" not in final["user_prompt"]
+    evidence = result["kg_evidence"]
+    first, second = evidence["steps"]
+    assert first["disfavors"] == [LRI]
+    assert (first["valid"], first["check"], first["quote_ok"]) == \
+        (["R1"], "consistent", True)
+    assert (second["valid"], second["invalid"], second["check"],
+            second["quote_ok"]) == (["F1"], ["R7"], "consistent", None)
+    assert len(evidence["cited"]) == 2
+    assert result["reasoning"] == "Sepsis led to the pneumonia. Fever fits " \
+                                  "sepsis."
+    assert result["causes"]["icd10:A41.9"]["score"] == pytest.approx(0.7)
+    assert agent.create_session_agent().kg is kg
+
+
+@pytest.mark.asyncio
+async def test_reasoning_arms_differ_only_in_the_kg_items(kg):
+    client = FakeLLMClient()
+    client.responses["final_ranking"] = [REASONING, REASONING]
+    agent = ToGReasoningIcd10Agent(client, graph=FakeGraph(), kg=kg)
+    first_opinion = {"causes": {
+        "icd10:A41.9": {"name": SEPSIS, "score": 0.7},
+        "icd10:J18.9": {"name": LRI, "score": 0.3}}, "reasoning": ""}
+    candidates = [{"cause": SEPSIS, "code": "A41.9", "score": 0.7,
+                   "findings": []},
+                  {"cause": LRI, "code": "J18.9", "score": 0.3,
+                   "findings": []}]
+    for items in ([], [ITEMS[0]]):
+        await agent.rank("c1", first_opinion, "## INPUT\nFever.", candidates,
+                         items=items)
+    control, shown = client.calls
+    assert control["system_prompt"] == shown["system_prompt"]
+    assert control["schema"] == shown["schema"]
+    assert NO_EVIDENCE in control["user_prompt"]
+    assert control["user_prompt"].split("## KG EVIDENCE")[0] == \
+        shown["user_prompt"].split("## KG EVIDENCE")[0]

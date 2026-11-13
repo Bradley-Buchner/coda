@@ -200,6 +200,13 @@ async def check_findings(graph: KGView, call, case_input, codes):
             for typical in findings]
 
 
+def shown_findings(findings):
+    """Return the typical findings the case answers the way their grade
+    describes.
+    """
+    return [f for f in findings or [] if f["status"] == f["graded_answer"]]
+
+
 def format_evidence(candidate, facts=True):
     """Render a candidate's walk facts, unless facts is False, and the typical
     findings the case shows, which are those answered the way their grade
@@ -221,7 +228,7 @@ def format_evidence(candidate, facts=True):
     elif not findings:
         lines.append("- (none in the KG)")
     else:
-        shown = [f for f in findings if f["status"] == f["graded_answer"]]
+        shown = shown_findings(findings)
         lines += [f"- [{f['status']}] {f['finding']} (grade {f['grade']} "
                   f"for {f['who_va_cause']} on answer {f['graded_answer']})"
                   for f in shown]
