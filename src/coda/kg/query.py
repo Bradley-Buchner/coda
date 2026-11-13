@@ -62,6 +62,12 @@ class KGQuery:
             self.code_lists.setdefault(code, []).append(
                 table.replace("acme:table_", "")
             )
+        # ICD-10 names, for the codes that Table E combines two causes into
+        names = pd.read_csv(
+            kg_dir.joinpath("icd10_nodes.tsv.gz"), sep="\t", dtype=str,
+            usecols=["id:ID", "name"], keep_default_na=False,
+        )
+        self.names: dict[str, str] = dict(zip(names["id:ID"], names["name"]))
 
     def resolve(self, code: str) -> str | None:
         """Return the KG node that the ACME tables use for a code.

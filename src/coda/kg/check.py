@@ -48,45 +48,78 @@ def check_top_causes(kg: KGQuery, causes: dict) -> dict:
             if table in TABLE_FLAGS:
                 flags.append({"curie": curie, "code": node, "table": table,
                               "flag": TABLE_FLAGS[table]})
+    def link(cause, consequence):
+        evidence = kg.due_to(nodes[cause], nodes[consequence])
+        results = [rule["result"] for rule in evidence["table_e"]
+                   if rule["result"]]
+        result = results[0] if results else ""
+        return {"cause": cause, "consequence": consequence,
+                "verdict": verdict(evidence), **evidence, "result": result,
+                "result_name": kg.names.get(normalize_code(result), "")
+                if result else ""}
+
+    # One link per pair of causes, with the other direction as its reverse
+    # when the rules allow both
     links = []
-    for cause, cause_node in nodes.items():
-        for consequence, consequence_node in nodes.items():
-            if cause == consequence:
-                continue
-            evidence = kg.due_to(cause_node, consequence_node)
-            link_verdict = verdict(evidence)
+    curies = list(nodes)
+    for i, first in enumerate(curies):
+        for second in curies[i + 1:]:
             # Catch-all rules allow almost any link, so they say little
-            if link_verdict in ("accepted", "needs_review"):
-                links.append({"cause": cause, "consequence": consequence,
-                              "verdict": link_verdict,
-                              "table_d": evidence["table_d"],
-                              "table_e": evidence["table_e"]})
+            pair = [found for found in (link(first, second),
+                                        link(second, first))
+                    if found["verdict"] in ("accepted", "needs_review")]
+            if len(pair) == 2:
+                pair = [{**pair[0], "reverse": pair[1]}]
+            links += pair
     return {"flags": flags, "links": links}
 
 
+def describe_link(link: dict, causes: dict) -> str:
+    """Return the ACME rule allowing one direction of a link, in words."""
+    table = "Table E" if link["table_e"] else "Table D"
+    text = (f"{causes[link['consequence']]['name']} may be due to "
+            f"{causes[link['cause']]['name']} (ACME {table}")
+    if link["verdict"] == "needs_review":
+        reasons = [rule["reason"] for rule in link["table_e"]
+                   if rule["reason"]]
+        text += f", only if: {reasons[0]}" if reasons else \
+            ", only in some cases"
+    return text + ")"
+
+
+def coded_as(link: dict) -> str:
+    """Return the code that a link's two causes are coded as, with its name."""
+    return f"{link['result']} ({link['result_name']})" \
+        if link["result_name"] else link["result"]
+
+
 def render_context(check: dict, causes: dict) -> str:
-    """Return the result of check_top_causes as lines of text."""
+    """Return the result of check_top_causes as lines of text, one for each
+    link and then one for each flag."""
     lines = []
     # Causes that cannot be the underlying cause
     contributing = {flag["curie"] for flag in check["flags"]
                     if flag["table"] in ("B", "C2", "C3")}
     for link in check["links"]:
-        cause = causes[link["cause"]]["name"]
-        consequence = causes[link["consequence"]]["name"]
-        table = "Table E" if link["table_e"] else "Table D"
-        line = f"- {consequence} may be due to {cause} (ACME {table}"
-        if link["verdict"] == "needs_review":
-            reasons = [rule["reason"] for rule in link["table_e"]
-                       if rule["reason"]]
-            line += f", only if: {reasons[0]}" if reasons else \
-                ", only in some cases"
-        line += ")."
-        results = [rule["result"] for rule in link["table_e"]
-                   if rule["result"]]
-        if results:
-            line += f" Together they are coded as {results[0]}."
-        elif link["cause"] not in contributing:
-            line += f" If both are reported, {cause} is the underlying cause."
+        reverse = link.get("reverse")
+        if reverse:
+            line = (f"- {describe_link(link, causes)}, and "
+                    f"{describe_link(reverse, causes)}. The order the case "
+                    "reports decides which is the underlying cause.")
+            for direction in (link, reverse):
+                if direction["result"]:
+                    line += (f" If {causes[direction['consequence']]['name']}"
+                             f" is due to {causes[direction['cause']]['name']}"
+                             f", together they are coded as "
+                             f"{coded_as(direction)}.")
+        else:
+            line = f"- {describe_link(link, causes)}."
+            if link["result"]:
+                line += f" Together they are coded as {coded_as(link)}."
+            elif link["cause"] not in contributing:
+                line += (f" If both are reported, "
+                         f"{causes[link['cause']]['name']} is the underlying "
+                         "cause.")
         lines.append(line)
     for flag in check["flags"]:
         name = causes[flag["curie"]]["name"]

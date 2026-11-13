@@ -28,7 +28,11 @@ EDGES = [
     ["icd10:I50.9", "acme:table_A", "in_code_list", "", "", "", ""],
     ["icd10:J18.9", "acme:table_A", "in_code_list", "", "", "", ""],
     ["icd10:T14.9", "acme:table_B", "in_code_list", "", "", "", ""],
+    ["icd10:E43", "icd10:J18.9", "causes", "False", "", "", ""],
+    ["icd10:J18.9", "icd10:E43", "causes", "True", "", "", ""],
 ]
+NAMES = [["icd10:B20.8",
+          "HIV disease resulting in other infectious and parasitic diseases"]]
 
 
 def make_kg(tmp_path):
@@ -37,6 +41,8 @@ def make_kg(tmp_path):
         "result", "reason",
     ])
     write_tsv_gz(edges, tmp_path / "acme_edges.tsv.gz")
+    write_tsv_gz(pd.DataFrame(NAMES, columns=["id:ID", "name"]),
+                 tmp_path / "icd10_nodes.tsv.gz")
     return KGQuery(kg_dir=tmp_path)
 
 
@@ -84,10 +90,31 @@ def test_check_top_causes(tmp_path):
         [("icd10:Q99", None), ("icd10:T14.9", "B")]
     assert render_context(check, causes) == (
         "- Lower respiratory infections may be due to HIV (ACME Table E). "
-        "Together they are coded as B20.8.\n"
+        "Together they are coded as B20.8 (HIV disease resulting in other "
+        "infectious and parasitic diseases).\n"
         "- Other chromosome abnormalities (Q99) is not in the ACME tables.\n"
         "- Injury (T14.9) can only be a contributing cause, not the "
         "underlying cause."
+    )
+
+
+def test_check_top_causes_both_ways(tmp_path):
+    kg = make_kg(tmp_path)
+    causes = {
+        "icd10:J18.9": {"name": "Lower respiratory infections"},
+        "icd10:E43": {"name": "Malnutrition"},
+    }
+    check = check_top_causes(kg, causes)
+    # A pair linked both ways gives one link, so one line
+    assert [(link["cause"], link["reverse"]["cause"])
+            for link in check["links"]] == [("icd10:J18.9", "icd10:E43")]
+    lines = render_context(check, causes).splitlines()
+    assert len(lines) == len(check["links"]) + len(check["flags"])
+    assert lines[0] == (
+        "- Malnutrition may be due to Lower respiratory infections (ACME "
+        "Table D, only in some cases), and Lower respiratory infections may "
+        "be due to Malnutrition (ACME Table D). The order the case reports "
+        "decides which is the underlying cause."
     )
 
 
