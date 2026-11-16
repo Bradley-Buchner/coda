@@ -127,14 +127,15 @@ def rotated(graph, candidates):
 
 
 def reversed_check(check, causes):
-    """Return check_top_causes's result with each one-way link reversed and
-    without the code it gives the pair, and each flag moved to the next cause.
-    Links both ways are kept as they are.
+    """Return check_top_causes's result with each link reversed, as one-way
+    and without the code it gives the pair, and each flag moved to the next
+    cause. Links that specific rules allow both ways are kept as they are.
     """
     curies = list(causes)
-    links = [link if "reverse" in link else
-             {**link, "cause": link["consequence"],
-              "consequence": link["cause"], "result": "", "result_name": ""}
+    links = [link if link.get("reverse", {}).get("specific") else
+             {**{key: value for key, value in link.items() if key != "reverse"},
+              "cause": link["consequence"], "consequence": link["cause"],
+              "result": "", "result_name": ""}
              for link in check["links"]]
     flags = []
     for flag in check["flags"]:

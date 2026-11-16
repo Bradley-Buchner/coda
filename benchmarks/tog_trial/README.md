@@ -115,11 +115,17 @@ python benchmarks/tog_trial/run_benchmark.py --sets original,sparse --arms reaso
 ```
 
 The scorer compares each arm's steps with the control's, keyed by role and the
-causes named. A step is added, omitted, or changed (the same key with no
-direction in common). Changes are stable if they hold in all three runs of both
+causes named; a step naming the same causes in the same direction as a control
+step takes its role, so a relabeled step isn't a change. A step is added,
+omitted, or changed (the same key with no direction in common). Changes are stable if they hold in all three runs of both
 arms, and provable if they are stable and rest on a shown item they agree with,
 or say why it doesn't apply, and contradict none; an omission is provable only if
-a shown rule contradicts it, so omissions involving findings stay statistical.
+a shown rule contradicts it, so omissions involving findings stay statistical. Steps can change without the
+conclusion changing, so the scorer also counts cases whose most common top
+cause, consistently named underlying cause, or a probability (by at least 0.05,
+the arms' ranges apart) differs from the control's, toward or away from the
+true cause, over all runs and over the main runs alone, which match the
+placebo's single run.
 Flags on injury codes are left out, since ACME selects the external cause, which
 the Injury group includes. Noise compares repeat runs of the
 same arm. The placebo shows whether steps follow the item shown or the real one.

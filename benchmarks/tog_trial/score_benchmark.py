@@ -50,6 +50,7 @@ COMPARISONS = (("full", "baseline"), ("full", "second_look"),
                ("reason_kg", "reason_placebo"),
                ("reason_kg_walks", "reason_kg"))
 CHANGES = ("added", "omitted", "changed")
+SHIFT = 0.05  # Probability change that counts as a changed conclusion
 FLOOR = 0.01  # Probability given to a true cause an arm left out, for log loss
 BOOTSTRAPS = 10000
 SEED = 0
@@ -438,15 +439,75 @@ def placebo_tracking(placebo, real):
                     else by_id.get(item_id)
                 if item["kind"] == "W" or twin is None:
                     continue
+                shown_ok = item_verdict(item, step) == "consistent"
+                real_ok = item_verdict(twin, step) == "consistent"
                 counts[item["kind"], "cited"] += 1
-                counts[item["kind"], "follows_shown"] += \
-                    item_verdict(item, step) == "consistent"
-                counts[item["kind"], "follows_real"] += \
-                    item_verdict(twin, step) == "consistent"
-    return [{"kind": kind, "cited": counts[kind, "cited"],
-             "follows_shown": counts[kind, "follows_shown"],
-             "follows_real": counts[kind, "follows_real"]}
+                counts[item["kind"], "follows_shown"] += shown_ok and not real_ok
+                counts[item["kind"], "follows_real"] += real_ok and not shown_ok
+                counts[item["kind"], "follows_both"] += shown_ok and real_ok
+    return [{"kind": kind, **{key: counts[kind, key] for key in (
+             "cited", "follows_shown", "follows_real", "follows_both")}}
             for kind in ("R", "F") if counts[kind, "cited"]]
+
+
+def conclusions(runs, case):
+    """Return the top causes, the underlying causes named by sequence and
+    coding-rule steps, and the probabilities of a case's runs.
+    """
+    saved = [run[case] for run in runs if case in run]
+    return ([top(scores(s["result"]["causes"])) for s in saved],
+            [{step["underlying"] for step in steps_of(s)
+              if step["role"] in ("sequence", "coding_rule")} - {""}
+             for s in saved],
+            [scores(s["result"]["causes"]) for s in saved])
+
+
+def conclusion_changes(kg_runs, control_runs, labels):
+    """Return how often an arm's conclusion differs from the control's over all
+    their runs, toward or away from the true cause: its most common top cause;
+    an underlying cause named in every run of the arm that the control names in
+    none, where the control names another (or none), and the true cause named
+    in every control run and no run of the arm; and a probability that moves
+    by at least SHIFT, with the two arms' ranges apart.
+    """
+    rows = Counter()
+    cases = [c for c in kg_runs[0] if c in control_runs[0] and c in labels]
+    for case in cases:
+        label = labels[case]
+        kg_top, kg_named, kg_scores = conclusions(kg_runs, case)
+        control_top, control_named, control_scores = conclusions(control_runs,
+                                                                 case)
+        new_top = Counter(kg_top).most_common(1)[0][0]
+        old_top = Counter(control_top).most_common(1)[0][0]
+        if new_top != old_top:
+            rows["top_changed"] += 1
+            rows["top_toward_label"] += new_top == label
+            rows["top_away_from_label"] += old_top == label
+        named = set.intersection(*kg_named) - set().union(*control_named)
+        dropped = set.intersection(*control_named) - set().union(*kg_named)
+        rows["underlying_label_dropped"] += label in dropped
+        if named:
+            key = "underlying_differs" if any(control_named) \
+                else "underlying_newly_named"
+            rows[key] += 1
+            rows[f"{key}_toward_label"] += label in named
+        shifts = {}
+        for cause in {c for s in kg_scores + control_scores for c in s}:
+            new = [s.get(cause, 0) for s in kg_scores]
+            old = [s.get(cause, 0) for s in control_scores]
+            shift = statistics.mean(new) - statistics.mean(old)
+            if abs(shift) >= SHIFT and (min(new) > max(old)
+                                        or max(new) < min(old)):
+                shifts[cause] = shift
+        rows["probability_shifted"] += bool(shifts)
+        if label in shifts:
+            rows["label_up" if shifts[label] > 0 else "label_down"] += 1
+    return {"cases": len(cases), **{key: rows[key] for key in (
+        "top_changed", "top_toward_label", "top_away_from_label",
+        "underlying_differs", "underlying_differs_toward_label",
+        "underlying_newly_named", "underlying_newly_named_toward_label",
+        "underlying_label_dropped",
+        "probability_shifted", "label_up", "label_down")}}
 
 
 def reasoning_measures(folder, labels, chain):
@@ -468,6 +529,13 @@ def reasoning_measures(folder, labels, chain):
         "changes": {f"{arm} vs reason_none": change_summary(
             arms[arm], arms["reason_none"])
             for arm in REASON_ARMS[1:] if arms[arm]},
+        # Over as many runs of each arm as it has, and its main run alone, to
+        # compare it with the placebo's one run
+        "conclusions": {f"{arm} vs reason_none, {n} run{'s' * (n > 1)} each":
+                        conclusion_changes(arms[arm][:n],
+                                           arms["reason_none"][:n], labels)
+                        for arm in REASON_ARMS[1:] if arms[arm]
+                        for n in dict.fromkeys((len(arms[arm]), 1))},
         "placebo_tracking": placebo_tracking(arms["reason_placebo"][0],
                                              arms["reason_kg"][0])
         if arms["reason_placebo"] else None,
@@ -631,9 +699,15 @@ def show_reasoning(arms, comparisons, reasoning):
                     if values["cases"]])
         print(f"  Provable added or changed steps, by the kinds of items they "
               f"rest on: {summary['provable_by_kind'] or 'none'}")
+    print("\nConclusion changes against reason_none, in cases, over the runs "
+          "shown (a probability shift is at least 0.05 with the arms' ranges "
+          "apart)")
+    show_table([{"comparison": name, **row}
+                for name, row in reasoning["conclusions"].items()])
     if reasoning["placebo_tracking"]:
         print("\nPlacebo steps citing a reversed rule or a moved finding: how "
-              "many agree with the item shown and with the real one")
+              "many agree only with the item shown, only with the real one, "
+              "or with both")
         show_table(reasoning["placebo_tracking"])
     difference = comparisons.get("reason_kg vs reason_none")
     kg = arms.get("reason_kg")

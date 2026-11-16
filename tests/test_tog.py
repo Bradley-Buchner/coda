@@ -421,6 +421,10 @@ def test_diff_and_stable_changes():
         [("sequence", frozenset({SEPSIS, LRI}))]
     changes = stable_changes([[], []], [[sequence], [sequence]], ITEMS)
     assert changes["omitted"] and not changes["provable_omitted"]
+    # A step relabeled with another role is the same step
+    relabel = {**sequence, "role": "coding_rule"}
+    assert diff_steps([relabel], [{**sequence, "check": "unchecked"}]) \
+        ["grounded"] == [("sequence", frozenset({SEPSIS, LRI}))]
     # An added step must be in every KG run
     changes = stable_changes([[sequence], []], [[], []], ITEMS)
     assert changes["added"] == []

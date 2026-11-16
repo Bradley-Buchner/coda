@@ -141,6 +141,17 @@ def step_direction(step):
             step["underlying"])
 
 
+def relabeled(steps, control_steps):
+    """Return the steps, each with the role of a control step that names the
+    same causes in the same direction, so that a relabeled step isn't a change.
+    """
+    roles = {(frozenset(step_names(s)), step_direction(s)): s["role"]
+             for s in control_steps}
+    return [{**s, "role": roles.get((frozenset(step_names(s)),
+                                     step_direction(s)), s["role"])}
+            for s in steps]
+
+
 def pooled(steps):
     """Return {key: directions} over the steps of one run."""
     pool = {}
@@ -154,14 +165,16 @@ def diff_steps(kg_steps, control_steps):
     omitted, changed (no direction in common), and grounded (same logic, now
     resting on a KG item it agrees with or says doesn't apply).
     """
+    kg_steps = relabeled(kg_steps, control_steps)
     kg, control = pooled(kg_steps), pooled(control_steps)
     shared = kg.keys() & control.keys()
     return {
         "added": [k for k in kg if k not in control],
         "omitted": [k for k in control if k not in kg],
         "changed": [k for k in shared if not kg[k] & control[k]],
-        "grounded": [k for k in shared if kg[k] & control[k] and any(
-            step_key(s) == k and s["check"] in GROUNDED for s in kg_steps)],
+        "grounded": [k for k in shared if any(
+            step_key(s) == k and step_direction(s) in kg[k] & control[k]
+            and s["check"] in GROUNDED for s in kg_steps)],
     }
 
 
@@ -179,6 +192,8 @@ def stable_changes(kg_runs, control_runs, items):
     shown R item contradicts it; findings can't, as in InterVA other answers
     aren't evidence against a cause.
     """
+    kg_runs = [relabeled(run, [s for steps in control_runs for s in steps])
+               for run in kg_runs]
     kg, control = [pooled(r) for r in kg_runs], [pooled(r) for r in control_runs]
     in_all = set.intersection(*(set(p) for p in kg))
     changes = {"added": [], "omitted": [], "changed": []}
