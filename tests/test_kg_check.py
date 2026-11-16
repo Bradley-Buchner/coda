@@ -30,6 +30,12 @@ EDGES = [
     ["icd10:T14.9", "acme:table_B", "in_code_list", "", "", "", ""],
     ["icd10:E43", "icd10:J18.9", "causes", "False", "", "", ""],
     ["icd10:J18.9", "icd10:E43", "causes", "True", "", "", ""],
+    ["icd10:J18.9", "icd10:D64.9", "causes", "False", "", "", ""],
+    ["icd10:R99", "icd10:J18.9", "causes", "False", "", "", ""],
+    ["icd10:R99", "acme:table_A", "in_code_list", "", "", "", ""],
+    [RANGE, "icd10:E43", "causes", "True", "", "", ""],
+    ["icd10:E43", "icd10:T14.9", "causes", "False", "", "", ""],
+    ["icd10:T14.9", "icd10:E43", "causes", "False", "", "", ""],
 ]
 NAMES = [["icd10:B20.8",
           "HIV disease resulting in other infectious and parasitic diseases"]]
@@ -138,4 +144,42 @@ def test_check_mccd_chain(tmp_path):
         "A suggestion, not official coding.\n"
         "Needs review: Table E LDC would select I11.0 only if: Must be "
         "hypertensive heart disease."
+    )
+
+
+def test_check_top_causes_catch_all_reverse(tmp_path, monkeypatch):
+    kg = make_kg(tmp_path)
+    monkeypatch.setattr(query, "CATCH_ALL_SIZE", 2)
+    causes = {
+        "icd10:J18.9": {"name": "Lower respiratory infections"},
+        "icd10:D64.9": {"name": "Anemias"},
+        "icd10:R99": {"name": "Undetermined"},
+    }
+    check = check_top_causes(kg, causes)
+    # A catch-all rule allowing the reverse leaves the order to the case, and
+    # an ill-defined cause links to nothing
+    assert [(link["cause"], link["reverse"]["verdict"])
+            for link in check["links"]] == \
+        [("icd10:J18.9", "accepted_catch_all")]
+    assert render_context(check, causes) == (
+        "- Anemias may be due to Lower respiratory infections (ACME Table D), "
+        "and Lower respiratory infections may be due to Anemias (ACME Table "
+        "D, by a broad rule). The order the case reports decides which is "
+        "the underlying cause."
+    )
+    # A "maybe" rule through a catch-all range isn't specific either
+    causes = {"icd10:D64.9": {"name": "Anemias"},
+              "icd10:E43": {"name": "Malnutrition"}}
+    assert check_top_causes(kg, causes)["links"] == []
+
+
+def test_contributing_cause_is_never_underlying(tmp_path):
+    kg = make_kg(tmp_path)
+    causes = {"icd10:E43": {"name": "Malnutrition"},
+              "icd10:T14.9": {"name": "Injury"}}
+    check = check_top_causes(kg, causes)
+    assert "reverse" in check["links"][0]
+    assert render_context(check, causes).splitlines()[0] == (
+        "- Injury may be due to Malnutrition (ACME Table D). If both are "
+        "reported, Malnutrition is the underlying cause."
     )

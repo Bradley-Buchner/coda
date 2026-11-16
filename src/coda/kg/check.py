@@ -1,5 +1,6 @@
 """Check an agent's top causes of death, or the 'due to' chain of an MCCD,
 against the ACME rules in the KG."""
+from coda.kg import query
 from coda.kg.query import (
     DUE_TO_RULE_TYPES,
     SEQUEL_RULE_TYPES,
@@ -19,6 +20,8 @@ TABLE_FLAGS = {
     "H": "is a trivial condition, which is not selected as the underlying "
          "cause if a more serious condition is reported",
 }
+# Ill-defined causes of death (R95-R99)
+ILL_DEFINED = ("R95", "R96", "R97", "R98", "R99")
 
 
 def check_top_causes(kg: KGQuery, causes: dict) -> dict:
@@ -53,24 +56,35 @@ def check_top_causes(kg: KGQuery, causes: dict) -> dict:
         results = [rule["result"] for rule in evidence["table_e"]
                    if rule["result"]]
         result = results[0] if results else ""
+        table_d = evidence["table_d"]
+        link_verdict = verdict(evidence)
         return {"cause": cause, "consequence": consequence,
-                "verdict": verdict(evidence), **evidence, "result": result,
+                "verdict": link_verdict, **evidence, "result": result,
                 "result_name": kg.names.get(normalize_code(result), "")
-                if result else ""}
+                if result else "",
+                # Allowed by a rule that isn't a catch-all, maybe or not
+                "specific": link_verdict == "accepted" or (
+                    link_verdict == "needs_review" and (
+                        bool(evidence["table_e"])
+                        or table_d["size"] < query.CATCH_ALL_SIZE))}
 
     # One link per pair of causes, with the other direction as its reverse
-    # when the rules allow both
+    # when the rules allow both. Catch-all rules allow almost any link, so a
+    # link needs a specific rule in one direction; a catch-all rule only
+    # allows the reverse. Ill-defined causes are never selected when another
+    # cause is reported, so they say nothing about which one is underlying.
     links = []
-    curies = list(nodes)
+    curies = [c for c in nodes if not nodes[c][6:].startswith(ILL_DEFINED)]
     for i, first in enumerate(curies):
         for second in curies[i + 1:]:
-            # Catch-all rules allow almost any link, so they say little
-            pair = [found for found in (link(first, second),
-                                        link(second, first))
-                    if found["verdict"] in ("accepted", "needs_review")]
-            if len(pair) == 2:
-                pair = [{**pair[0], "reverse": pair[1]}]
-            links += pair
+            pair = sorted((link(first, second), link(second, first)),
+                          key=lambda found: not found["specific"])
+            if not pair[0]["specific"]:
+                continue
+            if pair[1]["verdict"] != "not_listed":
+                links.append({**pair[0], "reverse": pair[1]})
+            else:
+                links.append(pair[0])
     return {"flags": flags, "links": links}
 
 
@@ -79,7 +93,9 @@ def describe_link(link: dict, causes: dict) -> str:
     table = "Table E" if link["table_e"] else "Table D"
     text = (f"{causes[link['consequence']]['name']} may be due to "
             f"{causes[link['cause']]['name']} (ACME {table}")
-    if link["verdict"] == "needs_review":
+    if not link["specific"]:
+        text += ", by a broad rule"
+    elif link["verdict"] == "needs_review":
         reasons = [rule["reason"] for rule in link["table_e"]
                    if rule["reason"]]
         text += f", only if: {reasons[0]}" if reasons else \
@@ -102,7 +118,9 @@ def render_context(check: dict, causes: dict) -> str:
                     if flag["table"] in ("B", "C2", "C3")}
     for link in check["links"]:
         reverse = link.get("reverse")
-        if reverse:
+        # A cause that can only contribute is never underlying, whatever the
+        # order, so only the link's own direction is described
+        if reverse and not {link["cause"], reverse["cause"]} & contributing:
             line = (f"- {describe_link(link, causes)}, and "
                     f"{describe_link(reverse, causes)}. The order the case "
                     "reports decides which is the underlying cause.")
